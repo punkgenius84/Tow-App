@@ -6,7 +6,7 @@
   var D = window.TowData;
   var LS_KEY = 'towguide.custom.v1';
 
-  var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null, vinFile: null, vinPreviewUrl: '', ocrStatus: '' };
+  var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null, vinFile: null, vinPreviewUrl: '', ocrStatus: '', barcodeStatus: '', barcodeScanning: false, barcodeControls: null, barcodeLoader: null };
   var custom = loadCustom();
 
   /* ---------- helpers ---------- */
@@ -41,6 +41,7 @@
 
   /* ---------- navigation ---------- */
   function setTab(t) {
+    stopBarcodeScanner();
     state.tab = t; state.cur = null; render();
     window.scrollTo(0, 0);
   }
@@ -238,9 +239,14 @@
   function renderVin() {
     var h = '<section class="stack"><div class="card stack">' +
       '<div class="label">SCAN VIN WITH CAMERA</div>' +
-      '<label class="f" for="vin-photo">Photograph the VIN on the windshield or driver-door label</label>' +
+      '<label class="f">Fastest: scan the VIN barcode on the vehicle label</label>' +
+      '<video id="vin-barcode-video" class="vin-preview barcode-video" autoplay muted playsinline' + (state.barcodeScanning ? '' : ' hidden') + '></video>' +
+      '<button class="btn block" id="vin-barcode-start" type="button">' + (state.barcodeScanning ? 'Barcode scanner starting…' : 'Start barcode scan') + '</button>' +
+      '<div id="vin-barcode-status" class="muted" aria-live="polite">' + esc(state.barcodeStatus || 'Point the camera at the VIN barcode and hold steady. Supports common 1D and 2D barcode formats.') + '</div>' +
+      '<div class="divider-text">OR USE A PHOTO</div>' +
+      '<label class="f" for="vin-photo">Photograph the VIN text on the windshield or driver-door label</label>' +
       '<input id="vin-photo" type="file" accept="image/*" capture="environment">' +
-      '<div class="muted">Take a clear, close, straight-on photo with the full 17-character VIN in focus. OCR runs on this device after its recognition engine loads. The photo is not uploaded or saved by this app.</div>' +
+      '<div class="muted">OCR is the fallback when there is no readable barcode. Recognition runs on this device; the photo is not uploaded or saved by this app.</div>' +
       '<img id="vin-preview" class="vin-preview" alt="VIN photo preview" hidden>' +
       '<button class="btn block" id="vin-ocr" type="button">Read VIN from photo</button>' +
       '<div id="vin-ocr-status" class="muted" aria-live="polite">' + esc(state.ocrStatus || 'Camera scan works best in good light with minimal glare.') + '</div>' +
@@ -290,6 +296,76 @@
       for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17));
     });
     return found;
+  }
+
+  function extractBarcodeVin(raw) {
+    var value = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return /^[A-HJ-NPR-Z0-9]{17}$/.test(value) ? value : '';
+  }
+
+  function loadBarcodeEngine() {
+    if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) return Promise.resolve(window.ZXingBrowser);
+    if (state.barcodeLoader) return state.barcodeLoader;
+    state.barcodeLoader = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js';
+      script.async = true;
+      script.onload = function () {
+        if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) resolve(window.ZXingBrowser);
+        else reject(new Error('Barcode scanner did not initialize.'));
+      };
+      script.onerror = function () { reject(new Error('Could not load barcode scanner. Check your internet connection.')); };
+      document.head.appendChild(script);
+    });
+    return state.barcodeLoader;
+  }
+
+  function stopBarcodeScanner() {
+    if (state.barcodeControls && state.barcodeControls.stop) {
+      try { state.barcodeControls.stop(); } catch (e) { /* camera may already be closed */ }
+    }
+    state.barcodeControls = null;
+    state.barcodeScanning = false;
+  }
+
+  function startBarcodeScan() {
+    var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
+    if (!video) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (status) status.textContent = 'Camera access is unavailable. Open the app over HTTPS or use the photo scanner below.';
+      return;
+    }
+    if (button) button.disabled = true;
+    if (status) status.textContent = 'Loading barcode scanner…';
+    loadBarcodeEngine().then(function (ZXing) {
+      state.barcodeScanning = true;
+      video.hidden = false;
+      if (status) status.textContent = 'Starting camera… allow camera access, then aim at the VIN barcode.';
+      var reader = new ZXing.BrowserMultiFormatReader();
+      return reader.decodeFromVideoDevice(undefined, video, function (result, err, controls) {
+        if (controls && !state.barcodeControls) state.barcodeControls = controls;
+        if (result) {
+          var vin = extractBarcodeVin(result.getText ? result.getText() : result.text);
+          if (vin) {
+            state.vinText = vin;
+            state.barcodeStatus = 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.';
+            stopBarcodeScanner();
+            renderVin();
+          } else if (status) {
+            status.textContent = 'Barcode detected, but it did not contain a valid 17-character VIN. Keep scanning or use the photo/manual option.';
+          }
+        }
+      });
+    }).then(function (controls) {
+      if (controls && state.barcodeScanning) state.barcodeControls = controls;
+    }).catch(function (err) {
+      stopBarcodeScanner();
+      state.barcodeStatus = err && err.name === 'NotAllowedError' ? 'Camera permission was denied. Allow camera access in Android settings, or use the photo/manual option.' : (err && err.message ? err.message : 'Could not start barcode camera.');
+      renderVin();
+    }).finally(function () {
+      var current = $('#vin-barcode-start');
+      if (current) current.disabled = false;
+    });
   }
 
   function loadOcrEngine() {
@@ -458,6 +534,7 @@
     }
     if (t.id === 'vin-go') return decodeVin();
     if (t.id === 'vin-ocr') return scanVinPhoto();
+    if (t.id === 'vin-barcode-start') return startBarcodeScan();
     if (t.id === 'custom-go') return customGo();
     if (t.hasAttribute('data-vin-custom') && state.vin) {
       var p = state.vin;
@@ -526,5 +603,5 @@
   render();
 
   // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates };
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin };
 })();
