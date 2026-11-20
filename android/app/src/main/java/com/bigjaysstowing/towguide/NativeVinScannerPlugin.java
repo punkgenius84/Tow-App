@@ -104,7 +104,11 @@ public class NativeVinScannerPlugin extends Plugin {
             .addOnSuccessListener(getActivity(), barcode -> {
                 JSObject result = new JSObject();
                 result.put("rawValue", barcode.getRawValue());
+                // Some formats/devices provide a display value even when ML Kit has no raw text payload.
+                // Return both so the JavaScript VIN parser can use whichever representation is populated.
+                result.put("displayValue", barcode.getDisplayValue());
                 result.put("format", barcode.getFormat());
+                result.put("valueType", barcode.getValueType());
                 call.resolve(result);
             })
             .addOnCanceledListener(getActivity(), () ->
