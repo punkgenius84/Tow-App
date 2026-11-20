@@ -416,15 +416,29 @@
   });
 
   var netCheckId = 0;
+  var netPollId = null;
   function setNetStatus(status) {
     var n = $('#net'); if (!n) return;
     n.textContent = status === 'online' ? 'Online' :
-      (status === 'checking' ? 'Checking internet…' : 'Offline (app works)');
+      (status === 'checking' ? 'Checking connection…' : 'Offline (app works)');
     n.classList.toggle('off', status === 'offline');
     n.classList.toggle('checking', status === 'checking');
   }
+  function applyNetStatus(connected) {
+    setNetStatus(connected ? 'online' : 'offline');
+  }
   function netBadge() {
     var id = ++netCheckId;
+    // Android's native ConnectivityManager reports validated internet access.
+    // navigator.onLine alone only reports a network interface, not real internet.
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+      try {
+        applyNetStatus(window.AndroidNetwork.isConnected() === true);
+      } catch (e) {
+        applyNetStatus(false);
+      }
+      return;
+    }
     if (navigator.onLine === false) { setNetStatus('offline'); return; }
     setNetStatus('checking');
     if (typeof window.fetch !== 'function') { setNetStatus('offline'); return; }
@@ -448,6 +462,11 @@
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) netBadge();
   });
+  // Poll native state so toggling Wi-Fi/mobile data is reflected even when
+  // Android WebView does not dispatch browser online/offline events.
+  if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+    netPollId = window.setInterval(netBadge, 3000);
+  }
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* ignore */ }); });
