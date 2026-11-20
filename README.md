@@ -9,7 +9,7 @@ A mobile-first towing reference app for Big Jay's Towing and Auto Center. Choose
 3. **Ground clearance** - belly breakover at the ramp-to-deck crest and a calculated maximum angle.
 4. **Loading and securement** - an eight-phase workflow covering tie-down count, working-load-limit sizing, corner-by-corner routing, wheel nets, ratchet straps, chains and binders, equipment inspection, troubleshooting, wheel-lift and dolly procedures, and CDL notes.
 
-The app works offline after its files are available on the device. VIN decoding uses the free NHTSA vPIC service and therefore requires internet access.
+The app works offline after its files are available on the device. VIN decoding uses the free NHTSA vPIC service and therefore requires internet access. The VIN screen also supports taking a photo of the windshield or driver-door VIN label; browser-based OCR reads the photo locally, then the operator must verify the suggested 17 characters before decoding. The OCR engine is downloaded from a CDN on first use, so photo recognition requires internet access the first time (and again if the engine is not cached). The photo itself is not sent to the OCR provider or saved by the app.
 
 ## Branding and application identity
 
