@@ -338,7 +338,9 @@
         // 17 characters so weight/tire/manufacturing fields cannot bleed in.
         var nextLines = [lines[lineIndex + 1] || '', lines[lineIndex + 2] || ''];
         for (var count = 1; count <= 2; count++) {
-          var following = nextLines.slice(0, count).join('').replace(/[^A-Z0-9]/g, '');
+          var followingText = nextLines.slice(0, count).join(' ');
+          if (/\b(?:GVWR|GAWR|MFD|MFG|TIRE|PRESSURE|FRONT|REAR|PLANT|ASSEMBLED|KPA|PSI)\b/.test(followingText)) continue;
+          var following = followingText.replace(/[^A-Z0-9]/g, '');
           if (following.length === 17) addCandidate(following, true);
         }
       }
