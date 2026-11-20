@@ -136,7 +136,7 @@
       '</select></div>';
     h += '<div class="grid2"><div><label class="f">Cargo / extra weight (lb)</label><input data-sel="extraLb" inputmode="numeric" placeholder="0"></div>' +
       '<div><label class="f">Measured clearance (in)</label><input data-sel="gc" inputmode="decimal" placeholder="' + v.gc + '"></div></div>';
-    h += '<div><label class="f">Measured wheelbase (in, optional)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+    h += '<div><label class="f">Measured wheelbase (in, required for clearance check)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
     $('#controls').innerHTML = h;
   }
 
