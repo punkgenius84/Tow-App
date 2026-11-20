@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - feature/vin-camera-ocr
+      - fix/vin-recognition-validation
 
 permissions:
   contents: read
