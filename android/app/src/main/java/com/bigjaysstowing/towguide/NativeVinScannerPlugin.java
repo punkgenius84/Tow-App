@@ -1,13 +1,16 @@
 package com.bigjaysstowing.towguide;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
 
+import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
@@ -16,6 +19,31 @@ import com.google.mlkit.vision.common.InputImage;
 
 @CapacitorPlugin(name = "NativeVinScanner")
 public class NativeVinScannerPlugin extends Plugin {
+
+    @PluginMethod
+    public void scanLiveBarcode(PluginCall call) {
+        Intent intent = new Intent(getContext(), NativeBarcodeScannerActivity.class);
+        startActivityForResult(call, intent, "scanLiveBarcodeResult");
+    }
+
+    @ActivityCallback
+    private void scanLiveBarcodeResult(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        if (result.getResultCode() != android.app.Activity.RESULT_OK || result.getData() == null) {
+            JSObject cancelled = new JSObject();
+            cancelled.put("cancelled", true);
+            cancelled.put("permissionDenied", result.getData() != null && result.getData().getBooleanExtra("permissionDenied", false));
+            call.resolve(cancelled);
+            return;
+        }
+        Intent data = result.getData();
+        JSObject payload = new JSObject();
+        payload.put("cancelled", false);
+        payload.put("rawValue", data.getStringExtra("rawValue"));
+        payload.put("vin", data.getStringExtra("vin"));
+        payload.put("format", data.getStringExtra("format"));
+        call.resolve(payload);
+    }
 
     @PluginMethod
     public void recognizeText(PluginCall call) {
@@ -35,14 +63,13 @@ public class NativeVinScannerPlugin extends Plugin {
                 return;
             }
 
-            // JS decodes the source image, draws the EXIF-oriented result to a canvas,
-            // then exports a new JPEG. This bitmap is already upright: no extra rotation.
+            // JS normalizes EXIF orientation before exporting this JPEG.
             InputImage image = InputImage.fromBitmap(bitmap, 0);
             recognizer.process(image)
                 .addOnSuccessListener(getActivity(), text -> {
-                    JSObject result = new JSObject();
-                    result.put("text", text.getText());
-                    call.resolve(result);
+                    JSObject response = new JSObject();
+                    response.put("text", text.getText());
+                    call.resolve(response);
                 })
                 .addOnFailureListener(getActivity(), error ->
                     call.reject("Android text recognition failed: " + error.getMessage(), error))
