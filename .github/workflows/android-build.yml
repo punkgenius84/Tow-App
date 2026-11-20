@@ -1,20 +1,9 @@
 name: Build Android APK # personal test build: debug-signed release artifact
 
+# APK generation is intentionally manual-only while the vehicle specification
+# and clearance catalog is undergoing its full accuracy audit.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - fix/android-build-and-ci
-      - release/clearance-safety-and-signing
-    paths:
-      - 'android/**'
-      - 'www/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'capacitor.config.json'
-      - '.github/workflows/**'
 
 permissions:
   contents: read
