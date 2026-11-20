@@ -2,15 +2,15 @@
 
 **Status: IN PROGRESS — NOT APPROVED FOR RELEASE**
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **245 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **263 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
 The current database stores one curb weight, wheelbase and ground-clearance value for each row, while many rows cover multiple redesigns and trim/drivetrain variants. The app's current confidence logic marks rows as lower confidence when the year span is broad, but a short year span is not proof that its specifications have been verified. The catalog has no per-row source provenance today.
 
-- **185 rows** cover seven or more model years.
-- **113 rows** cover eleven or more model years.
-- **7 rows** currently receive the default higher-confidence flag despite having no recorded source provenance. That flag is not evidence of verification.
+- **199 rows** cover seven or more model years.
+- **114 rows** cover eleven or more model years.
+- **11 rows** currently receive the default higher-confidence flag despite having no recorded source provenance. That flag is not evidence of verification.
 
 The companion CSV, `docs/vehicle-catalog-audit.csv`, lists every current row and its audit status.
 
