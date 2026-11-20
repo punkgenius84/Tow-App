@@ -323,19 +323,26 @@
     return found.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
   }
 
+  // Barcode payloads are machine-exact, so no OCR-style character swaps here. A VIN never contains I, O or Q.
+  function strictBarcodeVin(v) {
+    return /^[A-HJ-NPR-Z0-9]{17}$/.test(v) && /[0-9]/.test(v) ? v : '';
+  }
+
   function extractBarcodeVin(raw) {
-    var text = String(raw || '').toUpperCase().trim();
-    // When the barcode payload includes a VIN label, strip it before looking
-    // for the 17-character value so "VIN" cannot become part of the candidate.
-    text = text.replace(/^.*?\bVIN\b\s*[:#=-]?\s*/i, '');
-    // Some manufacturers wrap the VIN in start/stop characters or encode it
-    // alongside other data. Try each 17-character run in the remaining payload.
-    var compact = text.replace(/[^A-Z0-9]/g, '');
-    for (var i = 0; i <= compact.length - 17; i++) {
-      var candidate = normalizeVinCandidate(compact.slice(i, i + 17));
-      if (candidate) return candidate;
-    }
-    return '';
+    // Split on anything that is not A-Z/0-9 (spaces, GS/RS separators, punctuation, "*" start/stop) so a VIN is
+    // never stitched together from two neighbouring fields of a Data Matrix or PDF417 payload.
+    var tokens = String(raw || '').toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean);
+    var exact = [], loose = [];
+    function add(list, v) { if (v && list.indexOf(v) === -1) list.push(v); }
+    tokens.forEach(function (t) {
+      if (t.length === 17) add(exact, strictBarcodeVin(t));
+      else if (t.length === 18 && t.charAt(0) === 'I') add(exact, strictBarcodeVin(t.slice(1)));   // leading "I" prefix on some door labels
+      else if (t.length === 20 && t.indexOf('VIN') === 0) add(exact, strictBarcodeVin(t.slice(3))); // "VIN" label glued to the value
+      else if (t.length > 17) for (var i = 0; i <= t.length - 17; i++) add(loose, strictBarcodeVin(t.slice(i, i + 17)));
+    });
+    var all = exact.concat(loose);
+    for (var k = 0; k < all.length; k++) if (vinCheckDigitValid(all[k])) return all[k];
+    return all[0] || '';
   }
 
   function loadBarcodeEngine() {
@@ -381,24 +388,36 @@
     if (!video) return;
     var nativeScanner = nativeVinScanner();
     if (nativeScanner && nativeScanner.scanBarcode) {
+      // The Google scanner closes after the first barcode it sees. A door-jamb label carries several, so keep
+      // reopening it (a few times) until one of them contains a VIN.
+      var attempts = 0, MAX_ATTEMPTS = 5;
       if (button) button.disabled = true;
-      if (status) status.textContent = 'Opening Android barcode scanner…';
-      nativeScanner.scanBarcode().then(function (result) {
-        var raw = result && result.rawValue ? result.rawValue : '';
-        var vin = extractBarcodeVin(raw);
-        if (vin) {
-          state.vinText = vin;
-          state.barcodeStatus = 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.';
-        } else {
+      var scanOnce = function () {
+        attempts++;
+        if (status) status.textContent = attempts === 1 ? 'Opening Android barcode scanner…' : 'That barcode was not a VIN. Scanning again (' + attempts + ' of ' + MAX_ATTEMPTS + ')…';
+        return nativeScanner.scanBarcode().then(function (result) {
+          var raw = result && (result.rawValue || result.displayValue) ? (result.rawValue || result.displayValue) : '';
+          var vin = extractBarcodeVin(raw);
+          if (vin) {
+            state.vinText = vin;
+            state.barcodeStatus = vinCheckDigitValid(vin)
+              ? 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.'
+              : 'VIN barcode read, but its check digit did not validate (normal for some non-US vehicles). Verify the number carefully, then tap Decode VIN.';
+            return;
+          }
+          if (attempts < MAX_ATTEMPTS) return scanOnce();
           state.barcodeStatus = raw
-            ? 'A barcode was read, but its contents were not a valid 17-character VIN. Raw value: ' + raw
+            ? 'Barcodes were read, but none contained a valid 17-character VIN. Last value: ' + String(raw).slice(0, 60)
             : 'The barcode did not contain readable text. Try moving closer or use the photo option.';
-        }
+        });
+      };
+      scanOnce().catch(function (err) {
+        var msg = err && err.message ? err.message : '';
+        state.barcodeStatus = (err && err.code === 'CANCELLED') || /cancel/i.test(msg)
+          ? 'Barcode scan cancelled. Tap Start barcode scan to try again, or use the photo option.'
+          : (msg || 'Android barcode scanning failed. Try again or enter the VIN manually.');
+      }).then(function () {
         renderVin();
-      }).catch(function (err) {
-        state.barcodeStatus = err && err.message ? err.message : 'Android barcode scanning failed. Try again or enter the VIN manually.';
-        renderVin();
-      }).finally(function () {
         var current = $('#vin-barcode-start');
         if (current) current.disabled = false;
       });

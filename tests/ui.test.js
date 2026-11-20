@@ -179,7 +179,48 @@ test('VIN barcode scanner is available and accepts only a valid 17-character VIN
   assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA00000'), '1FTFW1E50NFA00000');
   assert.equal(w.__tow.extractBarcodeVin('VIN: 1FTFW1E50NFA00000'), '1FTFW1E50NFA00000');
   assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA0000'), '');
-  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E5ONFA00000'), '1FTFW1E50NFA00000');
+  // Barcodes are exact: a letter O is not silently turned into a zero.
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E5ONFA00000'), '');
+});
+
+test('barcode VIN extraction handles real label payload shapes', () => {
+  const { window: w } = boot();
+  const f = w.__tow.extractBarcodeVin, VIN = '1HGCM82633A004352';
+  assert.equal(f(VIN), VIN);
+  assert.equal(f('*' + VIN + '*'), VIN, 'Code 39 start/stop');
+  assert.equal(f('I' + VIN), VIN, 'leading I prefix must not shift the VIN');
+  assert.equal(f('VIN' + VIN), VIN, 'label glued to value');
+  assert.equal(f('VIN: ' + VIN), VIN);
+  assert.equal(f(VIN + '\x1dSN12345678'), VIN, 'VIN then GS separator');
+  assert.equal(f('PART12345678\x1d' + VIN), VIN, 'other field first must not bleed into the VIN');
+  assert.equal(f('DL ABCDEFGHJKLMNPRST 12345 ' + VIN + ' 20291231'), VIN, 'PDF417 text');
+  assert.equal(f('ABCDEFGHJKLMNPRST'), '', 'all-letter text is not a VIN');
+  assert.equal(f('PART-0001'), '');
+  assert.equal(f(''), '');
+});
+
+test('native barcode scanner reopens until a barcode contains a VIN', async () => {
+  const { window: w } = boot();
+  const calls = [];
+  const seq = [{ rawValue: 'PART-0001' }, { rawValue: 'I1HGCM82633A004352' }];
+  w.Capacitor = { registerPlugin: () => ({ scanBarcode: () => { calls.push(1); return Promise.resolve(seq[calls.length - 1]); } }) };
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(calls.length, 2, 'scanner reopened after a non-VIN barcode');
+  assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
+});
+
+test('cancelling the native scanner is a calm message, not an error', async () => {
+  const { window: w } = boot();
+  w.Capacitor = { registerPlugin: () => ({ scanBarcode: () => Promise.reject(Object.assign(new Error('Barcode scan cancelled.'), { code: 'CANCELLED' })) }) };
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /cancelled/i);
+  assert.equal(d.querySelector('#vin-barcode-start').disabled, false);
 });
 
 test('VIN scanners use working browser APIs and Android camera permission is declared', () => {

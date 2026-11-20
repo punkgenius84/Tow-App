@@ -43,11 +43,13 @@ public class NativeVinScannerPlugin extends Plugin {
         scanner.startScan()
             .addOnSuccessListener(barcode -> {
                 JSObject result = new JSObject();
-                result.put("rawValue", barcode.getRawValue());
+                String value = barcode.getRawValue();
+                result.put("rawValue", value);
+                result.put("displayValue", barcode.getDisplayValue());
                 result.put("format", barcode.getFormat());
                 call.resolve(result);
             })
-            .addOnCanceledListener(() -> call.reject("Barcode scan cancelled."))
+            .addOnCanceledListener(() -> call.reject("Barcode scan cancelled.", "CANCELLED"))
             .addOnFailureListener(error -> call.reject(
                 "Barcode scanner failed: " + error.getMessage(), error
             ));
