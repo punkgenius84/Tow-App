@@ -204,6 +204,13 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 });
 
 /* ---------- database integrity ---------- */
+test('US model-year catalog includes 1980-era Subaru and Mazda entries', () => {
+  assert.ok(find('Subaru', 'BRAT').yFrom <= 1980);
+  assert.ok(find('Subaru', 'Loyale / DL / GL').yFrom <= 1980);
+  assert.ok(find('Mazda', '626').yFrom <= 1980);
+  assert.ok(find('Mazda', 'RX-7').yFrom <= 1980);
+});
+
 test('database rows are well formed and unique', () => {
   const seen = new Set();
   for (const v of D.vehicles) {
@@ -211,7 +218,7 @@ test('database rows are well formed and unique', () => {
     assert.ok(!seen.has(id), 'duplicate ' + id);
     seen.add(id);
     assert.ok(v.make && v.model && v.body, id);
-    assert.ok(v.yFrom >= 1990 && v.yTo <= 2030 && v.yFrom <= v.yTo, 'years ' + id);
+    assert.ok(v.yFrom >= 1980 && v.yTo <= 2030 && v.yFrom <= v.yTo, 'years ' + id);
     assert.ok(v.drives.length >= 1 && v.drives.every(d => ['FWD', 'RWD', 'AWD', '4WD'].includes(d)), 'drives ' + id);
     assert.ok(['ICE', 'HEV', 'PHEV', 'EV'].includes(v.power), 'power ' + id);
     assert.ok(v.trans.every(t => ['AT', 'CVT', 'MT', 'DCT', 'EV'].includes(t)), 'trans ' + id);
@@ -221,8 +228,8 @@ test('database rows are well formed and unique', () => {
     if (v.gvwr) assert.ok(v.gvwr >= v.curb, 'gvwr below curb ' + id);
     if (v.power === 'EV') assert.deepEqual(v.trans, ['EV'], 'EV trans ' + id);
   }
-  assert.ok(D.vehicles.length >= 150);
-  for (const make of ['Mazda', 'Mercedes-Benz', 'Audi', 'BMW', 'Volkswagen', 'Hyundai', 'Kia', 'Volvo', 'Lexus']) {
+  assert.ok(D.vehicles.length >= 165);
+  for (const make of ['Subaru', 'Mazda', 'Mercedes-Benz', 'Audi', 'BMW', 'Volkswagen', 'Hyundai', 'Kia', 'Volvo', 'Lexus']) {
     assert.ok(D.makes.includes(make), 'missing manufacturer ' + make);
   }
 });
