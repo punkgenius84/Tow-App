@@ -45,7 +45,7 @@ test('RWD automatic: lift the rear (drive) wheels or pull the driveshaft', () =>
 });
 
 test('hybrid FWD is explained as hybrid', () => {
-  const r = E.recommend(find('Toyota', 'Prius'), { drive: 'FWD' });
+  const r = E.recommend(find('Toyota', 'Prius (2016-2022)'), { drive: 'FWD' });
   assert.equal(r.method.flatbedOnly, false);
   assert.ok(r.method.why.some(w => /Hybrid/.test(w)));
 });
