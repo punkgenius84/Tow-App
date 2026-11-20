@@ -414,17 +414,24 @@
   }
 
   function extractVinCandidatesFromOcrResults(readings) {
-    var found = [];
+    var found = [], labelled = {};
+    function add(vin, hasLabel) {
+      if (found.indexOf(vin) === -1) found.push(vin);
+      if (hasLabel) labelled[vin] = true;
+    }
     (readings || []).forEach(function (reading) {
-      extractVinCandidates(reading && reading.text || '').forEach(function (vin) {
-        if (found.indexOf(vin) === -1) found.push(vin);
+      var rawText = String(reading && reading.text || '');
+      extractVinCandidates(rawText).forEach(function (vin) {
+        var appearsBesideLabel = rawText.toUpperCase().split(/\\r?\\n/).some(function (line) {
+          return /\\b(?:VIN(?:\\s+(?:NO\\.?|NUMBER))?|V1N|VEHICLE\\s+IDENTIFICATION(?:\\s+NUMBER|\\s+NO\\.?)?)\\b/.test(line) &&
+            extractVinCandidates(line).indexOf(vin) !== -1;
+        });
+        add(vin, appearsBesideLabel);
       });
-      extractStructuredVinCandidates(reading).forEach(function (vin) {
-        if (found.indexOf(vin) === -1) found.push(vin);
-      });
+      extractStructuredVinCandidates(reading).forEach(function (vin) { add(vin, true); });
     });
     return found.sort(function (x, y) {
-      return vinCandidateScore(y, true) - vinCandidateScore(x, true);
+      return vinCandidateScore(y, !!labelled[y]) - vinCandidateScore(x, !!labelled[x]);
     });
   }
 
@@ -625,7 +632,7 @@
       var img = new Image();
       img.onload = function () {
         try {
-          var scale = Math.min(3, 2000 / Math.max(img.naturalWidth, img.naturalHeight));
+          var scale = Math.min(2, 3200 / Math.max(img.naturalWidth, img.naturalHeight));
           var canvas = document.createElement('canvas');
           canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
           canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
