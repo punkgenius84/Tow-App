@@ -386,7 +386,7 @@
     if (state.barcodeLoader) return state.barcodeLoader;
     state.barcodeLoader = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';
+      script.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.2.1/umd/zxing-browser.min.js';
       script.async = true;
       script.onload = function () {
         if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) resolve(window.ZXingBrowser);
@@ -425,58 +425,8 @@
   function startBarcodeScan() {
     var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
     if (!video) return;
-    var capacitor = window.Capacitor;
-    var platform = capacitor && typeof capacitor.getPlatform === 'function' ? capacitor.getPlatform() : '';
-    // On Android, use the continuous in-WebView camera scanner instead of the
-    // one-shot Google Play-services activity. Android can recreate the app
-    // while that external activity is open, leaving the Capacitor call pending.
-    // ZXing stays active until it sees a valid VIN and avoids that lost-result path.
+    // Barcode capture uses the continuous in-app camera reader; the native plugin is OCR-only.
     var nativeScanner = platform === 'android' ? null : nativeVinScanner();
-    if (nativeScanner && nativeScanner.scanBarcode) {
-      // The Google scanner closes after the first barcode it sees. A door-jamb label carries several, so keep
-      // reopening it (a few times) until one of them contains a VIN.
-      var attempts = 0, MAX_ATTEMPTS = 5;
-      if (button) button.disabled = true;
-      var scanOnce = function () {
-        attempts++;
-        if (status) status.textContent = attempts === 1 ? 'Opening Android barcode scanner…' : 'That barcode was not a VIN. Scanning again (' + attempts + ' of ' + MAX_ATTEMPTS + ')…';
-        return nativeScanner.scanBarcode().then(function (result) {
-          var raw = result ? String(result.rawValue || '').trim() || String(result.displayValue || '').trim() : '';
-          // Some Android barcode formats expose payload bytes but no decoded text.
-          if (!raw && result && result.rawBytesBase64 && window.atob) {
-            try {
-              var binary = window.atob(result.rawBytesBase64);
-              raw = Array.prototype.map.call(binary, function (ch) { return String.fromCharCode(ch.charCodeAt(0)); }).join('');
-            } catch (ignore) { raw = ''; }
-          }
-          var vin = extractBarcodeVin(raw);
-          if (vin) {
-            state.vinText = vin;
-            state.vin = null;
-            state.vinMsg = '';
-            state.barcodeStatus = vinCheckDigitValid(vin)
-              ? 'VIN captured from barcode. It passed the North American check digit; verify it below and tap Decode VIN.'
-              : 'VIN text captured from barcode. The North American check digit did not match, so verify every character before decoding.';
-            return;
-          }
-          if (attempts < MAX_ATTEMPTS) return scanOnce();
-          state.barcodeStatus = raw
-            ? 'Google read a barcode, but its value was not recognized as a VIN. Last value: ' + String(raw).replace(/[\\x00-\\x1f]/g, ' ').slice(0, 90) + '. Try the VIN-specific barcode on the door label, or use the photo option.'
-            : 'Google closed after detecting a barcode but returned no text value. Try another barcode on the label or use the photo option.';
-        });
-      };
-      scanOnce().catch(function (err) {
-        var msg = err && err.message ? err.message : '';
-        state.barcodeStatus = (err && err.code === 'CANCELLED') || /cancel/i.test(msg)
-          ? 'Barcode scan cancelled. Tap Start barcode scan to try again, or use the photo option.'
-          : (msg || 'Android barcode scanning failed. Try again or enter the VIN manually.');
-      }).then(function () {
-        renderVin();
-        var current = $('#vin-barcode-start');
-        if (current) current.disabled = false;
-      });
-      return;
-    }
     if (state.barcodeScanning) {
       stopBarcodeScanner();
       state.barcodeStatus = 'Barcode scanner stopped. You can start it again or use the photo option.';
@@ -896,5 +846,5 @@
   render();
 
   // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && (n.scanBarcode || n.recognizeText)); } };
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); } };
 })();
