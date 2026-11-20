@@ -284,9 +284,9 @@
   function normalizeVinCandidate(raw) {
     var value = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (value.length !== 17) return '';
-    // OCR commonly confuses these characters. Apply only unambiguous VIN rules;
-    // never guess between other letters and digits.
-    value = value.replace(/O/g, '0').replace(/[IQ]/g, '1');
+    // VINs cannot contain I, O or Q. OCR most often confuses O/Q with zero
+    // and I with one; apply those substitutions only to OCR text, never barcodes.
+    value = value.replace(/[OQ]/g, '0').replace(/I/g, '1');
     return /^[A-HJ-NPR-Z0-9]{17}$/.test(value) ? value : '';
   }
 
@@ -300,27 +300,43 @@
     return vin[8] === (check === 10 ? 'X' : String(check));
   }
 
+  function vinCandidateScore(vin, labelled) {
+    var score = 0;
+    // A matching North American check digit is the strongest available signal.
+    if (vinCheckDigitValid(vin)) score += 1000;
+    if (labelled) score += 180;
+    // Position 9 is the North American check digit; position 10 is a model-year code.
+    if (/^[0-9X]$/.test(vin.charAt(8))) score += 45;
+    if (/^[ABCDEFGHJKLMNPRSTVWXY123456789]$/.test(vin.charAt(9))) score += 35;
+    if (/^[A-HJ-NPR-Z0-9]{3}$/.test(vin.slice(0, 3)) && /[A-Z]/.test(vin.slice(0, 3))) score += 20;
+    if (/\d/.test(vin.slice(11))) score += 10;
+    return score;
+  }
+
   function extractVinCandidates(text) {
-    var found = [], lines = String(text || '').toUpperCase().split(/\r?\n/);
-    function addCandidate(raw) {
+    var found = [], metadata = {}, lines = String(text || '').toUpperCase().split(/\r?\n/);
+    function addCandidate(raw, labelled) {
       var candidate = normalizeVinCandidate(raw);
-      if (candidate && found.indexOf(candidate) === -1) found.push(candidate);
+      if (!candidate) return;
+      if (!metadata[candidate]) metadata[candidate] = { labelled: !!labelled };
+      else if (labelled) metadata[candidate].labelled = true;
+      if (found.indexOf(candidate) === -1) found.push(candidate);
+    }
+    function addWindows(raw, labelled) {
+      var compact = String(raw || '').replace(/[^A-Z0-9]/g, '');
+      for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17), labelled);
     }
     lines.forEach(function (line) {
-      var labelled = line.match(/\bVIN\b\s*[:#-]?\s*([A-Z0-9][A-Z0-9\s-]{15,24})/);
-      if (labelled) {
-        var labelledCompact = labelled[1].replace(/[^A-Z0-9]/g, '');
-        if (labelledCompact.length >= 17) {
-          addCandidate(labelledCompact.slice(0, 17));
-          return; // Do not create false candidates from the "VIN" label itself.
-        }
-      }
-      var compact = line.replace(/[^A-Z0-9]/g, '');
-      for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17));
+      // OCR can confuse the VIN label's I with 1 and may include NO./NUMBER.
+      var labelled = line.match(/\b(?:VIN|V1N)\s*(?:NO\.?|NUMBER)?\s*[:#-]?\s*([A-Z0-9][A-Z0-9\s-]{15,35})/);
+      if (labelled) addWindows(labelled[1], true);
+      // Also inspect the rest of the line: OCR sometimes puts the VIN value
+      // before the label or joins it to adjacent sticker fields.
+      addWindows(line, false);
     });
-    // Put candidates passing the North American check digit first, without
-    // discarding valid international VINs that do not use that checksum.
-    return found.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
+    return found.sort(function (a, b) {
+      return vinCandidateScore(b, metadata[b].labelled) - vinCandidateScore(a, metadata[a].labelled);
+    });
   }
 
   // Barcode payloads are machine-exact, so no OCR-style character swaps here. A VIN never contains I, O or Q.
@@ -400,12 +416,21 @@
         if (status) status.textContent = attempts === 1 ? 'Opening Android barcode scanner…' : 'That barcode was not a VIN. Scanning again (' + attempts + ' of ' + MAX_ATTEMPTS + ')…';
         return nativeScanner.scanBarcode().then(function (result) {
           var raw = result && (result.rawValue || result.displayValue) ? (result.rawValue || result.displayValue) : '';
+          // Some Android barcode formats expose payload bytes but no decoded text.
+          if (!raw && result && result.rawBytesBase64 && window.atob) {
+            try {
+              var binary = window.atob(result.rawBytesBase64);
+              raw = Array.prototype.map.call(binary, function (ch) { return String.fromCharCode(ch.charCodeAt(0)); }).join('');
+            } catch (ignore) { raw = ''; }
+          }
           var vin = extractBarcodeVin(raw);
           if (vin) {
             state.vinText = vin;
+            state.vin = null;
+            state.vinMsg = '';
             state.barcodeStatus = vinCheckDigitValid(vin)
-              ? 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.'
-              : 'VIN barcode read, but its check digit did not validate (normal for some non-US vehicles). Verify the number carefully, then tap Decode VIN.';
+              ? 'VIN captured from barcode. It passed the North American check digit; verify it below and tap Decode VIN.'
+              : 'VIN text captured from barcode. The North American check digit did not match, so verify every character before decoding.';
             return;
           }
           if (attempts < MAX_ATTEMPTS) return scanOnce();
@@ -461,7 +486,11 @@
           var vin = extractBarcodeVin(result.getText ? result.getText() : result.text);
           if (vin) {
             state.vinText = vin;
-            state.barcodeStatus = 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.';
+            state.vin = null;
+            state.vinMsg = '';
+            state.barcodeStatus = vinCheckDigitValid(vin)
+              ? 'VIN captured from barcode. It passed the North American check digit; verify it below and tap Decode VIN.'
+              : 'VIN text captured from barcode. Verify every character before decoding.';
             stopBarcodeScanner();
             renderVin();
           } else if (status) {
