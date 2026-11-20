@@ -316,17 +316,18 @@
 
   function toVehicle(r, i) {
     var o = r[11] || {};
-    // Broad year spans are treated as estimates unless a more specific row is added.
-    // A long model-year range can cross redesigns and trim changes even when its
-    // average dimensions look plausible. Prefer a conservative, measured check.
-    var spansMultipleModelYears = (r[3] - r[2]) >= 6;
+    // Every current catalog row is pending source-level verification. A plausible
+    // number or short year span is not evidence of an OEM specification. Keep all
+    // catalog-derived recommendations low-confidence until a row has explicit,
+    // auditable source provenance and a reviewed configuration scope.
+    // This deliberately requires on-scene measurement before committing to load.
     return {
       id: 'v' + i,
       make: r[0], model: r[1], yFrom: r[2], yTo: r[3], body: r[4],
       drives: r[5].split('|'), power: r[6], trans: r[7].split('|'),
       curb: r[8], wb: r[9], gc: r[10],
       gvwr: o.gvwr || 0, dually: !!o.dually, air: o.air || false,
-      low: !!o.low, note: o.note || '', conf: (o.c === 0 || spansMultipleModelYears) ? 0 : 1
+      low: !!o.low, note: o.note || '', source: o.source || '', sourceYear: o.sourceYear || 0, conf: 0
     };
   }
 
