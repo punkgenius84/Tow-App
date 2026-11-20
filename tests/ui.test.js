@@ -333,7 +333,11 @@ test('Android native scanner source declares supported formats and releases anal
   assert.ok(activity.includes('toggleTorch') && activity.includes('startFocusAndMetering'));
   assert.ok(activity.includes('setZoomSuggestionOptions'), 'undecoded barcode regions should trigger ML Kit automatic zoom');
   assert.ok(activity.includes('setMaxSupportedZoomRatio(maxZoom)'), 'automatic zoom must respect the camera hardware limit');
-  assert.ok(activity.includes('Barcode found. Automatically zooming to read it'));
+  assert.ok(activity.includes('new Size(1920, 1080)'), 'barcode analysis should request a higher-detail 1080p frame');
+  assert.ok(activity.includes('Math.max(currentZoom, Math.max(lastAutoZoomRatio, zoomRatio))'), 'auto-zoom must never step backwards');
+  assert.ok(activity.includes('lastAutoZoomRatio = targetZoom'), 'remember the highest accepted automatic zoom');
+  assert.ok(activity.includes('no VIN payload was decoded'), 'undecoded barcode feedback should be explicit and useful');
+  assert.ok(activity.includes('bounds.width() + "×" + bounds.height() + " px"'), 'show detected barcode dimensions for troubleshooting');
   assert.ok(gradle.includes('com.google.mlkit:barcode-scanning:17.3.0'));
   assert.ok(gradle.includes('androidx.camera:camera-lifecycle'));
   assert.ok(manifest.includes('.NativeBarcodeScannerActivity'));
