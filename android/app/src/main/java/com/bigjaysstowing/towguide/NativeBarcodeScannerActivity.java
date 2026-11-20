@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.util.Size;
@@ -65,6 +66,8 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
     private volatile boolean finishedWithResult = false;
     private String previousCandidate = "";
     private int consecutiveMatches = 0;
+    // Auto-zoom suggestions must never step backwards; ML Kit can issue multiple suggestions per scan.
+    private float lastAutoZoomRatio = 1f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,7 +190,7 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
                 ImageAnalysis analysis = new ImageAnalysis.Builder()
-                    .setTargetResolution(new Size(1280, 720))
+                    .setTargetResolution(new Size(1920, 1080))
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build();
 
@@ -217,10 +220,20 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
                             if (camera == null || finishedWithResult) return false;
                             try {
                                 float supportedMax = camera.getCameraInfo().getZoomState().getValue().getMaxZoomRatio();
-                                camera.getCameraControl().setZoomRatio(Math.min(zoomRatio, supportedMax));
-                                runOnUiThread(() -> {
-                                    if (!finishedWithResult) statusView.setText("Barcode found. Automatically zooming to read it…");
-                                });
+                                float currentZoom = camera.getCameraInfo().getZoomState().getValue().getZoomRatio();
+                                float targetZoom = Math.min(
+                                    supportedMax,
+                                    Math.max(currentZoom, Math.max(lastAutoZoomRatio, zoomRatio))
+                                );
+                                if (targetZoom > currentZoom + 0.05f) {
+                                    lastAutoZoomRatio = targetZoom;
+                                    camera.getCameraControl().setZoomRatio(targetZoom);
+                                    runOnUiThread(() -> {
+                                        if (!finishedWithResult) {
+                                            statusView.setText("Barcode found. Zooming in to improve the read…");
+                                        }
+                                    });
+                                }
                                 return true;
                             } catch (Exception ignored) {
                                 return false;
@@ -304,8 +317,13 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
             }
             String preview = decoded == null ? "" : decoded.replaceAll("[\\r\\n]+", " ").trim();
             if (preview.length() > 28) preview = preview.substring(0, 28) + "…";
-            final String diagnostic = "Barcode detected (" + formatName(detected.getFormat()) +
-                "), but no complete VIN was extracted. Decoded data: " + (preview.isEmpty() ? "(empty)" : preview);
+            Rect bounds = detected.getBoundingBox();
+            String symbolSize = bounds == null ? "size unknown" :
+                bounds.width() + "×" + bounds.height() + " px";
+            final String diagnostic = "Detected " + formatName(detected.getFormat()) + " (" + symbolSize +
+                "), but no VIN payload was decoded. " +
+                (preview.isEmpty() ? "Move closer, tap the barcode to focus, and hold steady." :
+                    "Decoded data: " + preview);
             runOnUiThread(() -> {
                 if (!finishedWithResult) statusView.setText(diagnostic);
             });
