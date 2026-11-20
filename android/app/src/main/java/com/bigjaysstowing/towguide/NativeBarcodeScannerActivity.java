@@ -274,6 +274,21 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
         }
         previousCandidate = "";
         consecutiveMatches = 0;
+        if (!barcodes.isEmpty()) {
+            Barcode detected = barcodes.get(0);
+            String decoded = detected.getRawValue();
+            if (decoded == null || decoded.isEmpty()) {
+                byte[] bytes = detected.getRawBytes();
+                if (bytes != null) decoded = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+            }
+            String preview = decoded == null ? "" : decoded.replaceAll("[\\r\\n]+", " ").trim();
+            if (preview.length() > 28) preview = preview.substring(0, 28) + "…";
+            final String diagnostic = "Barcode detected (" + formatName(detected.getFormat()) +
+                "), but no complete VIN was extracted. Decoded data: " + (preview.isEmpty() ? "(empty)" : preview);
+            runOnUiThread(() -> {
+                if (!finishedWithResult) statusView.setText(diagnostic);
+            });
+        }
     }
 
     private String findVin(String raw) {
