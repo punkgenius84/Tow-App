@@ -1,6 +1,6 @@
 {
-  "appId": "com.orbitaledgelabs.towguide",
-  "appName": "TowGuide",
+  "appId": "com.bigjaysstowing.towguide",
+  "appName": "Big Jay's Tow Guide",
   "webDir": "www",
   "server": {
     "androidScheme": "https"
