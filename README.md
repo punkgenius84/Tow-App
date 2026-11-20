@@ -71,7 +71,7 @@ For this tinkering build, the release APK is signed with Gradle's debug certific
 
 ## Vehicle catalog audit — release gate
 
-The catalog-wide audit is **in progress**. It covers all 263 current rows across 47 makes, not only selected examples. Each entry must be checked for model-year generation boundaries, drivetrain / trim differences, ground clearance, wheelbase, curb weight and source provenance. Unverified values must remain identified as estimates; the audit must not upgrade confidence based only on plausible-looking numbers.
+The catalog-wide audit is **in progress**. It covers all 289 current rows across 47 makes, not only selected examples. Each entry must be checked for model-year generation boundaries, drivetrain / trim differences, ground clearance, wheelbase, curb weight and source provenance. Unverified values must remain identified as estimates; the audit must not upgrade confidence based only on plausible-looking numbers.
 
 **No APKs are to be generated until the audit is complete, regression tests pass, documentation is updated, and the release is explicitly approved.** The Android build workflow is manual-only during this work.
 
