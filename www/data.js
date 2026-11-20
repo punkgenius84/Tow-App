@@ -167,7 +167,6 @@
     ['Mazda', 'B-Series Pickup', 1980, 2009, 'Pickup', 'RWD|4WD', 'ICE', 'AT|MT', 3300, 117.5, 7.5, { c: 0 }],
     ['Mazda', 'MPV', 1989, 2006, 'Minivan', 'FWD|AWD', 'ICE', 'AT', 3900, 110.2, 5.5, { c: 0 }],
     ['Mazda', 'Tribute', 2001, 2011, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3500, 103.1, 8.0, { c: 0 }],
-    ['Mazda', 'CX-7', 2007, 2012, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3900, 108.3, 8.1, { c: 0 }],
     ['Mazda', '6', 2003, 2021, 'Sedan', 'FWD', 'ICE', 'AT|MT', 3300, 107.3, 5.5, { c: 0 }],
     ['Mazda', '3 Sedan', 2004, 2025, 'Sedan', 'FWD|AWD', 'ICE', 'AT|MT', 3100, 107.3, 5.5, { c: 0 }],
     ['Mazda', '3 Hatchback', 2004, 2025, 'Hatchback', 'FWD|AWD', 'ICE', 'AT|MT', 3150, 107.3, 5.5, { c: 0 }],
