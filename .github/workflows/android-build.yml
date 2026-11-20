@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - fix/android-build-and-ci
+      - release/clearance-safety-and-signing
     paths:
       - 'android/**'
       - 'www/**'
