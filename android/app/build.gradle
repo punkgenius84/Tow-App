@@ -1,8 +1,5 @@
 apply plugin: 'com.android.application'
 
-def releaseStorePath = System.getenv("ANDROID_KEYSTORE_PATH")
-def releaseSigningReady = releaseStorePath && System.getenv("ANDROID_KEYSTORE_PASSWORD") && System.getenv("ANDROID_KEY_ALIAS") && System.getenv("ANDROID_KEY_PASSWORD")
-
 android {
     namespace "com.bigjaysstowing.towguide"
     compileSdk rootProject.ext.compileSdkVersion
@@ -19,19 +16,10 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    signingConfigs {
-        release {
-            if (releaseSigningReady) {
-                storeFile file(releaseStorePath)
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
-            }
-        }
-    }
     buildTypes {
         release {
-            if (releaseSigningReady) signingConfig signingConfigs.release
+            // Personal/testing build: use Gradle's debug key so the release APK is installable without secrets.
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
