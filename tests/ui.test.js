@@ -182,6 +182,14 @@ test('VIN OCR ranks the labeled, checksum-valid VIN above door-sticker numbers',
   assert.equal(candidates[0], '1HGCM82633A004352');
 });
 
+test('VIN OCR does not manufacture VIN candidates by joining unrelated sticker fields', () => {
+  const { window: w } = boot();
+  const candidates = w.__tow.extractVinCandidates(
+    'GVWR6200LBGAWRFRONT3450LB\\nMFD2023TIRE23565R17104H'
+  );
+  assert.equal(candidates.length, 0);
+});
+
 test('VIN OCR corrects Q as a zero only in OCR text and ranks checksum match first', () => {
   const { window: w } = boot();
   const candidates = Array.from(w.__tow.extractVinCandidates('VIN: 1HGCM82633AQQ4352'));
