@@ -240,37 +240,46 @@ test('barcode VIN extraction handles real label payload shapes', () => {
   assert.equal(f(''), '');
 });
 
-test('Android uses continuous in-app barcode scanning instead of the one-shot Play-services screen', async () => {
+test('Android uses the native CameraX scanner and returns the confirmed VIN to the form', async () => {
   const { window: w } = boot();
   const d = w.document;
   let nativeCalls = 0, browserCalls = 0;
-  const controls = { stop: () => {} };
-  Object.defineProperty(w.navigator, 'mediaDevices', {
-    configurable: true,
-    value: { getUserMedia: () => Promise.resolve({}) }
-  });
   w.Capacitor = {
     getPlatform: () => 'android',
-    Plugins: { NativeVinScanner: { scanBarcode: () => { nativeCalls++; return Promise.resolve({ rawValue: 'PART-0001' }); } } }
+    Plugins: { NativeVinScanner: {
+      scanLiveBarcode: () => {
+        nativeCalls++;
+        return Promise.resolve({ cancelled: false, rawValue: '1HGCM82633A004352', vin: '1HGCM82633A004352', format: 'Data Matrix' });
+      }
+    } }
   };
   w.ZXingBrowser = {
-    DecodeHintType: { TRY_HARDER: 'TRY_HARDER', POSSIBLE_FORMATS: 'POSSIBLE_FORMATS' },
-    BarcodeFormat: { CODE_39: 1, CODE_128: 2, DATA_MATRIX: 3, PDF_417: 4, QR_CODE: 5, ITF: 6 },
     BrowserMultiFormatReader: function () {
-      this.decodeFromConstraints = (constraints, video, callback) => {
-        browserCalls++;
-        callback({ getText: () => '1HGCM82633A004352' }, null, controls);
-        return Promise.resolve(controls);
-      };
+      this.decodeFromConstraints = () => { browserCalls++; return Promise.resolve({ stop: () => {} }); };
     }
   };
   click(w, d.querySelector('[data-tab="vin"]'));
   click(w, d.querySelector('#vin-barcode-start'));
   await new Promise(r => setTimeout(r, 0));
-  assert.equal(nativeCalls, 0, 'Android must not launch the one-shot external scanner');
-  assert.equal(browserCalls, 1, 'continuous ZXing camera reader starts');
+  assert.equal(nativeCalls, 1, 'Android launches the native CameraX scanner');
+  assert.equal(browserCalls, 0, 'Android does not start the browser ZXing camera');
   assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
-  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN captured from barcode/i);
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /native barcode scanner \(Data Matrix\)/i);
+});
+
+test('Android native barcode cancellation returns to the VIN form without losing OCR fallback', async () => {
+  const { window: w } = boot();
+  const d = w.document;
+  w.Capacitor = {
+    getPlatform: () => 'android',
+    Plugins: { NativeVinScanner: { scanLiveBarcode: () => Promise.resolve({ cancelled: true, permissionDenied: true }) } }
+  };
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  await new Promise(r => setTimeout(r, 0));
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /permission was denied/i);
+  assert.ok(d.querySelector('#vin-photo'));
+  assert.ok(d.querySelector('#vin-ocr'));
 });
 
 test('Android OCR reparses both photo passes together so candidate ranking is retained', () => {
