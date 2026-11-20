@@ -69,6 +69,10 @@ For this tinkering build, the release APK is signed with Gradle's debug certific
 
 
 
+## Vehicle data provenance
+
+Bulk offline data source evaluation, attribution requirements, and safety rules are documented in [`docs/BULK_DATA_SOURCES.md`](docs/BULK_DATA_SOURCES.md).
+
 ## Vehicle catalog audit — release gate
 
 The catalog-wide audit is **in progress**. It covers all 289 current rows across 47 makes, not only selected examples. Each entry must be checked for model-year generation boundaries, drivetrain / trim differences, ground clearance, wheelbase, curb weight and source provenance. Unverified values must remain identified as estimates; the audit must not upgrade confidence based only on plausible-looking numbers.
