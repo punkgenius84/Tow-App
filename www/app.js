@@ -425,8 +425,7 @@
   function startBarcodeScan() {
     var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
     if (!video) return;
-    // Barcode capture uses the continuous in-app camera reader; the native plugin is OCR-only.
-    var nativeScanner = platform === 'android' ? null : nativeVinScanner();
+    // Barcode capture uses the continuous in-app ZXing reader on every platform.
     if (state.barcodeScanning) {
       stopBarcodeScanner();
       state.barcodeStatus = 'Barcode scanner stopped. You can start it again or use the photo option.';
