@@ -258,6 +258,25 @@ test('every vehicle produces a complete recommendation for every drive and trans
   }
 });
 
+
+test('generation-split catalog entries match model years without reusing a cross-generation row', () => {
+  const by = (make, model, year) => {
+    const found = D.vehicles.filter(v => v.make === make && v.model === model && year >= v.yFrom && year <= v.yTo);
+    assert.equal(found.length, 1, make + ' ' + model + ' ' + year + ' should resolve to one generation row');
+    return found[0];
+  };
+  assert.equal(by('Mazda', 'MX-5 Miata (NA)', 1995).conf, 0);
+  assert.equal(by('Mazda', 'MX-5 Miata (NB)', 2002).yFrom, 1999);
+  assert.equal(by('Mazda', 'MX-5 Miata (NC)', 2010).yTo, 2015);
+  assert.equal(by('Mazda', 'MX-5 Miata (ND)', 2024).yFrom, 2016);
+  assert.equal(by('BMW', '3 Series (E46)', 2004).yTo, 2006);
+  assert.equal(by('BMW', '3 Series (G20)', 2022).yFrom, 2019);
+  assert.equal(by('Mercedes-Benz', 'C-Class (W205)', 2018).yTo, 2021);
+  assert.equal(by('Mercedes-Benz', 'E-Class (W214)', 2025).yFrom, 2024);
+  assert.equal(by('Mercedes-Benz', 'S-Class (W223)', 2022).yFrom, 2021);
+  for (const v of D.vehicles) assert.equal(v.conf, 0, v.make + ' ' + v.model);
+});
+
 /* ---------- VIN decode ---------- */
 const sample = (o) => ({ Results: [Object.assign({ Make: 'FORD', Model: 'F-150', ModelYear: '2021', BodyClass: 'Pickup',
   DriveType: '4WD/4-Wheel Drive/4x4', FuelTypePrimary: 'Gasoline', ElectrificationLevel: '', TransmissionStyle: 'Automatic',
