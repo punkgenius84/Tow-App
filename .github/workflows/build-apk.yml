@@ -74,6 +74,11 @@ jobs:
               android:gravity="center"
               android:filter="true" />
           XML
+          # Android API 24+ prefers the version-qualified drawable, which otherwise
+          # keeps Capacitor's default robot graphic and overrides the branded icon.
+          mkdir -p android/app/src/main/res/drawable-v24
+          cp android/app/src/main/res/drawable/ic_launcher_foreground.xml \
+             android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
 
       - name: Build debug APK
         run: |
