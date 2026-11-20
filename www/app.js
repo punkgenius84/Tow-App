@@ -302,9 +302,10 @@
 
   function vinCandidateScore(vin, labelled) {
     var score = 0;
-    // A matching North American check digit is the strongest available signal.
+    // An explicit VIN label outweighs an incidental 17-character number elsewhere on the sticker.
+    // Check-digit evidence ranks candidates only within the same evidence class.
+    if (labelled) score += 10000;
     if (vinCheckDigitValid(vin)) score += 1000;
-    if (labelled) score += 180;
     // Position 9 is the North American check digit; position 10 is a model-year code.
     if (/^[0-9X]$/.test(vin.charAt(8))) score += 45;
     if (/^[ABCDEFGHJKLMNPRSTVWXY123456789]$/.test(vin.charAt(9))) score += 35;
@@ -329,8 +330,8 @@
     lines.forEach(function (line, lineIndex) {
       // Capture exactly 17 OCR characters after a VIN label, allowing spaces
       // or hyphens between characters. Do not consume the rest of the sticker.
-      var vinLabel = /\b(?:VIN|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\b/;
-      var labelled = line.match(/\b(?:VIN|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\s*[:#-]?\s*((?:[A-Z0-9][\s-]?){17})/);
+      var vinLabel = /\b(?:VIN(?:\s+(?:NO\.?|NUMBER))?|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\b/;
+      var labelled = line.match(/\b(?:VIN(?:\s+(?:NO\.?|NUMBER))?|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\b\s*[:#-]?\s*((?:[A-Z0-9][\s-]?){17})/);
       if (labelled) addLabelledWindows(labelled[1]);
       else if (vinLabel.test(line)) {
         // Some OCR engines put the VIN label on one line and the number on
