@@ -179,7 +179,7 @@ test('VIN barcode scanner is available and accepts only a valid 17-character VIN
   assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA00000'), '1FTFW1E50NFA00000');
   assert.equal(w.__tow.extractBarcodeVin('VIN: 1FTFW1E50NFA00000'), '1FTFW1E50NFA00000');
   assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA0000'), '');
-  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E5ONFA00000'), '1FTFW1E51NFA00000');
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E5ONFA00000'), '1FTFW1E50NFA00000');
 });
 
 test('VIN scanners use working browser APIs and Android camera permission is declared', () => {
