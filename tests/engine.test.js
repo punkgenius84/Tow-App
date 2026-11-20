@@ -86,6 +86,19 @@ test('very heavy vehicles reach heavy-duty', () => {
 });
 
 /* ---------- clearance math ---------- */
+
+test('unverified catalog dimensions never produce a positive clearance verdict', () => {
+  const vehicle = D.vehicles.find(v => v.make === 'Mazda' && v.model === '6 i Grand Touring');
+  const estimate = E.recommend(vehicle, {});
+  assert.equal(estimate.clearance.status, 'unknown');
+  assert.match(estimate.clearance.advice.join(' '), /NO CLEARANCE VERDICT/);
+  const onlyClearance = E.resolve(vehicle, { gc: 5.5 });
+  assert.equal(onlyClearance.measured, false);
+  assert.equal(E.clearanceCheck(onlyClearance).status, 'unknown');
+  const measured = E.resolve(vehicle, { gc: 5.5, wb: 107.4 });
+  assert.equal(measured.measured, true);
+  assert.notEqual(E.clearanceCheck(measured).status, 'unknown');
+});
 test('breakover formula: (wb/4)*sin(angle)', () => {
   const k = E.clearanceCheck({ wb: 100, gc: 6, angle: 30, low: false, measured: false, conf: 1 });
   assert.equal(k.neededIn, 12.5);              // 100/4 * 0.5
