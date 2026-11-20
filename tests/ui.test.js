@@ -213,6 +213,19 @@ test('native barcode scanner reopens until a barcode contains a VIN', async () =
   assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
 });
 
+test('native barcode scanner uses displayValue when rawValue is unavailable', async () => {
+  const { window: w } = boot();
+  w.Capacitor = { Plugins: { NativeVinScanner: {
+    scanBarcode: () => Promise.resolve({ rawValue: null, displayValue: '1HGCM82633A004352', format: 2 })
+  } } };
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN barcode read successfully/i);
+});
+
 test('cancelling the native scanner is a calm message, not an error', async () => {
   const { window: w } = boot();
   w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => Promise.reject(Object.assign(new Error('Barcode scan cancelled.'), { code: 'CANCELLED' })) } } };
