@@ -2,9 +2,9 @@
 
 **Status: IN PROGRESS — NOT APPROVED FOR RELEASE**
 
-**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 291 rows have been verified.
+**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 292 rows have been verified.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **291 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **292 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
@@ -33,6 +33,11 @@ The former 2018–2025 Camry Hybrid row crossed the 2025 redesign. Toyota's 2024
 ## Partial source review — Toyota Sienna (2021–2025)
 
 Toyota's US newsroom confirms the fourth-generation Sienna debuted for model year 2021 and lists a 120.5 in wheelbase. Toyota also explicitly states that the 2022 Woodland Edition has increased ground clearance compared with other Sienna grades; the 2024 Woodland Edition retains that added-clearance distinction. This means a single 6.5 in clearance value cannot safely be presented as universal across the 2021–2025 FWD/AWD and trim range. The catalog retains its existing 6.5 in value only as an unverified low-confidence legacy baseline, with an explicit warning; it is not a verified specification and must not replace measuring the actual vehicle. Exact trim-specific clearance, curb weight and variant coverage remain unresolved. Sources: [2021 Toyota Sienna model overview](https://pressroom.toyota.com/toyota-sienna-2021/), [2022 Sienna Woodland Edition](https://pressroom.toyota.com/2022-toyota-sienna-expands-adventure-possibilities-with-new-woodland-edition/), [2024 Toyota Sienna](https://pressroom.toyota.com/seize-the-day-in-style-with-the-2024-toyota-sienna/).
+
+
+## Verified generation split — Toyota Prius
+
+The former 2016–2025 Prius row crossed the 2023 redesign. Toyota's 2022 US brochure lists a 106.3 in wheelbase and ground clearance of 5.1 in for FWD trims / 5.3 in for AWD-e trims; 2022 curb weights vary from 3,010–3,220 lb by trim. Toyota's 2023 US brochure lists a 108.3 in wheelbase and clearance of 5.6 in (LE) / 6.0 in (XLE and Limited). The catalog is split into 2016–2022 and 2023–2025 entries. Each stores a conservative low-end clearance baseline and remains low-confidence because the values vary by trim and drivetrain; neither is a substitute for measuring the actual vehicle. Sources: [2022 Toyota Prius eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2022/prius_ebrochure.pdf), [2023 Toyota Prius eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2023/prius_ebrochure.pdf).
 
 ## Verification standard
 
