@@ -87,6 +87,6 @@ Until the complete source audit is finished, every vehicle's database-derived sp
 
 ## Verification status
 
-The application treats 2,817 catalog entries as unverified and only 3 single-model-year entries (2025 Honda Passport, 2025 Hyundai Santa Cruz, and 2025 Toyota Camry Hybrid) as OEM-source verified. The audit CSV is the source-of-work checklist, not a completed verification report. The 2,519 AutoEvolution-derived specification rows have an unresolved redistribution-license status; do not treat the bundled dataset as cleared for public or commercial redistribution until that issue is resolved.
+The application treats 2,816 catalog entries as unverified and only 3 single-model-year entries (2025 Honda Passport, 2025 Hyundai Santa Cruz, and 2025 Toyota Camry Hybrid) as OEM-source verified. The audit CSV is the source-of-work checklist, not a completed verification report. The 2,519 AutoEvolution-derived specification rows have an unresolved redistribution-license status; do not treat the bundled dataset as cleared for public or commercial redistribution until that issue is resolved.
 
 A separate **Vehicle catalog and app tests** workflow runs `npm test` only; it does not build or upload an APK. The Android APK workflow remains manual-only and is not to be dispatched during the audit.
