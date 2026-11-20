@@ -20,6 +20,9 @@
   'use strict';
 
   var ROWS = [
+    // ---------- OEM-verified rows (single model year, primary manufacturer source) ----------
+    ['Honda', 'Passport', 2025, 2025, 'SUV', 'AWD', 'ICE', 'AT', 4262, 110.9, 8.1, { len: 189.1, wid: 78.6, ht: 72.2, verified: true, source: 'https://www.hondainfocenter.com/2025/Passport/Feature-Guide/Specifications/', sourceYear: 2025, note: 'OEM-verified for model year 2025 only (Honda Info Center). Trim curb weights: EX-L 4,236 / TrailSport 4,229 / Black Edition 4,262 lb (row uses highest). Clearance is Honda\'s unladen figure, 8.1 in on all trims; GVWR not published on that page. Measure on scene.' }],
+    ['Hyundai', 'Santa Cruz', 2025, 2025, 'Pickup', 'FWD|AWD', 'ICE', 'AT|DCT', 4237, 118.3, 8.6, { gvwr: 5798, len: 195.9, wid: 75.0, ht: 66.9, verified: true, source: 'https://www.hyundainews.com/assets/documents/original/62976-2025SantaCruzSpecsFeatures080724.pdf', sourceYear: 2025, note: 'OEM-verified for model year 2025 only (Hyundai product guide PDF). Curb 3,778-4,237 lb across FWD/AWD trims (row uses highest); GVWR 5,522-5,798 lb (row uses highest); length 195.7 in (195.9 XRT); height 66.7 in (66.9 with roof rails). The turbo uses a dual-clutch 8-speed per secondary sources, so DCT is offered: confirm on scene. Measure clearance on scene.' }],
     // ---------- Ford ----------
     ['Ford', 'F-150', 2015, 2025, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 5000, 145.0, 8.4, { gvwr: 7000 }],
     ['Ford', 'F-150 Lightning', 2022, 2025, 'Pickup', 'AWD', 'EV', 'EV', 6500, 145.5, 8.9, { gvwr: 8250, c: 0 }],
@@ -2879,6 +2882,13 @@
     return extra.length ? (n ? n + ' ' : '') + extra.join(' ') : n;
   }
 
+  // A row is OEM-verified only with an https primary-source URL, a source model year inside the row's
+  // year range, and an explicit verified flag. Verified rows are still never a clearance verdict:
+  // the engine requires on-scene measurements for that.
+  function isVerified(o, r) {
+    return o.verified === true && /^https:\/\//.test(o.source || '') && o.sourceYear >= r[2] && o.sourceYear <= r[3] && !o.agg;
+  }
+
   function toVehicle(r, i) {
     var o = r[11] || {};
     // Every current catalog row is pending source-level verification. A plausible
@@ -2893,7 +2903,7 @@
       curb: r[8], wb: r[9] || 0, gc: r[10] || 0,   // 0 = not in source / unknown (never a measured value)
       len: o.len || 0, wid: o.wid || 0, ht: o.ht || 0,
       gvwr: o.gvwr || 0, dually: !!o.dually, air: o.air || false,
-      low: !!o.low, note: noteFor(r, o), source: o.source || '', sourceYear: o.sourceYear || 0, agg: o.agg || '', conf: 0
+      low: !!o.low, note: noteFor(r, o), source: o.source || '', sourceYear: o.sourceYear || 0, agg: o.agg || '', conf: isVerified(o, r) ? 1 : 0
     };
   }
 

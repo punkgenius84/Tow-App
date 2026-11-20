@@ -220,12 +220,20 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 
 test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
   const curated = D.vehicles.filter(v => !v.agg);
-  assert.equal(curated.length, 298);
+  assert.equal(curated.length, 300, '298 estimate rows + 2 OEM-verified rows');
   assert.ok(D.vehicles.length > 298, 'bulk rows imported');
   for (const v of D.vehicles) {
-    assert.equal(v.conf, 0, v.make + ' ' + v.model + ' must not imply verified specs');
-    assert.equal(v.source, '', v.make + ' ' + v.model + ' has no verified source yet');
-    assert.equal(v.sourceYear, 0, v.make + ' ' + v.model + ' has no reviewed source year yet');
+    const id = v.make + ' ' + v.model + ' ' + v.yFrom;
+    if (v.source) {
+      // OEM-verified: only with an https primary source and a source year inside the row's years
+      assert.equal(v.conf, 1, id);
+      assert.match(v.source, /^https:\/\//, id);
+      assert.ok(v.sourceYear >= v.yFrom && v.sourceYear <= v.yTo, id + ' source year outside row years');
+      assert.ok(!v.agg, id + ' aggregator rows can never be verified');
+    } else {
+      assert.equal(v.conf, 0, id + ' must not imply verified specs');
+      assert.equal(v.sourceYear, 0, id + ' has no reviewed source year yet');
+    }
   }
 });
 
@@ -292,7 +300,7 @@ test('generation-split catalog entries match model years without reusing a cross
   assert.equal(by('Mercedes-Benz', 'C-Class (W205)', 2018).yTo, 2021);
   assert.equal(by('Mercedes-Benz', 'E-Class (W214)', 2025).yFrom, 2024);
   assert.equal(by('Mercedes-Benz', 'S-Class (W223)', 2022).yFrom, 2021);
-  for (const v of D.vehicles) assert.equal(v.conf, 0, v.make + ' ' + v.model);
+  for (const v of D.vehicles) if (!v.source) assert.equal(v.conf, 0, v.make + ' ' + v.model);
 });
 
 /* ---------- VIN decode ---------- */
@@ -407,4 +415,21 @@ test('broad or lumped hand-entered rows carry an explicit warning note', () => {
 test('bulk rows expose length/width/height when the source has them', () => {
   const withDims = D.vehicles.filter(v => v.agg && v.len && v.wid && v.ht);
   assert.ok(withDims.length >= 1000, 'dimension coverage ' + withDims.length);
+});
+
+
+test('OEM-verified rows still never produce a clearance verdict without on-scene measurements', () => {
+  const ver = D.vehicles.filter(v => v.source);
+  assert.equal(ver.length, 2);
+  for (const v of ver) {
+    const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
+    assert.equal(r.clearance.status, 'unknown', v.model);
+    assert.ok(v.len && v.wid && v.ht && v.wb && v.gc, v.model + ' complete dimensions');
+  }
+});
+
+test('every OEM-verified row has an OEM_VERIFIED audit CSV row with the same source URL', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const text = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8');
+  for (const v of D.vehicles.filter(v => v.source)) assert.ok(text.includes('"OEM_VERIFIED"') && text.includes('"' + v.source + '"'), v.model);
 });
