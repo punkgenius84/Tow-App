@@ -308,7 +308,13 @@
     }
     lines.forEach(function (line) {
       var labelled = line.match(/\bVIN\b\s*[:#-]?\s*([A-Z0-9][A-Z0-9\s-]{15,24})/);
-      if (labelled) addCandidate(labelled[1]);
+      if (labelled) {
+        var labelledCompact = labelled[1].replace(/[^A-Z0-9]/g, '');
+        if (labelledCompact.length >= 17) {
+          addCandidate(labelledCompact.slice(0, 17));
+          return; // Do not create false candidates from the "VIN" label itself.
+        }
+      }
       var compact = line.replace(/[^A-Z0-9]/g, '');
       for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17));
     });
@@ -319,9 +325,11 @@
 
   function extractBarcodeVin(raw) {
     var text = String(raw || '').toUpperCase().trim();
+    // When the barcode payload includes a VIN label, strip it before looking
+    // for the 17-character value so "VIN" cannot become part of the candidate.
+    text = text.replace(/^.*?\bVIN\b\s*[:#=-]?\s*/i, '');
     // Some manufacturers wrap the VIN in start/stop characters or encode it
-    // alongside a label. Try each 17-character run instead of requiring the
-    // entire decoded payload to be exactly 17 characters.
+    // alongside other data. Try each 17-character run in the remaining payload.
     var compact = text.replace(/[^A-Z0-9]/g, '');
     for (var i = 0; i <= compact.length - 17; i++) {
       var candidate = normalizeVinCandidate(compact.slice(i, i + 17));
