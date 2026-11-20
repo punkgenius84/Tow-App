@@ -539,7 +539,7 @@
         state.ocrStatus = 'OCR could not isolate a complete 17-character VIN. The raw readings are shown below so you can spot the characters it missed.';
       }
       renderVin();
-    }    }).catch(function (err) {
+    }).catch(function (err) {
       state.ocrStatus = err && err.message ? err.message : 'Photo reading failed. Please try again or enter the VIN manually.';
       renderVin();
     }).finally(function () {
