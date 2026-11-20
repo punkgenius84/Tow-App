@@ -107,7 +107,8 @@
 
     // ---------- Toyota ----------
     ['Toyota', 'Camry', 2018, 2024, 'Sedan', 'FWD|AWD', 'ICE', 'AT', 3300, 111.2, 5.7],
-    ['Toyota', 'Camry Hybrid', 2018, 2025, 'Sedan', 'FWD|AWD', 'HEV', 'CVT', 3500, 111.2, 5.7, { note: 'AWD hybrid is 2023 and newer.' }],
+    ['Toyota', 'Camry Hybrid (2018-2024)', 2018, 2024, 'Sedan', 'FWD|AWD', 'HEV', 'CVT', 3500, 111.2, 5.7, { c: 0, note: 'Toyota 2024 US brochure lists 111.2 in wheelbase and 5.7 in ground clearance across listed hybrid trims. AWD hybrid availability varies by year/trim; verify exact configuration and measure actual vehicle. https://www.toyota.com/content/dam/toyota/brochures/pdf/2024/camry_ebrochure.pdf' }],
+    ['Toyota', 'Camry Hybrid (2025)', 2025, 2025, 'Sedan', 'FWD|AWD', 'HEV', 'CVT', 3600, 111.2, 5.4, { c: 0, note: 'Toyota 2025 US brochure lists 111.2 in wheelbase and 5.4 in ground clearance; curb weight varies by trim and FWD/AWD. AWD availability is trim-specific. Verify exact configuration and measure actual vehicle. https://www.toyota.com/content/dam/toyota/brochures/pdf/2025/my25-camry-ebrochure.pdf' }],
     ['Toyota', 'Corolla', 2019, 2025, 'Sedan', 'FWD', 'ICE', 'CVT|MT', 2900, 106.3, 5.1],
     ['Toyota', 'Prius', 2016, 2025, 'Hatchback', 'FWD|AWD', 'HEV', 'CVT', 3100, 108.3, 5.3],
     ['Toyota', 'RAV4', 2019, 2025, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3500, 105.9, 8.4],
