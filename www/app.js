@@ -359,7 +359,12 @@
         'Strap and chain ratings, CDL rules and re-check intervals are general information and vary by state and employer. This is not legal advice.'
       ]) + '</div>' +
       '<div class="card"><div class="label">DATA</div><div>' + D.vehicles.length + ' vehicle entries across ' + D.makes.length + ' makes. ' +
-      custom.length + ' saved custom vehicle' + (custom.length === 1 ? '' : 's') + ' on this device.</div></div></section>';
+      custom.length + ' saved custom vehicle' + (custom.length === 1 ? '' : 's') + ' on this device.</div></div>' +
+      '<div class="card"><div class="label">DATA ATTRIBUTION</div><div>US model/year and body-style reference data: <strong>US Car Models Data</strong> by Abhilash Reddy, adapted under Creative Commons Attribution 4.0 International (CC BY 4.0).</div>' +
+      '<div><a href="https://github.com/abhionlyone/us-car-models-data" target="_blank" rel="noopener noreferrer">Source dataset</a> · ' +
+      '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0 license</a> · ' +
+      '<a href="https://github.com/punkgenius84/Tow-App/blob/database/vehicle-data-safety-audit/ATTRIBUTION.md" target="_blank" rel="noopener noreferrer">Full attribution</a></div>' +
+      '<div class="muted">This attribution does not cover the separately sourced vehicle specification data, which remains under licensing review.</div></div></section>';
   }
 
   /* ---------- events ---------- */
