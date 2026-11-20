@@ -2,8 +2,6 @@ package com.bigjaysstowing.towguide;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Base64;
 
 import com.getcapacitor.JSObject;
@@ -11,115 +9,13 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.google.android.gms.common.moduleinstall.ModuleInstall;
-import com.google.android.gms.common.moduleinstall.ModuleInstallRequest;
-import com.google.android.gms.common.moduleinstall.ModuleInstallClient;
-import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanner;
-import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
 
 @CapacitorPlugin(name = "NativeVinScanner")
 public class NativeVinScannerPlugin extends Plugin {
-
-    private static final long MODULE_CHECK_INTERVAL_MS = 750L;
-    private static final int MAX_MODULE_CHECKS = 80;
-
-    @PluginMethod
-    public void scanBarcode(PluginCall call) {
-        // Ask ML Kit to accept every standard format. VIN labels vary by
-        // manufacturer and may use formats beyond the common Code 39/PDF417.
-        GmsBarcodeScannerOptions options = new GmsBarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
-            .enableAutoZoom()
-            .build();
-
-        GmsBarcodeScanner scanner = GmsBarcodeScanning.getClient(getContext(), options);
-        ModuleInstallClient moduleInstallClient = ModuleInstall.getClient(getContext());
-
-        // A sideloaded APK may not have received the Play-services scanner UI
-        // module at install time. Explicitly request it and wait until ready
-        // before opening the camera; otherwise the first scan can be a no-op.
-        moduleInstallClient.areModulesAvailable(scanner)
-            .addOnSuccessListener(getActivity(), availability -> {
-                if (availability.areModulesAvailable()) {
-                    launchScanner(scanner, call);
-                    return;
-                }
-
-                ModuleInstallRequest request = ModuleInstallRequest.newBuilder()
-                    .addApi(scanner)
-                    .build();
-
-                moduleInstallClient.installModules(request)
-                    .addOnSuccessListener(getActivity(), response -> {
-                        if (response.areModulesAlreadyInstalled()) {
-                            launchScanner(scanner, call);
-                        } else {
-                            waitForScannerModule(moduleInstallClient, scanner, call, 0);
-                        }
-                    })
-                    .addOnFailureListener(getActivity(), error ->
-                        call.reject("Could not install Google's barcode scanner module: "
-                            + error.getMessage(), error));
-            })
-            .addOnFailureListener(getActivity(), error ->
-                call.reject("Could not check barcode scanner availability: "
-                    + error.getMessage(), error));
-    }
-
-    private void waitForScannerModule(
-        ModuleInstallClient client,
-        GmsBarcodeScanner scanner,
-        PluginCall call,
-        int attempt
-    ) {
-        if (attempt >= MAX_MODULE_CHECKS) {
-            call.reject("Google's barcode scanner module did not finish installing. "
-                + "Check that Google Play services is updated and try again.");
-            return;
-        }
-
-        new Handler(Looper.getMainLooper()).postDelayed(() ->
-            client.areModulesAvailable(scanner)
-                .addOnSuccessListener(getActivity(), availability -> {
-                    if (availability.areModulesAvailable()) {
-                        launchScanner(scanner, call);
-                    } else {
-                        waitForScannerModule(client, scanner, call, attempt + 1);
-                    }
-                })
-                .addOnFailureListener(getActivity(), error ->
-                    call.reject("Could not verify barcode scanner installation: "
-                        + error.getMessage(), error)),
-            MODULE_CHECK_INTERVAL_MS);
-    }
-
-    private void launchScanner(GmsBarcodeScanner scanner, PluginCall call) {
-        scanner.startScan()
-            .addOnSuccessListener(getActivity(), barcode -> {
-                JSObject result = new JSObject();
-                result.put("rawValue", barcode.getRawValue());
-                // Some formats/devices provide a display value even when ML Kit has no raw text payload.
-                // Return both so the JavaScript VIN parser can use whichever representation is populated.
-                result.put("displayValue", barcode.getDisplayValue());
-                result.put("format", barcode.getFormat());
-                result.put("valueType", barcode.getValueType());
-                byte[] rawBytes = barcode.getRawBytes();
-                if (rawBytes != null && rawBytes.length > 0) {
-                    result.put("rawBytesBase64", Base64.encodeToString(rawBytes, Base64.NO_WRAP));
-                }
-                call.resolve(result);
-            })
-            .addOnCanceledListener(getActivity(), () ->
-                call.reject("Barcode scan cancelled."))
-            .addOnFailureListener(getActivity(), error ->
-                call.reject("Barcode scanner failed: " + error.getMessage(), error));
-    }
 
     @PluginMethod
     public void recognizeText(PluginCall call) {
@@ -139,6 +35,8 @@ public class NativeVinScannerPlugin extends Plugin {
                 return;
             }
 
+            // JS decodes the source image, draws the EXIF-oriented result to a canvas,
+            // then exports a new JPEG. This bitmap is already upright: no extra rotation.
             InputImage image = InputImage.fromBitmap(bitmap, 0);
             recognizer.process(image)
                 .addOnSuccessListener(getActivity(), text -> {
