@@ -49,6 +49,7 @@ Append a row to `ROWS` in `www/data.js` (format documented at the top of that fi
 ## Operational limits
 
 - Vehicle specifications are typical for a model range, not guaranteed VIN-specific values. Treat lower-confidence entries cautiously and verify the vehicle on scene.
+- Truck-class results based on unverified catalog curb weight are explicitly provisional. Confirm the exact vehicle weight and GVWR from the VIN-specific OEM information / certification label before dispatch; unverified catalog GVWR is not used to upgrade the class.
 - The vehicle owner's manual and company procedures take precedence.
 - The clearance calculation covers belly breakover only; it does not model lips, splitters, skirts, or every underbody obstruction.
 - CDL, strap-rating, and re-check guidance is general information, not legal advice. Requirements vary by jurisdiction.
