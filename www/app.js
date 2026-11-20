@@ -6,7 +6,7 @@
   var D = window.TowData;
   var LS_KEY = 'towguide.custom.v1';
 
-  var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null };
+  var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null, vinFile: null, vinPreviewUrl: '', ocrStatus: '' };
   var custom = loadCustom();
 
   /* ---------- helpers ---------- */
@@ -303,7 +303,7 @@
   }
 
   function scanVinPhoto() {
-    var input = $('#vin-photo'), file = input && input.files && input.files[0];
+    var file = state.vinFile;
     if (!file) { state.ocrStatus = 'Take or choose a VIN photo first.'; return renderVin(); }
     if (!/^image\\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
     var button = $('#vin-ocr');
@@ -476,10 +476,13 @@
   document.addEventListener('change', function (e) {
     if (e.target && e.target.id === 'vin-photo') {
       var file = e.target.files && e.target.files[0];
+      state.vinFile = file || null;
       if (state.vinPreviewUrl && window.URL && URL.revokeObjectURL) URL.revokeObjectURL(state.vinPreviewUrl);
       state.vinPreviewUrl = file && window.URL && URL.createObjectURL ? URL.createObjectURL(file) : '';
       state.ocrStatus = file ? 'Photo ready. Tap “Read VIN from photo”.' : '';
-      renderVin();
+      var preview = $('#vin-preview'), status = $('#vin-ocr-status');
+      if (preview) { preview.src = state.vinPreviewUrl; preview.hidden = !state.vinPreviewUrl; }
+      if (status) status.textContent = state.ocrStatus;
     }
   });
 
