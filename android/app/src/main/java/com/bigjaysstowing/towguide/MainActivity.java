@@ -11,6 +11,17 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
+    public void onBackPressed() {
+        // Let the web app return from vehicle details/tabs before the Activity exits.
+        getBridge().getWebView().evaluateJavascript(
+            "(function(){return typeof window.__towBack === 'function' ? window.__towBack() : false;})()",
+            value -> {
+                if (!"true".equals(value)) MainActivity.super.onBackPressed();
+            }
+        );
+    }
+
+    @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getBridge().getWebView().addJavascriptInterface(
