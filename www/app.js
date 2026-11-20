@@ -363,7 +363,7 @@
       '<div class="card"><div class="label">DATA ATTRIBUTION</div><div>US model/year and body-style reference data: <strong>US Car Models Data</strong> by Abhilash Reddy, adapted under Creative Commons Attribution 4.0 International (CC BY 4.0).</div>' +
       '<div><a href="https://github.com/abhionlyone/us-car-models-data" target="_blank" rel="noopener noreferrer">Source dataset</a> · ' +
       '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0 license</a> · ' +
-      '<a href="https://github.com/punkgenius84/Tow-App/blob/database/vehicle-data-safety-audit/ATTRIBUTION.md" target="_blank" rel="noopener noreferrer">Full attribution</a></div>' +
+      '<a href="https://github.com/punkgenius84/Tow-App/blob/main/ATTRIBUTION.md" target="_blank" rel="noopener noreferrer">Full attribution</a></div>' +
       '<div class="muted">This attribution does not cover the separately sourced vehicle specification data, which remains under licensing review.</div></div></section>';
   }
 
