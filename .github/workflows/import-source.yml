@@ -1,0 +1,47 @@
+name: Import TowGuide app source
+on:
+  push:
+    branches:
+      - 'import/tow-guide-app-source'
+    paths:
+      - 'tow-guide-app.zip'
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Stop if the one-time archive was already extracted
+        run: test -f tow-guide-app.zip || { echo "Source archive already extracted; nothing to do."; exit 0; }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Extract project into repository root
+        run: |
+          mkdir -p /tmp/tow-app-import
+          unzip -q tow-guide-app.zip -d /tmp/tow-app-import
+          test -d /tmp/tow-app-import/tow-app
+          cp -a /tmp/tow-app-import/tow-app/. .
+      - run: npm ci
+      - run: npm test
+      - run: npx cap sync android
+      - name: Build debug APK
+        run: cd android && ./gradlew assembleDebug
+      - name: Commit extracted project files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -f tow-guide-app.zip
+          rm -f .github/workflows/import-source.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import TowGuide app source and Android project"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
