@@ -203,7 +203,8 @@ test('native barcode scanner reopens until a barcode contains a VIN', async () =
   const { window: w } = boot();
   const calls = [];
   const seq = [{ rawValue: 'PART-0001' }, { rawValue: 'I1HGCM82633A004352' }];
-  w.Capacitor = { registerPlugin: () => ({ scanBarcode: () => { calls.push(1); return Promise.resolve(seq[calls.length - 1]); } }) };
+  // Real Android shape: the bridge exposes plugins on Capacitor.Plugins and there is no registerPlugin().
+  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => { calls.push(1); return Promise.resolve(seq[calls.length - 1]); } } } };
   const d = w.document;
   click(w, d.querySelector('[data-tab="vin"]'));
   click(w, d.querySelector('#vin-barcode-start'));
@@ -214,7 +215,7 @@ test('native barcode scanner reopens until a barcode contains a VIN', async () =
 
 test('cancelling the native scanner is a calm message, not an error', async () => {
   const { window: w } = boot();
-  w.Capacitor = { registerPlugin: () => ({ scanBarcode: () => Promise.reject(Object.assign(new Error('Barcode scan cancelled.'), { code: 'CANCELLED' })) }) };
+  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => Promise.reject(Object.assign(new Error('Barcode scan cancelled.'), { code: 'CANCELLED' })) } } };
   const d = w.document;
   click(w, d.querySelector('[data-tab="vin"]'));
   click(w, d.querySelector('#vin-barcode-start'));
@@ -231,4 +232,26 @@ test('VIN scanners use working browser APIs and Android camera permission is dec
   assert.ok(app.includes('worker.recognize(image)'));
   assert.ok(!app.includes('Tesseract.recognize('));
   assert.ok(manifest.includes('android.permission.CAMERA'));
+});
+
+
+test('native scanner is found through Capacitor.Plugins (Android) or registerPlugin, and never faked', async () => {
+  // 1. Android bridge shape
+  let w = boot().window, hit = 0;
+  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => { hit++; return Promise.resolve({ rawValue: '1HGCM82633A004352' }); } } } };
+  click(w, w.document.querySelector('[data-tab="vin"]'));
+  click(w, w.document.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(hit, 1);
+  // 2. bundled-runtime shape
+  w = boot().window; hit = 0;
+  w.Capacitor = { registerPlugin: () => ({ scanBarcode: () => { hit++; return Promise.resolve({ rawValue: '1HGCM82633A004352' }); } }) };
+  click(w, w.document.querySelector('[data-tab="vin"]'));
+  click(w, w.document.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(hit, 1);
+  // 3. Capacitor present but no plugin and no registerPlugin: not treated as native
+  w = boot().window;
+  w.Capacitor = { getPlatform: () => 'android' };
+  assert.equal(w.__tow.nativeScannerAvailable(), false);
 });

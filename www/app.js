@@ -376,11 +376,14 @@
   var nativeVinScannerProxy = null;
   function nativeVinScanner() {
     if (nativeVinScannerProxy) return nativeVinScannerProxy;
-    if (window.Capacitor && typeof window.Capacitor.registerPlugin === 'function') {
-      nativeVinScannerProxy = window.Capacitor.registerPlugin('NativeVinScanner');
-      return nativeVinScannerProxy;
-    }
-    return null;
+    var cap = window.Capacitor;
+    if (!cap) return null;
+    // On Android the bridge injects every registered plugin as Capacitor.Plugins.<Name>. Capacitor.registerPlugin()
+    // only exists when the Capacitor core runtime is loaded, and this page is plain (unbundled) JavaScript, so it
+    // must not be the only way in. Without this the app silently used the browser scanners instead of ML Kit.
+    if (cap.Plugins && cap.Plugins.NativeVinScanner) nativeVinScannerProxy = cap.Plugins.NativeVinScanner;
+    else if (typeof cap.registerPlugin === 'function') nativeVinScannerProxy = cap.registerPlugin('NativeVinScanner');
+    return nativeVinScannerProxy;
   }
 
   function startBarcodeScan() {
@@ -824,5 +827,5 @@
   render();
 
   // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin };
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && (n.scanBarcode || n.recognizeText)); } };
 })();
