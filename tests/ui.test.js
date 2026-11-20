@@ -150,3 +150,10 @@ test('user text is escaped, not injected as HTML', () => {
   assert.equal(d.querySelectorAll('#view img').length, 0);
   assert.ok(d.querySelector('h1').textContent.includes('<img'));
 });
+
+test('brand header uses the supplied logo rather than the orange BJ text badge', () => {
+  const html = fs.readFileSync(path.join(WWW, 'index.html'), 'utf8');
+  assert.match(html, /brand-logo/);
+  assert.match(html, /assets\/branding\/big_jays_logo_300x300\.png/);
+  assert.doesNotMatch(html, /<span class="mark">BJ<\/span>/);
+});
