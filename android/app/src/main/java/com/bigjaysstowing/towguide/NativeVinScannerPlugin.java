@@ -14,9 +14,9 @@ import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.google.mlkit.vision.common.InputImage;
-import com.google.android.gms.code.scanner.GmsBarcodeScanner;
-import com.google.android.gms.code.scanner.GmsBarcodeScannerOptions;
-import com.google.android.gms.code.scanner.GmsBarcodeScanning;
+import com.google.android.gms.codescanner.GmsBarcodeScanner;
+import com.google.android.gms.codescanner.GmsBarcodeScannerOptions;
+import com.google.android.gms.codescanner.GmsBarcodeScanning;
 
 
 @CapacitorPlugin(name = "NativeVinScanner")
