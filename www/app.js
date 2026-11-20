@@ -107,6 +107,13 @@
     render(); window.scrollTo(0, 0);
   }
 
+  // Called by the native Android back button. Keep navigation inside the app.
+  function handleBack() {
+    if (state.cur) { state.cur = null; render(); window.scrollTo(0, 0); return true; }
+    if (state.tab !== 'find') { state.tab = 'find'; render(); window.scrollTo(0, 0); return true; }
+    return false;
+  }
+
   /* ---------- DETAIL ---------- */
   function renderDetail() {
     var v = state.cur.v;
@@ -131,7 +138,7 @@
     if (v.drives.length > 1) h += '<div><label class="f">Drive type (check badges, VIN or underside)</label>' + seg('drive', v.drives, s.drive) + '</div>';
     else h += '<div class="muted">Drive type: <b>' + esc(v.drives[0]) + '</b></div>';
     if (v.power !== 'EV' && v.trans.length > 1) h += '<div><label class="f">Transmission</label>' + seg('trans', v.trans, s.trans, TRANS) + '</div>';
-    h += '<div><label class="f">Crest angle where ramp meets deck</label><select data-sel="angle">' +
+    h += '<div><label class="f">Ramp crest angle</label><select data-sel="angle">' +
       E.ANGLE_PRESETS.map(function (p) { return '<option value="' + p.deg + '"' + (p.deg === s.angle ? ' selected' : '') + '>' + esc(p.label) + '</option>'; }).join('') +
       '</select></div>';
     h += '<div class="grid2"><div><label class="f">Cargo / extra weight (lb)</label><input data-sel="extraLb" inputmode="numeric" placeholder="0"></div>' +
@@ -146,6 +153,7 @@
 
   function renderResult() {
     var c = state.cur, v = c.v;
+    var openSections = Array.prototype.map.call(document.querySelectorAll('#result details'), function (d) { return d.open; });
     var r = E.recommend(v, c.sel);
     var m = r.method, t = r.truck, k = r.clearance, td = r.tiedown, h = '';
 
@@ -219,6 +227,7 @@
     h += '<div class="notice">Always confirm with the vehicle\'s owner\'s manual and your company procedures. This app gives general guidance and can be wrong for a given vehicle.</div>';
 
     $('#result').innerHTML = h;
+    Array.prototype.forEach.call(document.querySelectorAll('#result details'), function (d, i) { if (openSections[i] !== undefined) d.open = openSections[i]; });
     state.cur.last = r;
   }
 
@@ -362,7 +371,7 @@
       var pre = t.hasAttribute('data-pre') && state.vin ? { drive: state.vin.drive, trans: state.vin.trans } : null;
       return v && openVehicle(v, pre);
     }
-    if (t.id === 'back') { state.cur = null; return render(); }
+    if (t.id === 'back') { handleBack(); return; }
     if (t.hasAttribute('data-seg')) {
       state.cur.sel[t.getAttribute('data-seg')] = t.getAttribute('data-val');
       renderControlsKeepInputs(); return renderResult();
@@ -475,6 +484,8 @@
   netBadge();
   render();
 
+  // Native Android back delegates here so a vehicle detail returns to the list.
+  window.__towBack = handleBack;
   // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render };
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, handleBack: handleBack };
 })();
