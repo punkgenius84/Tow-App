@@ -443,7 +443,7 @@
   function scanVinPhoto() {
     var file = state.vinFile;
     if (!file) { state.ocrStatus = 'Take or choose a VIN photo first.'; return renderVin(); }
-    if (!/^image\\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
+    if (!/^image\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
     var button = $('#vin-ocr');
     if (button) button.disabled = true;
     var status = $('#vin-ocr-status');
