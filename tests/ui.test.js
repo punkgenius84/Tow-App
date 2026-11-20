@@ -187,7 +187,7 @@ test('VIN label priority beats an unrelated checksum-valid number elsewhere on t
   const labelledButCheckDigitUnclear = '1HGCM82633A004353';
   const unrelatedChecksumValid = '1HGCM82633A004352';
   const candidates = Array.from(w.__tow.extractVinCandidates(
-    'SERIAL NUMBER ' + unrelatedChecksumValid + '\\nVIN NO.: ' + labelledButCheckDigitUnclear
+    'SERIAL NUMBER ' + unrelatedChecksumValid + '\nVIN NO.: ' + labelledButCheckDigitUnclear
   ));
   assert.equal(candidates[0], labelledButCheckDigitUnclear);
 });
