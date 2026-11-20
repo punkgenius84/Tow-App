@@ -1,5 +1,5 @@
 /* Network-first service worker: updates apply when online, app still works offline. */
-var CACHE = 'towguide-v2';
+var CACHE = 'towguide-v3';
 var ASSETS = ['./', 'index.html', 'styles.css', 'data.js', 'engine.js', 'app.js',
   'manifest.webmanifest', 'icons/icon.svg', 'assets/branding/big_jays_logo_300x300.png'];
 

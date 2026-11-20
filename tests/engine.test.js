@@ -219,7 +219,9 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 
 
 test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
-  assert.equal(D.vehicles.length, 298);
+  const curated = D.vehicles.filter(v => !v.agg);
+  assert.equal(curated.length, 298);
+  assert.ok(D.vehicles.length > 298, 'bulk rows imported');
   for (const v of D.vehicles) {
     assert.equal(v.conf, 0, v.make + ' ' + v.model + ' must not imply verified specs');
     assert.equal(v.source, '', v.make + ' ' + v.model + ' has no verified source yet');
@@ -345,4 +347,26 @@ test('body-type guess for unlisted vehicles', () => {
   assert.equal(E.guessPreset('Sport Utility Vehicle (SUV)/Multi-Purpose Vehicle (MPV)', 5000), 'crossover');
   assert.equal(E.guessPreset('Coupe', 0), 'sports');
   assert.equal(E.guessPreset('Minivan', 0), 'minivan');
+});
+
+
+test('bulk aggregator rows are tagged, low-confidence, and never carry a verified source', () => {
+  const bulk = D.vehicles.filter(v => v.agg);
+  assert.ok(bulk.length >= 1000, 'expected bulk import, got ' + bulk.length);
+  for (const v of bulk) {
+    const id = v.make + ' ' + v.model + ' ' + v.yFrom;
+    assert.equal(v.conf, 0, id);
+    assert.equal(v.source, '', id + ' aggregator rows must not claim a verified source');
+    assert.match(v.agg, /autoevolution/, id);
+    assert.match(v.note, /UNVERIFIED/, id + ' note must say unverified');
+    assert.match(v.note, /Source variants:/, id + ' note must keep variant ranges');
+  }
+});
+
+test('every bulk row has a matching audit CSV row marked AGGREGATOR_UNVERIFIED', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const lines = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8').trim().split('\n');
+  const agg = lines.filter(l => l.includes('"AGGREGATOR_UNVERIFIED"')).length;
+  assert.equal(agg, D.vehicles.filter(v => v.agg).length);
+  assert.equal(lines.length - 1, D.vehicles.length, 'audit CSV must track every catalog row');
 });

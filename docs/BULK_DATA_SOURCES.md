@@ -27,3 +27,15 @@ This file records the external datasets evaluated for the offline vehicle catalo
 4. Preserve variant/engine/trim distinctions where they affect dimensions, weight or clearance.
 5. Third-party values are reference values, not OEM verification. On-scene measurement and the actual vehicle placard/manual remain authoritative.
 6. A vehicle-to-truck result must separately evaluate physical fit, rated capacity and recovery/equipment suitability. Dimensions alone cannot produce a safe-to-load approval.
+
+## Bulk import status (2026-11-20)
+
+Imported into the bundled catalog by `tools/import-bulk.py` (build-time only; the app makes no network calls for lookups):
+
+- **Specs:** `ilyasozkurt/automobile-models-and-specs` (scrape of autoevolution.com, 2024-10-23). The repo has no LICENSE file; the project owner accepted this risk on 2026-11-20. Attribution is kept in every row (`agg`) and in the audit CSV.
+- **US-market filter and body style:** `abhionlyone/us-car-models-data` (CC BY 4.0, 1992-2026). Only models listed there for an overlapping year are imported.
+- Not used for dimensions: `vehiclesdb/vehiclesdb`, `n8barr/automotive-model-year-data` (identity only).
+
+Rules applied: no invented values (a row needs wheelbase, curb weight and ground clearance from the source); across trims clearance uses the MIN, curb the MAX, wheelbase the median, and the variant ranges are kept in the row note; hybrids/EVs are split from the ICE rows of the same generation; body style shows every style the US list gives when the model name does not decide it. Pre-1992 generations are not bulk-imported (no US-market list to confirm them); the curated rows cover those.
+
+Known source noise: drive type has no 4WD value (all-wheel and four-wheel are lumped; pickups get both AWD and 4WD offered) and some trims list implausible drives (e.g. FWD on a full-size pickup). The driver picks the actual drive on scene. Clearance and wheelbase come from millimetre values converted to 0.1 in.
