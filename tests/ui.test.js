@@ -83,9 +83,11 @@ test('changing crest angle and measured clearance updates the verdict', () => {
   const d = w.document;
   type(w, d.querySelector('#q'), 'mustang');
   click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
-  assert.match(d.body.textContent, /WILL LIKELY SCRAPE/);
+  assert.match(d.body.textContent, /MEASUREMENTS REQUIRED/);
   const gc = d.querySelector('[data-sel="gc"]'); type(w, gc, '9');
-  assert.match(d.body.textContent, /SHOULD CLEAR/);
+  assert.match(d.body.textContent, /MEASUREMENTS REQUIRED/);
+  const wb = d.querySelector('[data-sel="wb"]'); type(w, wb, '107');
+  assert.match(d.body.textContent, /MEASURED: CLEARANCE INDICATED/);
   assert.equal(d.querySelector('[data-sel="gc"]').value, '9', 'typed input is kept after re-render');
 });
 
