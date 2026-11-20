@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TowGuide</string>
+    <string name="title_activity_main">TowGuide</string>
+    <string name="package_name">com.orbitaledgelabs.towguide</string>
+    <string name="custom_url_scheme">com.orbitaledgelabs.towguide</string>
+</resources>
