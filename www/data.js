@@ -153,7 +153,7 @@
     ['Subaru', 'XT / XT6', 1985, 1991, 'Coupe', 'AWD', 'ICE', 'AT|MT', 2600, 97.0, 6.1, { c: 0 }],
     ['Subaru', 'BRAT', 1980, 1987, 'Pickup', '4WD', 'ICE', 'MT', 2200, 96.7, 8.3, { c: 0 }],
     ['Subaru', 'Loyale / DL / GL', 1980, 1994, 'Sedan', 'FWD|AWD', 'ICE', 'AT|MT', 2300, 97.0, 6.1, { c: 0 }],
-    ['Subaru', 'RX', 1985, 1991, 'Sedan', 'AWD', 'ICE', 'MT', 2500, 97.0, 6.1, { c: 0 }]
+    ['Subaru', 'RX', 1985, 1991, 'Sedan', 'AWD', 'ICE', 'MT', 2500, 97.0, 6.1, { c: 0 }],
 
     // ---------- Mazda (US-market additions; specifications vary by trim) ----------
     ['Mazda', '6 i Grand Touring', 2014, 2014, 'Sedan', 'FWD', 'ICE', 'AT', 3300, 107.4, 5.5, { c: 0, note: 'Reference example: verify the actual lowest point; 5.5 in is not a guarantee of safe ramp clearance.' }],
