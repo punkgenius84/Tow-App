@@ -366,9 +366,39 @@
     state.barcodeScanning = false;
   }
 
+  function nativeVinScanner() {
+    return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeVinScanner
+      ? window.Capacitor.Plugins.NativeVinScanner : null;
+  }
+
   function startBarcodeScan() {
     var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
     if (!video) return;
+    var nativeScanner = nativeVinScanner();
+    if (nativeScanner && nativeScanner.scanBarcode) {
+      if (button) button.disabled = true;
+      if (status) status.textContent = 'Opening Android barcode scanner…';
+      nativeScanner.scanBarcode().then(function (result) {
+        var raw = result && result.rawValue ? result.rawValue : '';
+        var vin = extractBarcodeVin(raw);
+        if (vin) {
+          state.vinText = vin;
+          state.barcodeStatus = 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.';
+        } else {
+          state.barcodeStatus = raw
+            ? 'A barcode was read, but its contents were not a valid 17-character VIN. Raw value: ' + raw
+            : 'The barcode did not contain readable text. Try moving closer or use the photo option.';
+        }
+        renderVin();
+      }).catch(function (err) {
+        state.barcodeStatus = err && err.message ? err.message : 'Android barcode scanning failed. Try again or enter the VIN manually.';
+        renderVin();
+      }).finally(function () {
+        var current = $('#vin-barcode-start');
+        if (current) current.disabled = false;
+      });
+      return;
+    }
     if (state.barcodeScanning) {
       stopBarcodeScanner();
       state.barcodeStatus = 'Barcode scanner stopped. You can start it again or use the photo option.';
@@ -506,6 +536,37 @@
     var button = $('#vin-ocr');
     if (button) button.disabled = true;
     var status = $('#vin-ocr-status');
+    var nativeScanner = nativeVinScanner();
+    if (nativeScanner && nativeScanner.recognizeText) {
+      if (status) status.textContent = 'Preparing photo for Android text recognition…';
+      prepareVinImage(file).then(function (canvas) {
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        return nativeScanner.recognizeText({ imageBase64: dataUrl.split(',')[1] || '' });
+      }).then(function (result) {
+        var text = result && result.text ? result.text : '';
+        state.ocrRaw = text;
+        var candidates = extractVinCandidates(text);
+        candidates.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
+        if (candidates.length) {
+          state.vinText = candidates[0];
+          state.ocrStatus = candidates.length > 1
+            ? 'Android OCR found several possible VINs. The best check-digit match is shown first; verify every character.'
+            : (vinCheckDigitValid(candidates[0])
+              ? 'Android OCR found a VIN with a consistent check digit. Verify every character before decoding.'
+              : 'Android OCR found a possible VIN. Verify every character against the photo before decoding.');
+        } else {
+          state.ocrStatus = 'Android OCR read the photo but could not isolate a complete 17-character VIN. Review the raw text below.';
+        }
+        renderVin();
+      }).catch(function (err) {
+        state.ocrStatus = err && err.message ? err.message : 'Android photo recognition failed. Try another photo or enter the VIN manually.';
+        renderVin();
+      }).finally(function () {
+        var current = $('#vin-ocr');
+        if (current) current.disabled = false;
+      });
+      return;
+    }
     if (status) status.textContent = 'Loading on-device text recognition…';
     loadOcrEngine().then(function (Tesseract) {
       return Promise.all([getOcrWorker(Tesseract, status), prepareVinImage(file)]);
