@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
+import com.google.mlkit.vision.barcode.ZoomSuggestionOptions;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
@@ -178,24 +179,6 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
     }
 
     private void startCamera() {
-        BarcodeScannerOptions options = new BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(
-                Barcode.FORMAT_DATA_MATRIX,
-                Barcode.FORMAT_QR_CODE,
-                Barcode.FORMAT_PDF417,
-                Barcode.FORMAT_AZTEC,
-                Barcode.FORMAT_CODE_39,
-                Barcode.FORMAT_CODE_128,
-                Barcode.FORMAT_CODE_93,
-                Barcode.FORMAT_CODABAR,
-                Barcode.FORMAT_ITF
-            )
-            // Return detected-but-undecodable regions too, so the camera can report
-            // that it sees a barcode rather than silently appearing unresponsive.
-            .enableAllPotentialBarcodes()
-            .build();
-        scanner = BarcodeScanning.getClient(options);
-
         ListenableFuture<ProcessCameraProvider> providerFuture = ProcessCameraProvider.getInstance(this);
         providerFuture.addListener(() -> {
             try {
@@ -207,11 +190,46 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
                     .setTargetResolution(new Size(1280, 720))
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build();
-                analysis.setAnalyzer(cameraExecutor, this::analyzeFrame);
 
                 provider.unbindAll();
                 camera = provider.bindToLifecycle(
                     this, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis);
+
+                // ML Kit can detect a barcode region before it can decode its contents.
+                // Give it the camera's real zoom limit so it can request closer frames
+                // automatically instead of leaving the user stuck with an empty payload.
+                float maxZoom = camera.getCameraInfo().getZoomState().getValue().getMaxZoomRatio();
+                BarcodeScannerOptions options = new BarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(
+                        Barcode.FORMAT_DATA_MATRIX,
+                        Barcode.FORMAT_QR_CODE,
+                        Barcode.FORMAT_PDF417,
+                        Barcode.FORMAT_AZTEC,
+                        Barcode.FORMAT_CODE_39,
+                        Barcode.FORMAT_CODE_128,
+                        Barcode.FORMAT_CODE_93,
+                        Barcode.FORMAT_CODABAR,
+                        Barcode.FORMAT_ITF
+                    )
+                    .enableAllPotentialBarcodes()
+                    .setZoomSuggestionOptions(
+                        new ZoomSuggestionOptions.Builder(zoomRatio -> {
+                            if (camera == null || finishedWithResult) return false;
+                            try {
+                                float supportedMax = camera.getCameraInfo().getZoomState().getValue().getMaxZoomRatio();
+                                camera.getCameraControl().setZoomRatio(Math.min(zoomRatio, supportedMax));
+                                runOnUiThread(() -> {
+                                    if (!finishedWithResult) statusView.setText("Barcode found. Automatically zooming to read it…");
+                                });
+                                return true;
+                            } catch (Exception ignored) {
+                                return false;
+                            }
+                        }).setMaxSupportedZoomRatio(maxZoom).build())
+                    .build();
+                scanner = BarcodeScanning.getClient(options);
+                analysis.setAnalyzer(cameraExecutor, this::analyzeFrame);
+
                 statusView.setText("Camera ready. Center the VIN barcode and hold steady.");
                 if (!camera.getCameraInfo().hasFlashUnit()) {
                     torchButton.setEnabled(false);
