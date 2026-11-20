@@ -279,16 +279,70 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
     private String findVin(String raw) {
         if (raw == null || raw.trim().isEmpty()) return "";
         String prepared = raw.toUpperCase(java.util.Locale.US)
-            .replaceAll("^\\][A-Z][0-9]", " ")
-            .replaceAll("(?i)VIN\\s*[:#-]?\\s*", " ")
+            .replaceAll("^\\\\][A-Z][0-9]", " ")
             .replaceAll("[*]", " ");
-        String trimmed = prepared.trim();
-        if (trimmed.length() == 18 && trimmed.charAt(0) == 'I' &&
-            VIN_TOKEN.matcher(trimmed.substring(1)).matches()) {
-            return trimmed.substring(1);
+        String[] tokens = prepared.split("[^A-Z0-9]+");
+        String firstCandidate = "";
+        String checksumCandidate = "";
+        for (String original : tokens) {
+            if (original.isEmpty()) continue;
+            String token = original;
+            if (token.startsWith("VIN") && token.length() > 3) token = token.substring(3);
+            if (token.length() == 18 && token.charAt(0) == 'I') token = token.substring(1);
+            if (token.length() == 17) {
+                if (isStrictVin(token)) {
+                    if (firstCandidate.isEmpty()) firstCandidate = token;
+                    if (hasValidNorthAmericanCheckDigit(token)) checksumCandidate = token;
+                }
+                continue;
+            }
+            // Some manufacturer payloads append identifiers directly to the VIN.
+            // Search within this decoded field only; never join adjacent fields.
+            for (int i = 0; i <= token.length() - 17; i++) {
+                String candidate = token.substring(i, i + 17);
+                if (!isStrictVin(candidate)) continue;
+                if (firstCandidate.isEmpty()) firstCandidate = candidate;
+                if (hasValidNorthAmericanCheckDigit(candidate)) checksumCandidate = candidate;
+            }
         }
-        Matcher matcher = VIN_TOKEN.matcher(prepared);
-        return matcher.find() ? matcher.group() : "";
+        return !checksumCandidate.isEmpty() ? checksumCandidate : firstCandidate;
+    }
+
+    private boolean isStrictVin(String value) {
+        return value != null && value.matches("[A-HJ-NPR-Z0-9]{17}") && value.matches(".*[0-9].*");
+    }
+
+    private boolean hasValidNorthAmericanCheckDigit(String vin) {
+        if (!isStrictVin(vin)) return false;
+        int[] weights = {8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2};
+        int sum = 0;
+        for (int i = 0; i < 17; i++) {
+            char c = vin.charAt(i);
+            int value;
+            if (c >= '0' && c <= '9') value = c - '0';
+            else {
+                value = vinTransliterationValue(c);
+                if (value < 0) return false;
+            }
+            sum += value * weights[i];
+        }
+        int remainder = sum % 11;
+        return vin.charAt(8) == (remainder == 10 ? 'X' : (char)('0' + remainder));
+    }
+
+    private int vinTransliterationValue(char c) {
+        switch (c) {
+            case 'A': case 'J': return 1;
+            case 'B': case 'K': case 'S': return 2;
+            case 'C': case 'L': case 'T': return 3;
+            case 'D': case 'M': case 'U': return 4;
+            case 'E': case 'N': case 'V': return 5;
+            case 'F': case 'W': return 6;
+            case 'G': case 'P': case 'X': return 7;
+            case 'H': case 'Y': return 8;
+            case 'R': case 'Z': return 9;
+            default: return -1;
+        }
     }
 
     private String formatName(int format) {
