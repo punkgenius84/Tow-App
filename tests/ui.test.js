@@ -168,3 +168,16 @@ test('VIN OCR helper corrects common OCR-only I/O/Q substitutions but leaves rev
   const candidates = w.__tow.extractVinCandidates('1FTFW1E5ONFA00000');
   assert.ok(Array.from(candidates).includes('1FTFW1E50NFA00000'));
 });
+
+
+test('VIN barcode scanner is available and accepts only a valid 17-character VIN', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  assert.ok(d.querySelector('#vin-barcode-start'));
+  assert.ok(d.querySelector('#vin-barcode-video'));
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA00000'), '1FTFW1E50NFA00000');
+  assert.equal(w.__tow.extractBarcodeVin('VIN: 1FTFW1E50NFA00000'), '');
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA0000'), '');
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E5ONFA00000'), '');
+});
