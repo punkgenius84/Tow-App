@@ -182,6 +182,20 @@ test('VIN OCR ranks the labeled, checksum-valid VIN above door-sticker numbers',
   assert.equal(candidates[0], '1HGCM82633A004352');
 });
 
+test('VIN OCR accepts a VIN split over two lines immediately after its label', () => {
+  const { window: w } = boot();
+  const candidates = Array.from(w.__tow.extractVinCandidates(
+    'VEHICLE IDENTIFICATION NUMBER\n1HGCM8263\n3A004352\nGVWR 6200 LB'
+  ));
+  assert.equal(candidates[0], '1HGCM82633A004352');
+});
+
+test('VIN OCR does not join weight fields after a VIN label into a false VIN', () => {
+  const { window: w } = boot();
+  const candidates = w.__tow.extractVinCandidates('VIN\nGVWR 6200\nGAWR 3450');
+  assert.equal(candidates.length, 0);
+});
+
 test('VIN OCR does not manufacture VIN candidates by joining unrelated sticker fields', () => {
   const { window: w } = boot();
   const candidates = w.__tow.extractVinCandidates(
