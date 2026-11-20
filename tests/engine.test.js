@@ -106,12 +106,22 @@ test('tall trucks clear a standard bed', () => {
   assert.equal(E.recommend(find('Jeep', 'Wrangler Unlimited (JL)')).clearance.status, 'ok');
 });
 
-test('status bands: ok >= 1.15, marginal >= 0.90, fail below', () => {
-  const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 30, low: false, measured: false, conf: 1 }).status;  // need 12.5
-  assert.equal(mk(14.4), 'ok');
-  assert.equal(mk(13), 'marginal');
-  assert.equal(mk(11.3), 'marginal');
-  assert.equal(mk(11.2), 'fail');
+test('clearance bands reserve 1.5 inches for uneven pavement and variation', () => {
+  const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 30, low: false, measured: false, conf: 1 }).status;
+  assert.equal(mk(14), 'ok');
+  assert.equal(mk(13.1), 'marginal');
+  assert.equal(mk(12.9), 'marginal');
+  assert.equal(mk(12.4), 'fail');
+});
+
+test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear pass', () => {
+  const mazda = { make: 'Mazda', model: '6 i Grand Touring', body: 'Sedan', drives: ['FWD'], trans: ['AT'], power: 'ICE', curb: 3300, wb: 107.4, gc: 5.5 };
+  const standard = E.recommend(mazda, { angle: 12, gc: 5.5 });
+  assert.equal(standard.clearance.status, 'fail');
+  assert.match(standard.clearance.setup, /low-deck, long-bed rollback/i);
+  const lowAngle = E.recommend(mazda, { angle: 6, gc: 5.5 });
+  assert.equal(lowAngle.clearance.status, 'ok');
+  assert.ok(lowAngle.clearance.remainingIn >= 1.5);
 });
 
 test('measured clearance overrides the database value', () => {
