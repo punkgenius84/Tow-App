@@ -200,7 +200,7 @@ test('VIN OCR recognizes VIN NUMBER label before the 17-character value', () => 
 
 test('VIN OCR pairs a value printed to the right of its label using ML Kit line geometry', () => {
   const { window: w } = boot();
-  const reading = { text: 'VIN\\nGVWR 6200', lines: [
+  const reading = { text: 'VIN\nGVWR 6200', lines: [
     { text: 'VIN', left: 40, top: 100, right: 90, bottom: 120, width: 50, height: 20, confidence: 0.98 },
     { text: '1HGCM82633A004352', left: 105, top: 101, right: 270, bottom: 121, width: 165, height: 20, confidence: 0.95 },
     { text: 'GVWR 6200 LB', left: 40, top: 145, right: 170, bottom: 165, width: 130, height: 20, confidence: 0.99 }
@@ -211,7 +211,7 @@ test('VIN OCR pairs a value printed to the right of its label using ML Kit line 
 
 test('VIN OCR pairs a value directly below its label without consuming distant sticker fields', () => {
   const { window: w } = boot();
-  const reading = { text: 'VEHICLE IDENTIFICATION NUMBER\\nGVWR 6200', lines: [
+  const reading = { text: 'VEHICLE IDENTIFICATION NUMBER\nGVWR 6200', lines: [
     { text: 'VEHICLE IDENTIFICATION NUMBER', left: 35, top: 80, right: 260, bottom: 100, width: 225, height: 20, confidence: 0.98 },
     { text: '1HGCM82633A004352', left: 35, top: 105, right: 200, bottom: 125, width: 165, height: 20, confidence: 0.96 },
     { text: 'GVWR 6200 LB', left: 35, top: 165, right: 150, bottom: 185, width: 115, height: 20, confidence: 0.99 }
