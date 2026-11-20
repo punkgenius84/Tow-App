@@ -61,7 +61,7 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
     private BarcodeScanner scanner;
     private ExecutorService cameraExecutor;
     private boolean torchEnabled = false;
-    private boolean finishedWithResult = false;
+    private volatile boolean finishedWithResult = false;
     private String previousCandidate = "";
     private int consecutiveMatches = 0;
 
@@ -249,6 +249,12 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
         if (finishedWithResult || barcodes == null) return;
         for (Barcode barcode : barcodes) {
             String raw = barcode.getRawValue();
+            if (raw == null || raw.isEmpty()) {
+                byte[] rawBytes = barcode.getRawBytes();
+                if (rawBytes != null && rawBytes.length > 0) {
+                    raw = new String(rawBytes, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            }
             String vin = findVin(raw);
             if (vin.isEmpty()) continue;
             if (vin.equals(previousCandidate)) consecutiveMatches++;
@@ -273,8 +279,14 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
     private String findVin(String raw) {
         if (raw == null || raw.trim().isEmpty()) return "";
         String prepared = raw.toUpperCase(java.util.Locale.US)
-            .replaceAll("(?i)VIN\\s*[:#-]?\\s*", " ")
+            .replaceAll("^\\\\][A-Z][0-9]", " ")
+            .replaceAll("(?i)VIN\\\\s*[:#-]?\\\\s*", " ")
             .replaceAll("[*]", " ");
+        String trimmed = prepared.trim();
+        if (trimmed.length() == 18 && trimmed.charAt(0) == 'I' &&
+            VIN_TOKEN.matcher(trimmed.substring(1)).matches()) {
+            return trimmed.substring(1);
+        }
         Matcher matcher = VIN_TOKEN.matcher(prepared);
         return matcher.find() ? matcher.group() : "";
     }
