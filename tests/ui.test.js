@@ -159,7 +159,7 @@ test('VIN camera scanner is present and OCR candidates are normalized safely', (
   assert.ok(d.querySelector('#vin-photo'));
   assert.equal(d.querySelector('#vin-photo').getAttribute('capture'), 'environment');
   assert.ok(d.querySelector('#vin-ocr'));
-  const candidates = w.__tow.extractVinCandidates('VIN: 1FTFW1E50NFA00000\\nOther text');
+  const candidates = w.__tow.extractVinCandidates('VIN: 1FTFW1E50NFA00000\nOther text');
   assert.deepEqual(Array.from(candidates), ['1FTFW1E50NFA00000']);
 });
 
