@@ -24,15 +24,18 @@ public class NativeVinScannerPlugin extends Plugin {
 
     @PluginMethod
     public void scanBarcode(PluginCall call) {
-        int formats = Barcode.FORMAT_CODE_39
-            | Barcode.FORMAT_CODE_128
-            | Barcode.FORMAT_DATA_MATRIX
-            | Barcode.FORMAT_PDF417
-            | Barcode.FORMAT_QR_CODE
-            | Barcode.FORMAT_ITF;
-
+        // setBarcodeFormats takes separate format constants (varargs), not
+        // a bitwise-OR mask. Passing a combined mask prevents the scanner
+        // from matching the individual VIN label formats.
         GmsBarcodeScannerOptions options = new GmsBarcodeScannerOptions.Builder()
-            .setBarcodeFormats(formats)
+            .setBarcodeFormats(
+                Barcode.FORMAT_CODE_39,
+                Barcode.FORMAT_CODE_128,
+                Barcode.FORMAT_DATA_MATRIX,
+                Barcode.FORMAT_PDF417,
+                Barcode.FORMAT_QR_CODE,
+                Barcode.FORMAT_ITF
+            )
             .enableAutoZoom()
             .build();
 
