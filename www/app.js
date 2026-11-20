@@ -415,7 +415,7 @@
         attempts++;
         if (status) status.textContent = attempts === 1 ? 'Opening Android barcode scanner…' : 'That barcode was not a VIN. Scanning again (' + attempts + ' of ' + MAX_ATTEMPTS + ')…';
         return nativeScanner.scanBarcode().then(function (result) {
-          var raw = result && (result.rawValue || result.displayValue) ? (result.rawValue || result.displayValue) : '';
+          var raw = result ? String(result.rawValue || '').trim() || String(result.displayValue || '').trim() : '';
           // Some Android barcode formats expose payload bytes but no decoded text.
           if (!raw && result && result.rawBytesBase64 && window.atob) {
             try {
@@ -606,7 +606,7 @@
         if (candidates.length) {
           state.vinText = candidates[0];
           state.ocrStatus = candidates.length > 1
-            ? 'Android OCR found several possible VINs. The best check-digit match is shown first; verify every character.'
+            ? 'Android OCR found several possible VINs. The highest-ranked candidate is shown first using VIN structure and check-digit evidence; verify every character.'
             : (vinCheckDigitValid(candidates[0])
               ? 'Android OCR found a VIN with a consistent check digit. Verify every character before decoding.'
               : 'Android OCR found a possible VIN. Verify every character against the photo before decoding.');
@@ -658,7 +658,7 @@
           ? 'VIN found; its check digit is consistent. Verify every character before decoding.'
           : 'Possible VIN found. Verify every character against the photo before decoding.';
       } else if (candidates.length > 1) {
-        state.ocrStatus = 'Several possible VIN readings were found. The best checksum match is shown first; verify it against the photo.';
+        state.ocrStatus = 'Several possible VIN readings were found. The highest-ranked candidate uses VIN structure and check-digit evidence; verify it against the photo.';
         state.vinText = candidates[0];
       } else {
         state.ocrStatus = 'OCR could not isolate a complete 17-character VIN. The raw readings are shown below so you can spot the characters it missed.';
