@@ -326,11 +326,22 @@
       var compact = String(raw || '').replace(/[^A-Z0-9]/g, '');
       for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17), true);
     }
-    lines.forEach(function (line) {
+    lines.forEach(function (line, lineIndex) {
       // Capture exactly 17 OCR characters after a VIN label, allowing spaces
       // or hyphens between characters. Do not consume the rest of the sticker.
-      var labelled = line.match(/\b(?:VIN|V1N)\s*(?:NO\.?|NUMBER)?\s*[:#-]?\s*((?:[A-Z0-9][\s-]?){17})/);
+      var vinLabel = /\b(?:VIN|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\b/;
+      var labelled = line.match(/\b(?:VIN|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\s*[:#-]?\s*((?:[A-Z0-9][\s-]?){17})/);
       if (labelled) addLabelledWindows(labelled[1]);
+      else if (vinLabel.test(line)) {
+        // Some OCR engines put the VIN label on one line and the number on
+        // the next. Join at most the next two lines, and only accept exactly
+        // 17 characters so weight/tire/manufacturing fields cannot bleed in.
+        var nextLines = [lines[lineIndex + 1] || '', lines[lineIndex + 2] || ''];
+        for (var count = 1; count <= 2; count++) {
+          var following = nextLines.slice(0, count).join('').replace(/[^A-Z0-9]/g, '');
+          if (following.length === 17) addCandidate(following, true);
+        }
+      }
 
       // Without a VIN label, accept only a standalone 17-character token
       // (or the known 18-character leading-I label prefix). Never slide a
