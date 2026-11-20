@@ -95,6 +95,17 @@ def pick_body(model, styles):
 
 
 def main():
+    # The specification source repository has no explicit data licence. Do not
+    # silently regenerate/expand the bundled dataset until permission or a
+    # separately licensed replacement is documented. This opt-in is for a
+    # deliberate private research run only; it does not grant redistribution rights.
+    if os.environ.get('TOW_ALLOW_UNLICENSED_SPEC_IMPORT') != '1':
+        raise SystemExit(
+            'BLOCKED: AutoEvolution-derived specifications have no confirmed redistribution licence. '
+            'Obtain written permission or replace the source before importing. '
+            'For a deliberate private research-only run, set TOW_ALLOW_UNLICENSED_SPEC_IMPORT=1; '
+            'this does not authorize distribution.'
+        )
     z = zipfile.ZipFile(fetch(AE_ZIP, 'automobiles.csv.zip'))
     brands = [r['name'] for r in csv.DictReader(io.TextIOWrapper(z.open('brands.csv'), encoding='utf-8'))]
     brands.sort(key=len, reverse=True)
