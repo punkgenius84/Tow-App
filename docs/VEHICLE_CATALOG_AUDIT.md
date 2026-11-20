@@ -2,9 +2,9 @@
 
 **Status: IN PROGRESS — NOT APPROVED FOR RELEASE**
 
-**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 263 rows have been verified.
+**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 290 rows have been verified.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **289 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **290 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
@@ -19,6 +19,10 @@ The companion CSV, `docs/vehicle-catalog-audit.csv`, lists every current row and
 ## Identity / generation corrections applied
 
 The catalog now separates Mazda MX-5 Miata NA/NB/NC/ND generations, Mazda3 sedan and hatchback generation ranges, BMW 3 Series chassis generations E36/E46/E90/F30/G20 (year boundaries are catalog working ranges and require US model-year confirmation), and Mercedes-Benz C-Class W202/W203/W204/W205/W206, E-Class W124/W210/W211/W212/W213/W214, and S-Class W140/W220/W221/W222/W223 model series. These are identity/year corrections only. Their curb weight, wheelbase and ground-clearance numbers remain provisional legacy baselines and are not verified for each generation or trim. They remain low-confidence and must not be used instead of measuring the actual vehicle.
+
+## Verified source-backed update — Honda CR-V
+
+The former 2017–2025 CR-V row was split at the 2023 redesign because the wheelbase changed from approximately 104.7–104.8 in (2017–2022) to 106.3 in (2023–2025). Honda's US specification pages also document drivetrain-dependent unladen clearance: 7.8 in (2WD) and 8.2 in (AWD). The app retains a conservative 7.8 in catalog baseline and keeps both rows low-confidence; operators must identify drivetrain and measure the actual vehicle. Sources: [2022 Honda CR-V specifications](https://www.hondainfocenter.com/2022/CR-V/Feature-Guide/Specifications/) and [2025 Honda CR-V specifications](https://www.hondainfocenter.com/2025/cr-v/feature-guide/specifications/).
 
 ## Verification standard
 
