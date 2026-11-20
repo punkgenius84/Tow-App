@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK # personal test build: debug-signed release artifact
 
 on:
   workflow_dispatch:
