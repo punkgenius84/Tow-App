@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package com.bigjaysstowing.towguide;
 
 import static org.junit.Assert.*;
 

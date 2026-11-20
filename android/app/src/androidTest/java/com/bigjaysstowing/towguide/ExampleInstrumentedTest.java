@@ -1,5 +1,5 @@
 
-package com.getcapacitor.myapp;
+package com.bigjaysstowing.towguide;
 
 import static org.junit.Assert.*;
 
@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.orbitaledgelabs.towguide", appContext.getPackageName());
+        assertEquals("com.bigjaysstowing.towguide", appContext.getPackageName());
     }
 }

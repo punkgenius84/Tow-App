@@ -1,8 +1,8 @@
 {
-  "name": "towguide",
+  "name": "big-jays-tow-guide",
   "version": "1.0.0",
   "private": true,
-  "description": "Android app for tow operators: tow method, truck class, ground-clearance check and step-by-step tie-down.",
+  "description": "Big Jay's Towing and Auto Center mobile towing reference app.",
   "scripts": {
     "test": "node --test tests/engine.test.js tests/ui.test.js",
     "serve": "npx --yes serve www",
