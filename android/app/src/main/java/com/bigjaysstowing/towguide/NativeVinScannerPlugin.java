@@ -9,10 +9,7 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.google.android.gms.tasks.Task;
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 import com.google.mlkit.vision.barcode.common.Barcode;
-import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
@@ -21,7 +18,6 @@ import com.google.android.gms.code.scanner.GmsBarcodeScanner;
 import com.google.android.gms.code.scanner.GmsBarcodeScannerOptions;
 import com.google.android.gms.code.scanner.GmsBarcodeScanning;
 
-import java.util.concurrent.Executor;
 
 @CapacitorPlugin(name = "NativeVinScanner")
 public class NativeVinScannerPlugin extends Plugin {
