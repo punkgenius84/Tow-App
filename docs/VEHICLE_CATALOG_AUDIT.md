@@ -2,11 +2,13 @@
 
 **Status: IN PROGRESS — NOT APPROVED FOR RELEASE**
 
+**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 263 rows have been verified.
+
 This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **263 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
-The current database stores one curb weight, wheelbase and ground-clearance value for each row, while many rows cover multiple redesigns and trim/drivetrain variants. The app's current confidence logic marks rows as lower confidence when the year span is broad, but a short year span is not proof that its specifications have been verified. The catalog has no per-row source provenance today.
+The current database stores one curb weight, wheelbase and ground-clearance value for each row, while many rows cover multiple redesigns and trim/drivetrain variants. The app's current confidence logic marks rows as lower confidence when the year span is broad, but a short year span is not proof that its specifications have been verified. The catalog has no per-row source provenance today. Until that is remedied, every catalog row is treated as unverified by the application, regardless of year-span length.
 
 - **199 rows** cover seven or more model years.
 - **114 rows** cover eleven or more model years.
