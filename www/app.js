@@ -410,8 +410,8 @@
           }
           if (attempts < MAX_ATTEMPTS) return scanOnce();
           state.barcodeStatus = raw
-            ? 'Barcodes were read, but none contained a valid 17-character VIN. Last value: ' + String(raw).slice(0, 60)
-            : 'The barcode did not contain readable text. Try moving closer or use the photo option.';
+            ? 'Google read a barcode, but its value was not recognized as a VIN. Last value: ' + String(raw).replace(/[\\x00-\\x1f]/g, ' ').slice(0, 90) + '. Try the VIN-specific barcode on the door label, or use the photo option.'
+            : 'Google closed after detecting a barcode but returned no text value. Try another barcode on the label or use the photo option.';
         });
       };
       scanOnce().catch(function (err) {
