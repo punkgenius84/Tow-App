@@ -226,6 +226,49 @@ test('barcode VIN extraction handles real label payload shapes', () => {
   assert.equal(f(''), '');
 });
 
+test('Android uses continuous in-app barcode scanning instead of the one-shot Play-services screen', async () => {
+  const { window: w } = boot();
+  const d = w.document;
+  let nativeCalls = 0, browserCalls = 0;
+  const controls = { stop: () => {} };
+  Object.defineProperty(w.navigator, 'mediaDevices', {
+    configurable: true,
+    value: { getUserMedia: () => Promise.resolve({}) }
+  });
+  w.Capacitor = {
+    getPlatform: () => 'android',
+    Plugins: { NativeVinScanner: { scanBarcode: () => { nativeCalls++; return Promise.resolve({ rawValue: 'PART-0001' }); } } }
+  };
+  w.ZXingBrowser = {
+    DecodeHintType: { TRY_HARDER: 'TRY_HARDER', POSSIBLE_FORMATS: 'POSSIBLE_FORMATS' },
+    BarcodeFormat: { CODE_39: 1, CODE_128: 2, DATA_MATRIX: 3, PDF_417: 4, QR_CODE: 5, ITF: 6 },
+    BrowserMultiFormatReader: function () {
+      this.decodeFromConstraints = (constraints, video, callback) => {
+        browserCalls++;
+        callback({ getText: () => '1HGCM82633A004352' }, null, controls);
+        return Promise.resolve(controls);
+      };
+    }
+  };
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  await new Promise(r => setTimeout(r, 0));
+  assert.equal(nativeCalls, 0, 'Android must not launch the one-shot external scanner');
+  assert.equal(browserCalls, 1, 'continuous ZXing camera reader starts');
+  assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN captured from barcode/i);
+});
+
+test('Android OCR reparses both photo passes together so candidate ranking is retained', () => {
+  const app = fs.readFileSync(path.join(WWW, 'app.js'), 'utf8');
+  const start = app.indexOf('function scanVinPhoto()');
+  const end = app.indexOf('function decodeVin()', start);
+  const androidPath = app.slice(start, end);
+  assert.match(androidPath, /prepareVinImage\(file, true\)/);
+  assert.match(androidPath, /extractVinCandidates\(readings\.enhanced \+ '\\\\n' \+ readings\.original\)/);
+  assert.doesNotMatch(androidPath, /candidates\.sort\(function \(a, b\) \{ return Number\(vinCheckDigitValid/);
+});
+
 test('native barcode scanner reopens until a barcode contains a VIN', async () => {
   const { window: w } = boot();
   const calls = [];
