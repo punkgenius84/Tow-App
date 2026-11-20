@@ -168,8 +168,9 @@
     h += '<div class="card edge-' + kcls + '"><div class="label">GROUND CLEARANCE CHECK</div>' +
       '<div class="big"><span class="badge ' + kcls + '">' + klabel + '</span></div>' +
       '<div class="stats"><div class="stat"><b>' + k.gc + '"</b><span>clearance</span></div>' +
-      '<div class="stat"><b>' + k.neededIn + '"</b><span>needed at ' + k.angle + '°</span></div>' +
-      '<div class="stat"><b>' + k.maxAngleDeg + '°</b><span>max safe angle</span></div></div>' +
+      '<div class="stat"><b>' + k.neededIn + '"</b><span>crest rise at ' + k.angle + '°</span></div>' +
+      '<div class="stat"><b>' + k.remainingIn + '"</b><span>remaining margin</span></div></div>' +
+      '<h3>TRUCK / DECK TO USE</h3><p>' + esc(k.setup) + '</p>' +
       ul(k.advice) +
       '<div class="muted">Covers belly breakover only. Also check the front lip, side skirts and rear bumper by eye.</div></div>';
 
