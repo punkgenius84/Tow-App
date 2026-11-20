@@ -32,7 +32,7 @@ The Android project uses Gradle 8.11.1 and requires **JDK 21** for compilation.
 3. Run `npx cap sync android`.
 4. Build with `cd android && ./gradlew assembleDebug` (Windows: `gradlew.bat assembleDebug` from the `android` folder).
 
-You can also use the repository's **Build Android APK** GitHub Actions workflow. It runs the tests, synchronizes Capacitor, builds the debug APK with JDK 21, and uploads an artifact named `TowGuide-debug-apk`. Open the repository's **Actions** tab, select **Build Android APK**, choose **Run workflow**, and download the artifact when the run succeeds.
+The repository's **Build Android APK** workflow is currently manual-only and intentionally paused from automatic push / pull-request builds while the vehicle catalog audit is in progress. Do not generate another APK until the full audit, regression tests and documentation are complete and the release is explicitly approved.
 
 The debug APK output path is `android/app/build/outputs/apk/debug/app-debug.apk`.
 
@@ -44,7 +44,7 @@ Run `npm test` for the tow-rule, clearance, tie-down, vehicle-database, VIN-deco
 
 ## Adding vehicles
 
-Append a row to `ROWS` in `www/data.js` (format documented at the top of that file). The test suite checks row structure and database integrity.
+Append a row to `ROWS` in `www/data.js` (format documented at the top of that file). The test suite checks row structure and database integrity. The complete catalog audit is tracked in [`docs/VEHICLE_CATALOG_AUDIT.md`](docs/VEHICLE_CATALOG_AUDIT.md), with one inventory line for every current database row in [`docs/vehicle-catalog-audit.csv`](docs/vehicle-catalog-audit.csv).
 
 ## Operational limits
 
@@ -67,3 +67,10 @@ The US-market reference database now includes additional Mazda (including the 20
 
 For this tinkering build, the release APK is signed with Gradle's debug certificate so no private keystore or passwords are needed. This is suitable for personal sideload testing, not Play Store distribution. A debug certificate generated on a hosted runner may change between runs, so a later APK may require uninstalling the previous test build before installing the new one. No signing secrets need to be shared in chat or committed to the repository.
 
+
+
+## Vehicle catalog audit — release gate
+
+The catalog-wide audit is **in progress**. It covers all 263 current rows across 47 makes, not only selected examples. Each entry must be checked for model-year generation boundaries, drivetrain / trim differences, ground clearance, wheelbase, curb weight and source provenance. Unverified values must remain identified as estimates; the audit must not upgrade confidence based only on plausible-looking numbers.
+
+**No APKs are to be generated until the audit is complete, regression tests pass, documentation is updated, and the release is explicitly approved.** The Android build workflow is manual-only during this work.
