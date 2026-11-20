@@ -117,7 +117,7 @@
     ['Toyota', '4Runner', 2010, 2025, 'SUV', 'RWD|4WD', 'ICE', 'AT', 4400, 109.8, 9.6],
     ['Toyota', 'Tacoma', 2016, 2023, 'Pickup', 'RWD|4WD', 'ICE', 'AT|MT', 4100, 127.4, 9.4],
     ['Toyota', 'Tundra', 2022, 2025, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 5800, 145.7, 10.2, { gvwr: 7400 }],
-    ['Toyota', 'Sienna', 2021, 2025, 'Minivan', 'FWD|AWD', 'HEV', 'CVT', 4600, 120.5, 6.5, { c: 0 }],
+    ['Toyota', 'Sienna', 2021, 2025, 'Minivan', 'FWD|AWD', 'HEV', 'CVT', 4600, 120.5, 6.5, { c: 0, note: 'Toyota confirms the fourth-generation redesign for 2021 and 120.5 in wheelbase. Woodland Edition (2022+) has increased ground clearance versus other trims; 6.5 in is an unverified legacy baseline, not a universal trim specification. Confirm trim/drivetrain and measure actual vehicle. Sources: https://pressroom.toyota.com/toyota-sienna-2021/ ; https://pressroom.toyota.com/2022-toyota-sienna-expands-adventure-possibilities-with-new-woodland-edition/' }],
 
     // ---------- Honda ----------
     ['Honda', 'Civic', 2016, 2025, 'Sedan', 'FWD', 'ICE', 'CVT|MT', 2950, 107.7, 5.3],
