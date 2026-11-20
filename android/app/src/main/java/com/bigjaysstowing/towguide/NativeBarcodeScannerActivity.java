@@ -190,6 +190,9 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
                 Barcode.FORMAT_CODABAR,
                 Barcode.FORMAT_ITF
             )
+            // Return detected-but-undecodable regions too, so the camera can report
+            // that it sees a barcode rather than silently appearing unresponsive.
+            .enableAllPotentialBarcodes()
             .build();
         scanner = BarcodeScanning.getClient(options);
 
