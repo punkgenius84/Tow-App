@@ -204,6 +204,16 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
   assert.match(t, /Tie-downs:/);
 });
 
+
+test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
+  assert.equal(D.vehicles.length, 263);
+  for (const v of D.vehicles) {
+    assert.equal(v.conf, 0, v.make + ' ' + v.model + ' must not imply verified specs');
+    assert.equal(v.source, '', v.make + ' ' + v.model + ' has no verified source yet');
+    assert.equal(v.sourceYear, 0, v.make + ' ' + v.model + ' has no reviewed source year yet');
+  }
+});
+
 /* ---------- database integrity ---------- */
 test('US model-year catalog includes 1980-era Subaru and Mazda entries', () => {
   assert.ok(find('Subaru', 'BRAT').yFrom <= 1980);
