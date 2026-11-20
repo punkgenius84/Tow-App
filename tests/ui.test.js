@@ -177,7 +177,7 @@ test('VIN OCR ranks the labeled, checksum-valid VIN above door-sticker numbers',
     'TIRE 235/65R17 104H PRESSURE 240 KPA',
     'VIN NO: 1HGCM82633A004352',
     'ASSEMBLED IN USA PLANT 2'
-  ].join('\\n');
+  ].join('\n');
   const candidates = Array.from(w.__tow.extractVinCandidates(text));
   assert.equal(candidates[0], '1HGCM82633A004352');
 });
@@ -185,7 +185,7 @@ test('VIN OCR ranks the labeled, checksum-valid VIN above door-sticker numbers',
 test('VIN OCR does not manufacture VIN candidates by joining unrelated sticker fields', () => {
   const { window: w } = boot();
   const candidates = w.__tow.extractVinCandidates(
-    'GVWR6200LBGAWRFRONT3450LB\\nMFD2023TIRE23565R17104H'
+    'GVWR6200LBGAWRFRONT3450LB\nMFD2023TIRE23565R17104H'
   );
   assert.equal(candidates.length, 0);
 });
