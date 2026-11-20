@@ -387,13 +387,10 @@
         ]);
       }
       var reader = new ZXing.BrowserMultiFormatReader(hints, 350);
-      // Prefer the rear camera; undefined deviceId can select the front camera
-      // on Android phones and make small vehicle labels almost impossible to scan.
-      return reader.listVideoInputDevices().then(function (devices) {
-        var rear = (devices || []).find(function (device) { return /back|rear|environment/i.test(device.label || ''); });
-        var selected = rear || (devices && devices.length ? devices[devices.length - 1] : null);
-        if (!selected) throw new Error('No camera was found. Check camera permission or use the photo scanner.');
-        return reader.decodeFromVideoDevice(selected.deviceId, video, function (result, err, controls) {
+      // Request the rear-facing camera by constraint. Device ordering is not
+      // consistent across Android manufacturers, so selecting the last camera
+      // from enumerateDevices can accidentally choose the selfie camera.
+      return reader.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } } }, video, function (result, err, controls) {
         if (controls && !state.barcodeControls) state.barcodeControls = controls;
         if (result) {
           var vin = extractBarcodeVin(result.getText ? result.getText() : result.text);
@@ -406,7 +403,6 @@
             status.textContent = 'Barcode detected, but it did not contain a valid 17-character VIN. Keep scanning or use the photo/manual option.';
           }
         }
-        });
       });
     }).then(function (controls) {
       if (controls && state.barcodeScanning) {
