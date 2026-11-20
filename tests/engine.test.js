@@ -91,9 +91,10 @@ test('breakover formula: (wb/4)*sin(angle)', () => {
   assert.equal(k.neededIn, 12.5);              // 100/4 * 0.5
 });
 
-test('max safe angle is asin(4*gc/wb)', () => {
+test('max recommended angle preserves the 1.5-inch reserve', () => {
   const k = E.clearanceCheck({ wb: 100, gc: 12.5, angle: 10, low: false, measured: false, conf: 1 });
-  assert.equal(k.maxAngleDeg, 30);             // asin(0.5)
+  assert.ok(k.maxAngleDeg < 30);
+  assert.ok(k.maxAngleDeg > 25);
 });
 
 test('Mustang scrapes on a standard bed, clears on a low-angle bed', () => {
