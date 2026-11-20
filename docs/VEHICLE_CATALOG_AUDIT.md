@@ -4,7 +4,7 @@
 
 **Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 292 rows have been verified.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **293 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **294 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
@@ -42,6 +42,10 @@ The former 2016–2025 Prius row crossed the 2023 redesign. Toyota's 2022 US bro
 ## Verified generation split — Toyota 4Runner
 
 The former 2010–2025 4Runner row crossed the 2025 sixth-generation redesign. Toyota's 2024 US brochure lists a 109.8 in wheelbase and drivetrain-dependent ground clearance of 9.0 in (2WD) / 9.6 in (4WD); the catalog uses the conservative 9.0 in baseline for 2010–2024. The 2025 Toyota USVI brochure lists a 112.2 in wheelbase and 8.1 in ground clearance for its documented configurations, while Toyota USA confirms the all-new sixth generation and its expanded grade and powertrain lineup. The catalog is now split into 2010–2024 and 2025 entries. Both remain low-confidence: clearance varies by trim/package, curb weight varies materially, and the 2025 catalog weight is a provisional estimate rather than a verified universal value. Confirm the exact trim, drivetrain and powertrain, then measure the actual vehicle. Sources: [2024 Toyota 4Runner eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2024/4runner_ebrochure.pdf), [2025 Toyota 4Runner eBrochure — Toyota USVI](https://www.toyotausvi.com/dynamic/ebrochure/2025_4runner_ebrochure_usvi.pdf), [Toyota USA — all-new 2025 4Runner](https://pressroom.toyota.com/the-all-new-2025-toyota-4runner-the-icon-that-inspires-exploration/).
+
+## Verified generation split — Honda Pilot
+
+The former 2016–2025 Pilot row crossed the 2023 redesign. Honda's 2022 US specifications list a 111.0 in wheelbase and 7.3 in unladen ground clearance on standard trims; the 2022 TrailSport is 7.9 in and has a 110.9 in wheelbase. Honda's 2023 US specifications list a 113.8 in wheelbase, 7.3 in unladen clearance on most trims, and 8.3 in for TrailSport AWD. The catalog is split into 2016–2022 and 2023–2025 entries, each using the conservative 7.3 in baseline. Curb weight varies by trim and drivetrain; the newer row's 4,400 lb is a provisional catalog estimate. Both remain low-confidence and require exact trim confirmation and an on-scene measurement. Sources: [2022 Honda Pilot specifications](https://www.hondainfocenter.com/2022/Pilot/Feature-Guide/Specifications/) and [2023 Honda Pilot specifications](https://hondanews.com/en-US/honda-automobiles/releases/release-4e58b4e0fcd795affa5685a66a1953ae-2023-honda-pilot-specifications-features).
 
 ## Verification standard
 
