@@ -52,3 +52,19 @@ Append a row to `ROWS` in `www/data.js` (format documented at the top of that fi
 - The vehicle owner's manual and company procedures take precedence.
 - The clearance calculation covers belly breakover only; it does not model lips, splitters, skirts, or every underbody obstruction.
 - CDL, strap-rating, and re-check guidance is general information, not legal advice. Requirements vary by jurisdiction.
+
+
+## Signed Android release
+
+The workflow always builds the debug APK. It also builds and uploads a signed release APK when all four repository Actions secrets are configured:
+
+- `ANDROID_KEYSTORE_BASE64`: base64-encoded JKS/PKCS12 signing keystore
+- `ANDROID_KEYSTORE_PASSWORD`: keystore password
+- `ANDROID_KEY_ALIAS`: signing key alias
+- `ANDROID_KEY_PASSWORD`: key password
+
+Add these under **Repository Settings → Secrets and variables → Actions**. Never commit the keystore or passwords. The release artifact is named `TowGuide-release-signed-apk`. Keep the same keystore and alias for every future update; losing the signing key can prevent updates to the installed app.
+
+## Clearance safety margin
+
+The clearance estimate now requires at least 1.5 inches beyond the calculated ramp-crest rise before showing a positive result. A smaller reserve is marked tight or likely to scrape and recommends a low-deck, long-bed rollback with adjustable tilt and long ramp extensions, or go-jacks/skates / a different carrier. This is a screening aid, not a guarantee: measure the lowest point, inspect approach/departure lips, and account for uneven pavement and suspension movement.
