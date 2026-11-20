@@ -236,7 +236,16 @@
 
   /* ---------- VIN ---------- */
   function renderVin() {
-    var h = '<section class="stack"><div class="card stack"><label class="f">17-character VIN (needs internet)</label>' +
+    var h = '<section class="stack"><div class="card stack">' +
+      '<div class="label">SCAN VIN WITH CAMERA</div>' +
+      '<label class="f" for="vin-photo">Photograph the VIN on the windshield or driver-door label</label>' +
+      '<input id="vin-photo" type="file" accept="image/*" capture="environment">' +
+      '<div class="muted">Take a clear, close, straight-on photo with the full 17-character VIN in focus. OCR runs on this device after its recognition engine loads. The photo is not uploaded or saved by this app.</div>' +
+      '<img id="vin-preview" class="vin-preview" alt="VIN photo preview" hidden>' +
+      '<button class="btn block" id="vin-ocr" type="button">Read VIN from photo</button>' +
+      '<div id="vin-ocr-status" class="muted" aria-live="polite">' + esc(state.ocrStatus || 'Camera scan works best in good light with minimal glare.') + '</div>' +
+      '</div><div class="card stack"><div class="label">OR ENTER VIN MANUALLY</div>' +
+      '<label class="f" for="vin">17-character VIN (NHTSA lookup needs internet)</label>' +
       '<input id="vin" autocapitalize="characters" autocomplete="off" maxlength="17" placeholder="1FTFW1E50NFA00000" value="' + esc(state.vinText || '') + '">' +
       '<button class="btn block" id="vin-go">Decode VIN</button>' +
       '<div class="muted">Uses the free US government (NHTSA) VIN service. Drive type, powertrain and transmission come from the VIN. Weight and clearance still come from the database or your measurements.</div></div>';
@@ -261,6 +270,74 @@
       h += '<button class="btn ghost block" data-vin-custom="1">Use decoded info in Custom form</button>';
     }
     $('#view').innerHTML = h + '</section>';
+    var preview = $('#vin-preview');
+    if (preview && state.vinPreviewUrl) { preview.src = state.vinPreviewUrl; preview.hidden = false; }
+  }
+
+  function extractVinCandidates(text) {
+    var found = [], lines = String(text || '').toUpperCase().split(/\\r?\\n/);
+    lines.forEach(function (line) {
+      var compact = line.replace(/[^A-Z0-9]/g, '');
+      for (var i = 0; i <= compact.length - 17; i++) {
+        var raw = compact.slice(i, i + 17);
+        if (/^[A-HJ-NPR-Z0-9]{17}$/.test(raw) && found.indexOf(raw) === -1) found.push(raw);
+        var corrected = raw.replace(/O/g, '0').replace(/[IQ]/g, '1');
+        if (/^[A-HJ-NPR-Z0-9]{17}$/.test(corrected) && found.indexOf(corrected) === -1) found.push(corrected);
+      }
+    });
+    return found;
+  }
+
+  function loadOcrEngine() {
+    if (window.Tesseract) return Promise.resolve(window.Tesseract);
+    if (state.ocrLoader) return state.ocrLoader;
+    state.ocrLoader = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      script.async = true;
+      script.onload = function () { if (window.Tesseract) resolve(window.Tesseract); else reject(new Error('OCR engine did not initialize')); };
+      script.onerror = function () { reject(new Error('Could not load the OCR engine. Check your internet connection.')); };
+      document.head.appendChild(script);
+    });
+    return state.ocrLoader;
+  }
+
+  function scanVinPhoto() {
+    var input = $('#vin-photo'), file = input && input.files && input.files[0];
+    if (!file) { state.ocrStatus = 'Take or choose a VIN photo first.'; return renderVin(); }
+    if (!/^image\\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
+    var button = $('#vin-ocr');
+    if (button) button.disabled = true;
+    var status = $('#vin-ocr-status');
+    if (status) status.textContent = 'Loading on-device text recognition…';
+    loadOcrEngine().then(function (Tesseract) {
+      return Tesseract.recognize(file, 'eng', {
+        logger: function (m) {
+          if (!status) return;
+          if (m.status === 'recognizing text') status.textContent = 'Reading VIN… ' + Math.round((m.progress || 0) * 100) + '%';
+          else if (m.status === 'loading tesseract core') status.textContent = 'Preparing text recognition…';
+        }
+      });
+    }).then(function (result) {
+      var candidates = extractVinCandidates(result && result.data ? result.data.text : '');
+      if (candidates.length === 1) {
+        state.vinText = candidates[0];
+        state.ocrStatus = 'VIN found. Check every character below, then tap Decode VIN.';
+      } else if (candidates.length > 1) {
+        state.ocrStatus = 'More than one possible VIN was found. Choose and verify the correct 17 characters below.';
+        state.vinText = candidates[0];
+      } else {
+        state.ocrStatus = 'No clear 17-character VIN found. Retake the photo closer, reduce glare, or enter it manually.';
+      }
+      renderVin();
+      if (candidates.length > 1) {
+        var msg = $('#vin-ocr-status');
+        if (msg) msg.textContent += ' First candidate shown; compare it with the photo.';
+      }
+    }).catch(function (err) {
+      state.ocrStatus = err && err.message ? err.message : 'Photo reading failed. Please try again or enter the VIN manually.';
+      renderVin();
+    });
   }
 
   function decodeVin() {
@@ -376,6 +453,7 @@
       state.cur = null; return render();
     }
     if (t.id === 'vin-go') return decodeVin();
+    if (t.id === 'vin-ocr') return scanVinPhoto();
     if (t.id === 'custom-go') return customGo();
     if (t.hasAttribute('data-vin-custom') && state.vin) {
       var p = state.vin;
@@ -394,6 +472,16 @@
       if (keep[k] !== undefined) el.value = keep[k];
     });
   }
+
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'vin-photo') {
+      var file = e.target.files && e.target.files[0];
+      if (state.vinPreviewUrl && window.URL && URL.revokeObjectURL) URL.revokeObjectURL(state.vinPreviewUrl);
+      state.vinPreviewUrl = file && window.URL && URL.createObjectURL ? URL.createObjectURL(file) : '';
+      state.ocrStatus = file ? 'Photo ready. Tap “Read VIN from photo”.' : '';
+      renderVin();
+    }
+  });
 
   document.addEventListener('input', function (e) {
     var el = e.target;
@@ -431,5 +519,5 @@
   render();
 
   // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render };
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates };
 })();
