@@ -322,17 +322,24 @@
       else if (labelled) metadata[candidate].labelled = true;
       if (found.indexOf(candidate) === -1) found.push(candidate);
     }
-    function addWindows(raw, labelled) {
+    function addLabelledWindows(raw) {
       var compact = String(raw || '').replace(/[^A-Z0-9]/g, '');
-      for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17), labelled);
+      for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17), true);
     }
     lines.forEach(function (line) {
-      // OCR can confuse the VIN label's I with 1 and may include NO./NUMBER.
-      var labelled = line.match(/\b(?:VIN|V1N)\s*(?:NO\.?|NUMBER)?\s*[:#-]?\s*([A-Z0-9][A-Z0-9\s-]{15,35})/);
-      if (labelled) addWindows(labelled[1], true);
-      // Also inspect the rest of the line: OCR sometimes puts the VIN value
-      // before the label or joins it to adjacent sticker fields.
-      addWindows(line, false);
+      // Capture exactly 17 OCR characters after a VIN label, allowing spaces
+      // or hyphens between characters. Do not consume the rest of the sticker.
+      var labelled = line.match(/\b(?:VIN|V1N)\s*(?:NO\.?|NUMBER)?\s*[:#-]?\s*((?:[A-Z0-9][\s-]?){17})/);
+      if (labelled) addLabelledWindows(labelled[1]);
+
+      // Without a VIN label, accept only a standalone 17-character token
+      // (or the known 18-character leading-I label prefix). Never slide a
+      // 17-character window across an entire door-sticker line: that creates
+      // convincing-looking VINs out of GVWR, tire and manufacturing fields.
+      line.split(/[^A-Z0-9]+/).filter(Boolean).forEach(function (token) {
+        if (token.length === 17) addCandidate(token, false);
+        else if (token.length === 18 && token.charAt(0) === 'I') addCandidate(token.slice(1), false);
+      });
     });
     return found.sort(function (a, b) {
       return vinCandidateScore(b, metadata[b].labelled) - vinCandidateScore(a, metadata[a].labelled);
