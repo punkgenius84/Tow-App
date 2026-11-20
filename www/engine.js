@@ -17,6 +17,7 @@
 
   var SAFETY_MARGIN = 1.15;      // weight margin added when sizing the truck
   var LOW_CLEARANCE_IN = 5.5;    // below this we treat the car as "low"
+  var CLEARANCE_RESERVE_IN = 1.5; // reserve for uneven pavement and real-world variation
   var DEG = Math.PI / 180;
 
   var ANGLE_PRESETS = [
@@ -174,17 +175,21 @@
    */
   function clearanceCheck(n) {
     var need = (n.wb / 4) * Math.sin(n.angle * DEG);
-    var maxAngle = Math.asin(Math.min(1, (4 * n.gc) / n.wb)) / DEG;
-    var ratio = need > 0 ? n.gc / need : Infinity;
-    var status = ratio >= 1.15 ? 'ok' : (ratio >= 0.9 ? 'marginal' : 'fail');
+    var usableGc = Math.max(0, n.gc - CLEARANCE_RESERVE_IN);
+    var maxAngle = Math.asin(Math.min(1, (4 * usableGc) / n.wb)) / DEG;
+    var remaining = n.gc - need;
+    var status = remaining >= CLEARANCE_RESERVE_IN ? 'ok' : (remaining >= 0.5 ? 'marginal' : 'fail');
     var advice = [];
+    var setup = status === 'ok' ? 'Use a rollback with a long, low-angle deck and full-width ramp extensions; keep a spotter watching the lowest point.' : 'Choose a low-deck, long-bed rollback with adjustable tilt and long ramp extensions. If the measured reserve is still under 1.5 inches, use go-jacks/skates or a different carrier rather than forcing the load.';
 
     if (status === 'ok') {
-      advice.push('Should clear at ' + r1(n.angle) + '°. Still spot the belly and the front and rear lips while loading.');
+      advice.push('Calculated belly clearance leaves ' + r1(remaining) + ' inches of reserve at ' + r1(n.angle) + '°. The app requires at least 1.5 inches for uneven pavement and real-world variation.');
+      advice.push('Spot the belly, front lip and rear lip throughout loading; stop immediately if anything approaches contact.');
     } else if (status === 'marginal') {
-      advice.push('Tight at ' + r1(n.angle) + '°. Reduce the angle with ramp extensions or blocks, load slowly with a spotter, and consider go-jacks.');
+      advice.push('Only ' + r1(remaining) + ' inches of calculated reserve at ' + r1(n.angle) + '°. This is not a safe clearance margin for uneven pavement; do not treat this as a pass.');
+      advice.push('Switch to a longer, lower-angle rollback with full-width ramp extensions or use go-jacks/skates. Recalculate before loading.');
     } else {
-      advice.push('Likely to scrape or hang up at ' + r1(n.angle) + '°. This vehicle needs a crest angle of about ' + r1(maxAngle) + '° or less.');
+      advice.push('Likely to scrape or hang up at ' + r1(n.angle) + '°. This vehicle needs a crest angle of about ' + r1(maxAngle) + '° or less to preserve the 1.5-inch reserve.');
       advice.push('Use a low-angle or long bed, ramp extensions plus wood or wedge blocks at the crest, or go-jacks / skates to raise the low end.');
     }
     if (n.low) {
@@ -197,8 +202,8 @@
     }
     return {
       gc: r1(n.gc), wb: r1(n.wb), angle: r1(n.angle),
-      neededIn: r1(need), maxAngleDeg: r1(maxAngle),
-      status: status, advice: advice
+      neededIn: r1(need), remainingIn: r1(remaining), reserveIn: CLEARANCE_RESERVE_IN, maxAngleDeg: r1(maxAngle),
+      status: status, setup: setup, advice: advice
     };
   }
 
@@ -597,6 +602,7 @@
   return {
     SAFETY_MARGIN: SAFETY_MARGIN,
     LOW_CLEARANCE_IN: LOW_CLEARANCE_IN,
+    CLEARANCE_RESERVE_IN: CLEARANCE_RESERVE_IN,
     ANGLE_PRESETS: ANGLE_PRESETS,
     BODY_PRESETS: BODY_PRESETS,
     resolve: resolve,
