@@ -2,7 +2,7 @@
 
 **Status: IN PROGRESS — NOT APPROVED FOR RELEASE**
 
-**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 292 rows have been verified.
+**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 296 rows have been verified.
 
 This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **296 rows across 47 makes**, spanning model years 1980–2025.
 
@@ -83,3 +83,8 @@ Manufacturer specifications, owner's manuals and model-year brochures are prefer
 ## Completion gate
 
 The audit is complete only when every CSV row has a reviewed status, source reference(s), verified generation boundaries, and a documented disposition for clearance, wheelbase, curb weight and variant coverage. Any unresolved item must remain visibly unverified and must not be represented as a confirmed specification.
+
+
+## Honda Accord — 2025 OEM specification reference
+
+Honda's 2025 US Accord specification release confirms a 111.4 in wheelbase, 5.3 in unladen ground clearance, and curb weights from 3,239 to 3,532 lb depending on trim. It also lists body dimensions of 195.7 in length, 73.3 in width and 57.1 in height. These measurements are recorded as a 2025 reference only; the catalog's 2018–2025 row crosses a generation change, so the row remains low-confidence and the 2025 values must not be assumed to describe every year or trim. The current database schema stores curb weight, wheelbase and clearance but not overall length/width/height; those dimensions are retained in the audit record pending a deliberate fitment-schema enhancement. Source: [2025 Honda Accord specifications](https://hondanews.com/en-US/honda-automobiles/releases/release-008e554add341b8444085beaa2074089-2025-honda-accord-specifications-features).
