@@ -330,7 +330,7 @@ test('VIN match finds the right database entry', () => {
   ms = E.matchVehicles(D.vehicles, E.parseVinDecode(sample({ Make: 'JEEP', Model: 'Wrangler', ModelYear: '2012' })));
   assert.equal(ms[0].model, 'Wrangler Unlimited (JK)');
   ms = E.matchVehicles(D.vehicles, E.parseVinDecode(sample({ Make: 'TOYOTA', Model: 'Camry', ModelYear: '2022', ElectrificationLevel: 'HEV (Hybrid Electric Vehicle) - Full' })));
-  assert.equal(ms[0].model, 'Camry Hybrid');
+  assert.equal(ms[0].model, 'Camry Hybrid (2018-2024)');
 });
 
 test('VIN match returns nothing for unknown vehicles and bad payloads', () => {
