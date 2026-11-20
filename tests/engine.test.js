@@ -109,11 +109,11 @@ test('tall trucks clear a standard bed', () => {
 
 test('clearance bands reserve 1.5 inches for uneven pavement and variation', () => {
   const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 10, low: false, measured: false, conf: 1 }).status;
-  // At 100-inch wheelbase and 10 degrees, the modeled crest rise is about 17.4 inches.
-  assert.equal(mk(19.0), 'ok');       // 1.6 inches remaining
-  assert.equal(mk(18.8), 'marginal'); // 1.4 inches remaining
-  assert.equal(mk(17.8), 'fail');     // 0.4 inches remaining
-  assert.equal(mk(17.0), 'fail');
+  // At 100-inch wheelbase and 10 degrees, the modeled crest rise is about 4.3 inches.
+  assert.equal(mk(6.0), 'ok');       // about 1.7 inches remaining
+  assert.equal(mk(5.8), 'marginal'); // about 1.5 inches remaining (below reserve)
+  assert.equal(mk(4.8), 'fail');     // about 0.5 inches remaining
+  assert.equal(mk(4.5), 'fail');
 });
 
 test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear pass', () => {
