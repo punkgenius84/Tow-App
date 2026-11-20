@@ -3,10 +3,12 @@ package com.bigjaysstowing.towguide;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.util.Base64;
 
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -69,6 +71,28 @@ public class NativeVinScannerPlugin extends Plugin {
                 .addOnSuccessListener(getActivity(), text -> {
                     JSObject response = new JSObject();
                     response.put("text", text.getText());
+                    // Preserve ML Kit's spatial OCR data; flat text loses the relationship
+                    // between a VIN label and a value printed beside it.
+                    JSArray lines = new JSArray();
+                    for (com.google.mlkit.vision.text.Text.TextBlock block : text.getTextBlocks()) {
+                        for (com.google.mlkit.vision.text.Text.Line line : block.getLines()) {
+                            JSObject item = new JSObject();
+                            item.put("text", line.getText());
+                            item.put("angle", line.getAngle());
+                            item.put("confidence", line.getConfidence());
+                            Rect bounds = line.getBoundingBox();
+                            if (bounds != null) {
+                                item.put("left", bounds.left);
+                                item.put("top", bounds.top);
+                                item.put("right", bounds.right);
+                                item.put("bottom", bounds.bottom);
+                                item.put("width", bounds.width());
+                                item.put("height", bounds.height());
+                            }
+                            lines.put(item);
+                        }
+                    }
+                    response.put("lines", lines);
                     call.resolve(response);
                 })
                 .addOnFailureListener(getActivity(), error ->
