@@ -279,8 +279,8 @@ public class NativeBarcodeScannerActivity extends AppCompatActivity {
     private String findVin(String raw) {
         if (raw == null || raw.trim().isEmpty()) return "";
         String prepared = raw.toUpperCase(java.util.Locale.US)
-            .replaceAll("^\\\\][A-Z][0-9]", " ")
-            .replaceAll("(?i)VIN\\\\s*[:#-]?\\\\s*", " ")
+            .replaceAll("^\\][A-Z][0-9]", " ")
+            .replaceAll("(?i)VIN\\s*[:#-]?\\s*", " ")
             .replaceAll("[*]", " ");
         String trimmed = prepared.trim();
         if (trimmed.length() == 18 && trimmed.charAt(0) == 'I' &&
