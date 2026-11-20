@@ -24,6 +24,11 @@ The catalog now separates Mazda MX-5 Miata NA/NB/NC/ND generations, Mazda3 sedan
 
 The former 2017–2025 CR-V row was split at the 2023 redesign because the wheelbase changed from approximately 104.7–104.8 in (2017–2022) to 106.3 in (2023–2025). Honda's US specification pages also document drivetrain-dependent unladen clearance: 7.8 in (2WD) and 8.2 in (AWD). The app retains a conservative 7.8 in catalog baseline and keeps both rows low-confidence; operators must identify drivetrain and measure the actual vehicle. Sources: [2022 Honda CR-V specifications](https://www.hondainfocenter.com/2022/CR-V/Feature-Guide/Specifications/) and [2025 Honda CR-V specifications](https://www.hondainfocenter.com/2025/cr-v/feature-guide/specifications/).
 
+
+## Verified source-backed update — Toyota Camry Hybrid
+
+The former 2018–2025 Camry Hybrid row crossed the 2025 redesign. Toyota's 2024 US brochure lists 111.2 in wheelbase and 5.7 in ground clearance for the listed hybrid trims; the 2025 US brochure lists 111.2 in wheelbase and 5.4 in ground clearance. The catalog now separates 2018–2024 from 2025 and uses the lower 2025 clearance for that one-year row. Curb weight and drivetrain availability vary by trim, so both entries remain low-confidence and operators must verify the exact configuration and measure the actual vehicle. Sources: [2024 Toyota Camry eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2024/camry_ebrochure.pdf) and [2025 Toyota Camry eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2025/my25-camry-ebrochure.pdf).
+
 ## Verification standard
 
 Each row must be checked against the correct model-year generation and US-market configuration. The audit must separately consider:
