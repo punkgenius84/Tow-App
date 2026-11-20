@@ -100,28 +100,28 @@ test('unverified catalog dimensions never produce a positive clearance verdict',
   assert.notEqual(E.clearanceCheck(measured).status, 'unknown');
 });
 test('breakover formula: (wb/4)*sin(angle)', () => {
-  const k = E.clearanceCheck({ wb: 100, gc: 6, angle: 30, low: false, measured: false, conf: 1 });
+  const k = E.clearanceCheck({ wb: 100, gc: 6, angle: 30, low: false, measured: true, conf: 1 });
   assert.equal(k.neededIn, 12.5);              // 100/4 * 0.5
 });
 
 test('max recommended angle preserves the 1.5-inch reserve', () => {
-  const k = E.clearanceCheck({ wb: 100, gc: 12.5, angle: 10, low: false, measured: false, conf: 1 });
+  const k = E.clearanceCheck({ wb: 100, gc: 12.5, angle: 10, low: false, measured: true, conf: 1 });
   assert.ok(k.maxAngleDeg < 30);
   assert.ok(k.maxAngleDeg > 25);
 });
 
 test('Mustang scrapes on a standard bed, clears on a low-angle bed', () => {
   const v = find('Ford', 'Mustang');
-  assert.equal(E.recommend(v, { angle: 12 }).clearance.status, 'fail');
-  assert.equal(E.recommend(v, { angle: 6 }).clearance.status, 'ok');
+  assert.equal(E.recommend(v, { angle: 12, gc: v.gc, wb: v.wb }).clearance.status, 'fail');
+  assert.equal(E.recommend(v, { angle: 6, gc: v.gc, wb: v.wb }).clearance.status, 'ok');
 });
 
 test('tall trucks clear a standard bed', () => {
-  assert.equal(E.recommend(find('Jeep', 'Wrangler Unlimited (JL)')).clearance.status, 'ok');
+  assert.equal(E.recommend(find('Jeep', 'Wrangler Unlimited (JL)'), { gc: 9.7, wb: 118.4 }).clearance.status, 'ok');
 });
 
 test('clearance bands reserve 1.5 inches for uneven pavement and variation', () => {
-  const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 10, low: false, measured: false, conf: 1 }).status;
+  const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 10, low: false, measured: true, conf: 1 }).status;
   // At 100-inch wheelbase and 10 degrees, the modeled crest rise is about 4.3 inches.
   assert.equal(mk(6.0), 'ok');       // about 1.7 inches remaining
   assert.equal(mk(5.8), 'marginal'); // about 1.5 inches remaining (below reserve)
@@ -132,17 +132,17 @@ test('clearance bands reserve 1.5 inches for uneven pavement and variation', () 
 test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear pass', () => {
   const mazda = find('Mazda', '6 i Grand Touring');
   assert.equal(mazda.gc, 5.5);
-  const standard = E.recommend(mazda, { angle: 12, gc: 5.5 });
+  const standard = E.recommend(mazda, { angle: 12, gc: 5.5, wb: mazda.wb });
   assert.equal(standard.clearance.status, 'fail');
   assert.match(standard.clearance.setup, /low-deck, long-bed rollback/i);
-  const lowAngle = E.recommend(mazda, { angle: 6, gc: 5.5 });
+  const lowAngle = E.recommend(mazda, { angle: 6, gc: 5.5, wb: mazda.wb });
   assert.equal(lowAngle.clearance.status, 'ok');
   assert.ok(lowAngle.clearance.remainingIn >= 1.5);
 });
 
 test('measured clearance overrides the database value', () => {
   const v = find('Ford', 'Mustang');
-  const r = E.recommend(v, { angle: 12, gc: 7.2 });
+  const r = E.recommend(v, { angle: 12, gc: 7.2, wb: v.wb });
   assert.equal(r.clearance.gc, 7.2);
   assert.equal(r.clearance.status, 'ok');
   assert.equal(r.spec.measured, true);
@@ -150,8 +150,8 @@ test('measured clearance overrides the database value', () => {
 
 test('wheelbase 0 / bad numbers never produce NaN', () => {
   const r = E.recommend(find('Ford', 'Mustang'), { gc: NaN, wb: -3, angle: 0 });
-  assert.ok(Number.isFinite(r.clearance.neededIn));
-  assert.ok(Number.isFinite(r.clearance.maxAngleDeg));
+  assert.equal(r.clearance.status, 'unknown');
+  assert.equal(r.clearance.neededIn, '—');
 });
 
 /* ---------- tie-down plan ---------- */
@@ -264,7 +264,7 @@ test('every vehicle produces a complete recommendation for every drive and trans
       for (const trans of v.trans) {
         const r = E.recommend(v, { drive, trans });
         assert.ok(r.method.primary && r.truck.label && r.tiedown.steps.tiedown.length, v.model);
-        assert.ok(Number.isFinite(r.clearance.neededIn) && Number.isFinite(r.clearance.maxAngleDeg), v.model);
+        assert.equal(r.clearance.status, 'unknown', v.model);
         if (v.power === 'EV' || drive === 'AWD' || drive === '4WD') assert.equal(r.method.flatbedOnly, true, v.model + ' ' + drive);
       }
     }
