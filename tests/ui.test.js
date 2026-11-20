@@ -7,11 +7,12 @@ const { JSDOM } = require('jsdom');
 
 const WWW = path.join(__dirname, '..', 'www');
 
-function boot() {
+function boot(network) {
   const html = fs.readFileSync(path.join(WWW, 'index.html'), 'utf8')
     .replace(/<script src="[^"]+"><\/script>/g, '');
   const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://example.test/', pretendToBeVisual: true });
   dom.window.scrollTo = () => {};
+  if (network) dom.window.AndroidNetwork = network;
   for (const f of ['data.js', 'engine.js', 'app.js']) dom.window.eval(fs.readFileSync(path.join(WWW, f), 'utf8'));
   return dom;
 }
@@ -30,6 +31,22 @@ test('index.html references only files that exist', () => {
 test('service worker caches every file the app loads', () => {
   const sw = fs.readFileSync(path.join(WWW, 'sw.js'), 'utf8');
   for (const f of ['index.html', 'styles.css', 'data.js', 'engine.js', 'app.js']) assert.ok(sw.includes("'" + f + "'"), f);
+});
+
+
+test('Android native connectivity status controls the offline badge on launch', () => {
+  let calls = 0;
+  const { window: w } = boot({ isConnected: () => { calls++; return false; } });
+  assert.ok(calls >= 1, 'native connectivity is checked on launch');
+  assert.equal(w.document.querySelector('#net').textContent, 'Offline (app works)');
+  assert.ok(w.document.querySelector('#net').classList.contains('off'));
+  w.close();
+});
+
+test('Android native online state is shown as online', () => {
+  const { window: w } = boot({ isConnected: () => true });
+  assert.equal(w.document.querySelector('#net').textContent, 'Online');
+  w.close();
 });
 
 test('find screen lists vehicles and filters by search, make and year', () => {
