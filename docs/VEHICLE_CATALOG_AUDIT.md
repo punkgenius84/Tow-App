@@ -4,7 +4,7 @@
 
 **Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 292 rows have been verified.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **292 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **293 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
@@ -38,6 +38,10 @@ Toyota's US newsroom confirms the fourth-generation Sienna debuted for model yea
 ## Verified generation split — Toyota Prius
 
 The former 2016–2025 Prius row crossed the 2023 redesign. Toyota's 2022 US brochure lists a 106.3 in wheelbase and ground clearance of 5.1 in for FWD trims / 5.3 in for AWD-e trims; 2022 curb weights vary from 3,010–3,220 lb by trim. Toyota's 2023 US brochure lists a 108.3 in wheelbase and clearance of 5.6 in (LE) / 6.0 in (XLE and Limited). The catalog is split into 2016–2022 and 2023–2025 entries. Each stores a conservative low-end clearance baseline and remains low-confidence because the values vary by trim and drivetrain; neither is a substitute for measuring the actual vehicle. Sources: [2022 Toyota Prius eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2022/prius_ebrochure.pdf), [2023 Toyota Prius eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2023/prius_ebrochure.pdf).
+
+## Verified generation split — Toyota 4Runner
+
+The former 2010–2025 4Runner row crossed the 2025 sixth-generation redesign. Toyota's 2024 US brochure lists a 109.8 in wheelbase and drivetrain-dependent ground clearance of 9.0 in (2WD) / 9.6 in (4WD); the catalog uses the conservative 9.0 in baseline for 2010–2024. The 2025 Toyota USVI brochure lists a 112.2 in wheelbase and 8.1 in ground clearance for its documented configurations, while Toyota USA confirms the all-new sixth generation and its expanded grade and powertrain lineup. The catalog is now split into 2010–2024 and 2025 entries. Both remain low-confidence: clearance varies by trim/package, curb weight varies materially, and the 2025 catalog weight is a provisional estimate rather than a verified universal value. Confirm the exact trim, drivetrain and powertrain, then measure the actual vehicle. Sources: [2024 Toyota 4Runner eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2024/4runner_ebrochure.pdf), [2025 Toyota 4Runner eBrochure — Toyota USVI](https://www.toyotausvi.com/dynamic/ebrochure/2025_4runner_ebrochure_usvi.pdf), [Toyota USA — all-new 2025 4Runner](https://pressroom.toyota.com/the-all-new-2025-toyota-4runner-the-icon-that-inspires-exploration/).
 
 ## Verification standard
 
