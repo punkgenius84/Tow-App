@@ -312,10 +312,13 @@
       script.async = true;
       script.onload = function () {
         if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) resolve(window.ZXingBrowser);
-        else reject(new Error('Barcode scanner did not initialize.'));
+        else reject(new Error('Barcode scanner loaded, but its reader API was unavailable. Reload the app and try again.'));
       };
-      script.onerror = function () { reject(new Error('Could not load barcode scanner. Check your internet connection.')); };
+      script.onerror = function () { reject(new Error('Could not download the barcode scanner. Check your internet connection and try again.')); };
       document.head.appendChild(script);
+    }).catch(function (err) {
+      state.barcodeLoader = null;
+      throw err;
     });
     return state.barcodeLoader;
   }
@@ -331,6 +334,11 @@
   function startBarcodeScan() {
     var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
     if (!video) return;
+    if (state.barcodeScanning) {
+      stopBarcodeScanner();
+      state.barcodeStatus = 'Barcode scanner stopped. You can start it again or use the photo option.';
+      return renderVin();
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       if (status) status.textContent = 'Camera access is unavailable. Open the app over HTTPS or use the photo scanner below.';
       return;
@@ -340,6 +348,7 @@
     loadBarcodeEngine().then(function (ZXing) {
       state.barcodeScanning = true;
       video.hidden = false;
+      if (button) button.textContent = 'Stop barcode scan';
       if (status) status.textContent = 'Starting camera… allow camera access, then aim at the VIN barcode.';
       var reader = new ZXing.BrowserMultiFormatReader();
       return reader.decodeFromVideoDevice(undefined, video, function (result, err, controls) {
@@ -357,7 +366,10 @@
         }
       });
     }).then(function (controls) {
-      if (controls && state.barcodeScanning) state.barcodeControls = controls;
+      if (controls && state.barcodeScanning) {
+        state.barcodeControls = controls;
+        if (status) status.textContent = 'Camera is active. Hold the VIN barcode inside the frame and move slowly until it focuses.';
+      }
     }).catch(function (err) {
       stopBarcodeScanner();
       state.barcodeStatus = err && err.name === 'NotAllowedError' ? 'Camera permission was denied. Allow camera access in Android settings, or use the photo/manual option.' : (err && err.message ? err.message : 'Could not start barcode camera.');
