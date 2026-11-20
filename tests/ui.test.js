@@ -22,7 +22,7 @@ test('index.html references only files that exist', () => {
   const html = fs.readFileSync(path.join(WWW, 'index.html'), 'utf8');
   const refs = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]).filter(r => !/^https?:/.test(r));
   assert.ok(refs.length >= 5);
-  for (const r of refs) assert.ok(fs.existsSync(path.join(WWW, r)), 'missing ' + r);
+  for (const r of refs) assert.ok(fs.existsSync(path.join(WWW, decodeURIComponent(r))), 'missing ' + r);
   const manifest = JSON.parse(fs.readFileSync(path.join(WWW, 'manifest.webmanifest'), 'utf8'));
   for (const i of manifest.icons) assert.ok(fs.existsSync(path.join(WWW, i.src)), 'missing icon ' + i.src);
 });
@@ -149,4 +149,122 @@ test('user text is escaped, not injected as HTML', () => {
   click(w, d.querySelector('#custom-go'));
   assert.equal(d.querySelectorAll('#view img').length, 0);
   assert.ok(d.querySelector('h1').textContent.includes('<img'));
+});
+
+
+test('VIN camera scanner is present and OCR candidates are normalized safely', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  assert.ok(d.querySelector('#vin-photo'));
+  assert.equal(d.querySelector('#vin-photo').getAttribute('capture'), 'environment');
+  assert.ok(d.querySelector('#vin-ocr'));
+  const candidates = w.__tow.extractVinCandidates('VIN: 1FTFW1E50NFA00000\nOther text');
+  assert.deepEqual(Array.from(candidates), ['1FTFW1E50NFA00000']);
+});
+
+test('VIN OCR helper corrects common OCR-only I/O/Q substitutions but leaves review to operator', () => {
+  const { window: w } = boot();
+  const candidates = w.__tow.extractVinCandidates('1FTFW1E5ONFA00000');
+  assert.ok(Array.from(candidates).includes('1FTFW1E50NFA00000'));
+});
+
+
+test('VIN barcode scanner is available and accepts only a valid 17-character VIN', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  assert.ok(d.querySelector('#vin-barcode-start'));
+  assert.ok(d.querySelector('#vin-barcode-video'));
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA00000'), '1FTFW1E50NFA00000');
+  assert.equal(w.__tow.extractBarcodeVin('VIN: 1FTFW1E50NFA00000'), '1FTFW1E50NFA00000');
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E50NFA0000'), '');
+  // Barcodes are exact: a letter O is not silently turned into a zero.
+  assert.equal(w.__tow.extractBarcodeVin('1FTFW1E5ONFA00000'), '');
+});
+
+test('barcode VIN extraction handles real label payload shapes', () => {
+  const { window: w } = boot();
+  const f = w.__tow.extractBarcodeVin, VIN = '1HGCM82633A004352';
+  assert.equal(f(VIN), VIN);
+  assert.equal(f('*' + VIN + '*'), VIN, 'Code 39 start/stop');
+  assert.equal(f('I' + VIN), VIN, 'leading I prefix must not shift the VIN');
+  assert.equal(f('VIN' + VIN), VIN, 'label glued to value');
+  assert.equal(f('VIN: ' + VIN), VIN);
+  assert.equal(f(VIN + '\x1dSN12345678'), VIN, 'VIN then GS separator');
+  assert.equal(f('PART12345678\x1d' + VIN), VIN, 'other field first must not bleed into the VIN');
+  assert.equal(f('DL ABCDEFGHJKLMNPRST 12345 ' + VIN + ' 20291231'), VIN, 'PDF417 text');
+  assert.equal(f('ABCDEFGHJKLMNPRST'), '', 'all-letter text is not a VIN');
+  assert.equal(f('PART-0001'), '');
+  assert.equal(f(''), '');
+});
+
+test('native barcode scanner reopens until a barcode contains a VIN', async () => {
+  const { window: w } = boot();
+  const calls = [];
+  const seq = [{ rawValue: 'PART-0001' }, { rawValue: 'I1HGCM82633A004352' }];
+  // Real Android shape: the bridge exposes plugins on Capacitor.Plugins and there is no registerPlugin().
+  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => { calls.push(1); return Promise.resolve(seq[calls.length - 1]); } } } };
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(calls.length, 2, 'scanner reopened after a non-VIN barcode');
+  assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
+});
+
+test('native barcode scanner uses displayValue when rawValue is unavailable', async () => {
+  const { window: w } = boot();
+  w.Capacitor = { Plugins: { NativeVinScanner: {
+    scanBarcode: () => Promise.resolve({ rawValue: null, displayValue: '1HGCM82633A004352', format: 2 })
+  } } };
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN barcode read successfully/i);
+});
+
+test('cancelling the native scanner is a calm message, not an error', async () => {
+  const { window: w } = boot();
+  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => Promise.reject(Object.assign(new Error('Barcode scan cancelled.'), { code: 'CANCELLED' })) } } };
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /cancelled/i);
+  assert.equal(d.querySelector('#vin-barcode-start').disabled, false);
+});
+
+test('VIN scanners use working browser APIs and Android camera permission is declared', () => {
+  const app = fs.readFileSync(path.join(WWW, 'app.js'), 'utf8');
+  const manifest = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'src', 'main', 'AndroidManifest.xml'), 'utf8');
+  assert.ok(app.includes('@zxing/browser@0.1.5/umd/zxing-browser.min.js'));
+  assert.ok(app.includes("Tesseract.createWorker('eng'"));
+  assert.ok(app.includes('worker.recognize(image)'));
+  assert.ok(!app.includes('Tesseract.recognize('));
+  assert.ok(manifest.includes('android.permission.CAMERA'));
+});
+
+
+test('native scanner is found through Capacitor.Plugins (Android) or registerPlugin, and never faked', async () => {
+  // 1. Android bridge shape
+  let w = boot().window, hit = 0;
+  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => { hit++; return Promise.resolve({ rawValue: '1HGCM82633A004352' }); } } } };
+  click(w, w.document.querySelector('[data-tab="vin"]'));
+  click(w, w.document.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(hit, 1);
+  // 2. bundled-runtime shape
+  w = boot().window; hit = 0;
+  w.Capacitor = { registerPlugin: () => ({ scanBarcode: () => { hit++; return Promise.resolve({ rawValue: '1HGCM82633A004352' }); } }) };
+  click(w, w.document.querySelector('[data-tab="vin"]'));
+  click(w, w.document.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(hit, 1);
+  // 3. Capacitor present but no plugin and no registerPlugin: not treated as native
+  w = boot().window;
+  w.Capacitor = { getPlatform: () => 'android' };
+  assert.equal(w.__tow.nativeScannerAvailable(), false);
 });

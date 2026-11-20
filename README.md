@@ -9,7 +9,7 @@ A mobile-first towing reference app for Big Jay's Towing and Auto Center. Choose
 3. **Ground clearance** - belly breakover at the ramp-to-deck crest and a calculated maximum angle.
 4. **Loading and securement** - an eight-phase workflow covering tie-down count, working-load-limit sizing, corner-by-corner routing, wheel nets, ratchet straps, chains and binders, equipment inspection, troubleshooting, wheel-lift and dolly procedures, and CDL notes.
 
-The app works offline after its files are available on the device. VIN decoding uses the free NHTSA vPIC service and therefore requires internet access.
+The app works offline after its files are available on the device. VIN decoding uses the free NHTSA vPIC service and therefore requires internet access. The VIN screen supports live camera barcode scanning as the first option, then photo-based OCR and manual entry as fallbacks. Barcode scanning uses the camera to read common 1D/2D barcode formats and accepts only a valid 17-character VIN; the operator must verify the number before decoding. The installed Android app uses Google's on-device barcode scanner and ML Kit text recognition; Google Play services may download its scanner module the first time it is used. The browser fallback scanner and OCR engine are downloaded from a CDN when first used and require internet access. Camera access requires permission and a secure app origin (HTTPS or the installed Android app). Photos are processed locally and are not uploaded or saved by the app.
 
 ## Branding and application identity
 
