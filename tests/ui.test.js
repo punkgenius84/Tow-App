@@ -182,6 +182,22 @@ test('VIN OCR ranks the labeled, checksum-valid VIN above door-sticker numbers',
   assert.equal(candidates[0], '1HGCM82633A004352');
 });
 
+test('VIN label priority beats an unrelated checksum-valid number elsewhere on the sticker', () => {
+  const { window: w } = boot();
+  const labelledButCheckDigitUnclear = '1HGCM82633A004353';
+  const unrelatedChecksumValid = '1HGCM82633A004352';
+  const candidates = Array.from(w.__tow.extractVinCandidates(
+    'SERIAL NUMBER ' + unrelatedChecksumValid + '\\nVIN NO.: ' + labelledButCheckDigitUnclear
+  ));
+  assert.equal(candidates[0], labelledButCheckDigitUnclear);
+});
+
+test('VIN OCR recognizes VIN NUMBER label before the 17-character value', () => {
+  const { window: w } = boot();
+  const candidates = Array.from(w.__tow.extractVinCandidates('VIN NUMBER: 1HGCM82633A004352'));
+  assert.equal(candidates[0], '1HGCM82633A004352');
+});
+
 test('VIN OCR accepts a VIN split over two lines immediately after its label', () => {
   const { window: w } = boot();
   const candidates = Array.from(w.__tow.extractVinCandidates(
