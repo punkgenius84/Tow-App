@@ -275,7 +275,7 @@
   }
 
   function extractVinCandidates(text) {
-    var found = [], lines = String(text || '').toUpperCase().split(/\\r?\\n/);
+    var found = [], lines = String(text || '').toUpperCase().split(/\r?\n/);
     lines.forEach(function (line) {
       var compact = line.replace(/[^A-Z0-9]/g, '');
       for (var i = 0; i <= compact.length - 17; i++) {
@@ -305,7 +305,7 @@
   function scanVinPhoto() {
     var file = state.vinFile;
     if (!file) { state.ocrStatus = 'Take or choose a VIN photo first.'; return renderVin(); }
-    if (!/^image\\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
+    if (!/^image\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
     var button = $('#vin-ocr');
     if (button) button.disabled = true;
     var status = $('#vin-ocr-status');
