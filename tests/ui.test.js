@@ -282,6 +282,22 @@ test('Android native barcode cancellation returns to the VIN form without losing
   assert.ok(d.querySelector('#vin-ocr'));
 });
 
+test('Android native scanner source declares supported formats and releases analyzed frames', () => {
+  const activity = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'src', 'main', 'java', 'com', 'bigjaysstowing', 'towguide', 'NativeBarcodeScannerActivity.java'), 'utf8');
+  const gradle = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'build.gradle'), 'utf8');
+  const manifest = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'src', 'main', 'AndroidManifest.xml'), 'utf8');
+  for (const format of ['FORMAT_DATA_MATRIX', 'FORMAT_QR_CODE', 'FORMAT_PDF417', 'FORMAT_AZTEC', 'FORMAT_CODE_39', 'FORMAT_CODE_128']) {
+    assert.ok(activity.includes(format), 'missing native barcode format ' + format);
+  }
+  assert.ok(activity.includes('STRATEGY_KEEP_ONLY_LATEST'));
+  assert.ok(activity.includes('addOnCompleteListener(task -> proxy.close())'), 'each analyzed camera frame must be released');
+  assert.ok(activity.includes('consecutiveMatches >= 2'), 'require a stable repeated VIN before returning it');
+  assert.ok(activity.includes('toggleTorch') && activity.includes('startFocusAndMetering'));
+  assert.ok(gradle.includes('com.google.mlkit:barcode-scanning:17.3.0'));
+  assert.ok(gradle.includes('androidx.camera:camera-lifecycle'));
+  assert.ok(manifest.includes('.NativeBarcodeScannerActivity'));
+});
+
 test('Android OCR reparses both photo passes together so candidate ranking is retained', () => {
   const app = fs.readFileSync(path.join(WWW, 'app.js'), 'utf8');
   const start = app.indexOf('function scanVinPhoto()');
