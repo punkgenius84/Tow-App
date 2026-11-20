@@ -276,14 +276,18 @@
 
   function extractVinCandidates(text) {
     var found = [], lines = String(text || '').toUpperCase().split(/\r?\n/);
+    function addCandidate(raw) {
+      if (/^[A-HJ-NPR-Z0-9]{17}$/.test(raw) && found.indexOf(raw) === -1) found.push(raw);
+      var corrected = raw.replace(/O/g, '0').replace(/[IQ]/g, '1');
+      if (/^[A-HJ-NPR-Z0-9]{17}$/.test(corrected) && found.indexOf(corrected) === -1) found.push(corrected);
+    }
     lines.forEach(function (line) {
+      // Prefer a VIN explicitly following its printed label; this avoids false
+      // overlapping 17-character fragments from nearby words such as "VIN:".
+      var labelled = line.match(/\bVIN\b\s*[:#-]?\s*([A-Z0-9]{17})/);
+      if (labelled) { addCandidate(labelled[1]); return; }
       var compact = line.replace(/[^A-Z0-9]/g, '');
-      for (var i = 0; i <= compact.length - 17; i++) {
-        var raw = compact.slice(i, i + 17);
-        if (/^[A-HJ-NPR-Z0-9]{17}$/.test(raw) && found.indexOf(raw) === -1) found.push(raw);
-        var corrected = raw.replace(/O/g, '0').replace(/[IQ]/g, '1');
-        if (/^[A-HJ-NPR-Z0-9]{17}$/.test(corrected) && found.indexOf(corrected) === -1) found.push(corrected);
-      }
+      for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17));
     });
     return found;
   }
