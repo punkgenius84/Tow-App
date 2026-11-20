@@ -4,7 +4,7 @@
 
 **Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 292 rows have been verified.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **294 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **295 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
@@ -46,6 +46,10 @@ The former 2010–2025 4Runner row crossed the 2025 sixth-generation redesign. T
 ## Verified generation split — Honda Pilot
 
 The former 2016–2025 Pilot row crossed the 2023 redesign. Honda's 2022 US specifications list a 111.0 in wheelbase and 7.3 in unladen ground clearance on standard trims; the 2022 TrailSport is 7.9 in and has a 110.9 in wheelbase. Honda's 2023 US specifications list a 113.8 in wheelbase, 7.3 in unladen clearance on most trims, and 8.3 in for TrailSport AWD. The catalog is split into 2016–2022 and 2023–2025 entries, each using the conservative 7.3 in baseline. Curb weight varies by trim and drivetrain; the newer row's 4,400 lb is a provisional catalog estimate. Both remain low-confidence and require exact trim confirmation and an on-scene measurement. Sources: [2022 Honda Pilot specifications](https://www.hondainfocenter.com/2022/Pilot/Feature-Guide/Specifications/) and [2023 Honda Pilot specifications](https://hondanews.com/en-US/honda-automobiles/releases/release-4e58b4e0fcd795affa5685a66a1953ae-2023-honda-pilot-specifications-features).
+
+## Verified generation split — Honda Civic Sedan
+
+The former 2016–2025 Civic Sedan row crossed the 2022 redesign. Honda's 2021 US specifications list a 106.3 in wheelbase and curb weights of 2,771–2,963 lb by trim; its 2022 specifications list a 107.7 in wheelbase and 2,877–3,077 lb. Honda's 2025 specifications retain the 107.7 in wheelbase and list curb weights from 2,877–3,252 lb across the published sedan configurations. The catalog is split into 2016–2021 and 2022–2025 entries. Important limitation: the cited Honda specification pages do not publish ground clearance. The existing 5.3 in catalog value is retained only as an explicitly unverified legacy placeholder, not a verified OEM dimension. Both rows remain low-confidence; confirm exact trim and measure the actual vehicle. Sources: [2021 Honda Civic Sedan specifications](https://www.hondainfocenter.com/2021/Civic-Sedan/Feature-Guide/Civic-Sedan-Specifications/), [2022 Honda Civic Sedan specifications](https://www.hondainfocenter.com/2022/Civic-Sedan/Feature-Guide/Civic-Sedan-Specifications/), [2025 Honda Civic Sedan specifications](https://hondanews.com/en-US/honda-automobiles/releases/release-c28e8d1efb94e520fef21ff3f800cb30-2025-honda-civic-sedan-specifications-features).
 
 ## Verification standard
 
