@@ -185,9 +185,9 @@ test('VIN barcode scanner is available and accepts only a valid 17-character VIN
 test('VIN scanners use working browser APIs and Android camera permission is declared', () => {
   const app = fs.readFileSync(path.join(WWW, 'app.js'), 'utf8');
   const manifest = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'src', 'main', 'AndroidManifest.xml'), 'utf8');
-  assert.match(app, /@zxing\\/browser@0\\.1\\.5\\/umd\\/zxing-browser\\.min\\.js/);
-  assert.match(app, /Tesseract\\.createWorker\\('eng'/);
-  assert.match(app, /worker\\.recognize\\(image\\)/);
-  assert.doesNotMatch(app, /Tesseract\\.recognize\\(/);
-  assert.match(manifest, /android\\.permission\\.CAMERA/);
+  assert.ok(app.includes('@zxing/browser@0.1.5/umd/zxing-browser.min.js'));
+  assert.ok(app.includes("Tesseract.createWorker('eng'"));
+  assert.ok(app.includes('worker.recognize(image)'));
+  assert.ok(!app.includes('Tesseract.recognize('));
+  assert.ok(manifest.includes('android.permission.CAMERA'));
 });
