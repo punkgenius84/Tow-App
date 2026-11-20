@@ -488,7 +488,7 @@
       var img = new Image();
       img.onload = function () {
         try {
-          var scale = Math.min(3, Math.max(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight)));
+          var scale = Math.min(3, 2000 / Math.max(img.naturalWidth, img.naturalHeight));
           var canvas = document.createElement('canvas');
           canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
           canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
