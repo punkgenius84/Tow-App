@@ -242,7 +242,7 @@ test('native barcode scanner uses displayValue when rawValue is unavailable', as
   click(w, d.querySelector('#vin-barcode-start'));
   for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
   assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
-  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN barcode read successfully/i);
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN captured from barcode/i);
 });
 
 test('native barcode scanner decodes raw payload bytes when text values are missing', async () => {
