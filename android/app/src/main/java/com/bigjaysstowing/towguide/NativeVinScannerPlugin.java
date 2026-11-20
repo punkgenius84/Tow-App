@@ -109,6 +109,10 @@ public class NativeVinScannerPlugin extends Plugin {
                 result.put("displayValue", barcode.getDisplayValue());
                 result.put("format", barcode.getFormat());
                 result.put("valueType", barcode.getValueType());
+                byte[] rawBytes = barcode.getRawBytes();
+                if (rawBytes != null && rawBytes.length > 0) {
+                    result.put("rawBytesBase64", Base64.encodeToString(rawBytes, Base64.NO_WRAP));
+                }
                 call.resolve(result);
             })
             .addOnCanceledListener(getActivity(), () ->
