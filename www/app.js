@@ -360,6 +360,74 @@
     });
   }
 
+  // ML Kit's flat text order can miss VINs printed to the right of their label.
+  // Pair nearby OCR lines by their image coordinates before ranking VIN candidates.
+  function extractStructuredVinCandidates(reading) {
+    var lines = reading && Array.isArray(reading.lines) ? reading.lines.slice() : [];
+    lines = lines.filter(function (line) {
+      return line && typeof line.text === 'string' &&
+        isFinite(Number(line.left)) && isFinite(Number(line.top)) &&
+        isFinite(Number(line.right)) && isFinite(Number(line.bottom));
+    }).sort(function (a, b) {
+      return Number(a.top) - Number(b.top) || Number(a.left) - Number(b.left);
+    });
+    var found = [];
+    var labelPattern = /\\b(?:VIN(?:\\s+(?:NO\\.?|NUMBER))?|V1N|VEHICLE\\s+IDENTIFICATION(?:\\s+NUMBER|\\s+NO\\.?)?)\\b/i;
+    lines.forEach(function (label, index) {
+      if (!labelPattern.test(label.text)) return;
+      var h = Math.max(1, Number(label.height) || Number(label.bottom) - Number(label.top));
+      var pairs = [];
+      lines.forEach(function (value, valueIndex) {
+        if (valueIndex === index) return;
+        var vh = Math.max(1, Number(value.height) || Number(value.bottom) - Number(value.top));
+        var overlap = Math.max(0, Math.min(Number(label.bottom), Number(value.bottom)) -
+          Math.max(Number(label.top), Number(value.top)));
+        var overlapRatio = overlap / Math.max(1, Math.min(h, vh));
+        var rightGap = Number(value.left) - Number(label.right);
+        var sameRow = overlapRatio >= 0.30 && rightGap >= -h * 0.25 && rightGap <= h * 5;
+        var belowGap = Number(value.top) - Number(label.bottom);
+        var below = belowGap >= -h * 0.25 && belowGap <= h * 3.5 &&
+          Math.abs(Number(value.left) - Number(label.left)) <= h * 4;
+        if (sameRow || below) pairs.push({
+          line: value, index: valueIndex,
+          distance: sameRow ? Math.max(0, rightGap) : h * 5 + Math.max(0, belowGap)
+        });
+      });
+      pairs.sort(function (x, y) { return x.distance - y.distance; });
+      pairs.slice(0, 3).forEach(function (pair) {
+        var pairedText = 'VIN: ' + pair.line.text;
+        var next = lines[pair.index + 1];
+        if (next) {
+          var gap = Number(next.top) - Number(pair.line.bottom);
+          var ph = Math.max(1, Number(pair.line.height) || Number(pair.line.bottom) - Number(pair.line.top));
+          if (gap >= -ph * 0.2 && gap <= ph * 1.8 &&
+              Math.abs(Number(next.left) - Number(pair.line.left)) <= ph * 3) {
+            pairedText += '\\n' + next.text;
+          }
+        }
+        extractVinCandidates(pairedText).forEach(function (vin) {
+          if (found.indexOf(vin) === -1) found.push(vin);
+        });
+      });
+    });
+    return found;
+  }
+
+  function extractVinCandidatesFromOcrResults(readings) {
+    var found = [];
+    (readings || []).forEach(function (reading) {
+      extractVinCandidates(reading && reading.text || '').forEach(function (vin) {
+        if (found.indexOf(vin) === -1) found.push(vin);
+      });
+      extractStructuredVinCandidates(reading).forEach(function (vin) {
+        if (found.indexOf(vin) === -1) found.push(vin);
+      });
+    });
+    return found.sort(function (x, y) {
+      return vinCandidateScore(y, true) - vinCandidateScore(x, true);
+    });
+  }
+
   // Barcode payloads are machine-exact, so no OCR-style character swaps here. A VIN never contains I, O or Q.
   function strictBarcodeVin(v) {
     return /^[A-HJ-NPR-Z0-9]{17}$/.test(v) && /[0-9]/.test(v) ? v : '';
@@ -625,16 +693,16 @@
         return recognizeCanvas(enhancedCanvas).then(function (enhancedResult) {
           return prepareVinImage(file, true).then(function (originalCanvas) {
             return recognizeCanvas(originalCanvas).then(function (originalResult) {
-              return { enhanced: enhancedResult && enhancedResult.text || '', original: originalResult && originalResult.text || '' };
+              return { enhanced: enhancedResult || { text: '' }, original: originalResult || { text: '' } };
             });
           });
         });
       }).then(function (readings) {
-        var text = 'Enhanced photo pass:\n' + readings.enhanced + '\n\nOriginal photo pass:\n' + readings.original;
+        var text = 'Enhanced photo pass:\\n' + (readings.enhanced.text || '') +
+          '\\n\\nOriginal photo pass:\\n' + (readings.original.text || '');
         state.ocrRaw = text;
-        // Re-parse the combined text so VIN-label proximity and check-digit
-        // ranking are applied once across both OCR passes.
-        var candidates = extractVinCandidates(readings.enhanced + '\n' + readings.original);
+        // Combine flat text with geometry-aware VIN-label/value pairs from both passes.
+        var candidates = extractVinCandidatesFromOcrResults([readings.enhanced, readings.original]);
         if (candidates.length) {
           state.vinText = candidates[0];
           state.ocrStatus = candidates.length > 1
@@ -888,5 +956,5 @@
   render();
 
   // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); } };
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractStructuredVinCandidates: extractStructuredVinCandidates, extractVinCandidatesFromOcrResults: extractVinCandidatesFromOcrResults, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); } };
 })();
