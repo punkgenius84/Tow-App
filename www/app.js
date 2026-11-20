@@ -415,14 +415,39 @@
     }
   });
 
-  function netBadge() {
+  var netCheckId = 0;
+  function setNetStatus(status) {
     var n = $('#net'); if (!n) return;
-    var on = navigator.onLine !== false;
-    n.textContent = on ? 'Online' : 'Offline (app works)';
-    n.classList.toggle('off', !on);
+    n.textContent = status === 'online' ? 'Online' :
+      (status === 'checking' ? 'Checking internet…' : 'Offline (app works)');
+    n.classList.toggle('off', status === 'offline');
+    n.classList.toggle('checking', status === 'checking');
+  }
+  function netBadge() {
+    var id = ++netCheckId;
+    if (navigator.onLine === false) { setNetStatus('offline'); return; }
+    setNetStatus('checking');
+    if (typeof window.fetch !== 'function') { setNetStatus('offline'); return; }
+    var ctl = ('AbortController' in window) ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 5000);
+    window.fetch('https://www.google.com/generate_204', {
+      method: 'GET', mode: 'no-cors', cache: 'no-store',
+      signal: ctl ? ctl.signal : undefined
+    }).then(function () {
+      if (id === netCheckId) setNetStatus('online');
+    }).catch(function () {
+      if (id === netCheckId) setNetStatus('offline');
+    }).then(function () { clearTimeout(timer); });
   }
   window.addEventListener('online', netBadge);
-  window.addEventListener('offline', netBadge);
+  window.addEventListener('offline', function () {
+    ++netCheckId;
+    setNetStatus('offline');
+  });
+  window.addEventListener('pageshow', netBadge);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) netBadge();
+  });
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* ignore */ }); });
