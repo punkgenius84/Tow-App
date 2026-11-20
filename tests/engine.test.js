@@ -420,7 +420,7 @@ test('bulk rows expose length/width/height when the source has them', () => {
 
 test('OEM-verified rows still never produce a clearance verdict without on-scene measurements', () => {
   const ver = D.vehicles.filter(v => v.source);
-  assert.equal(ver.length, 2);
+  assert.equal(ver.length, 3);
   for (const v of ver) {
     const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
     assert.equal(r.clearance.status, 'unknown', v.model);
@@ -465,4 +465,20 @@ test('operator-entered curb weight and GVWR overrides are treated as confirmed i
   const withGvwr = E.recommend(v, { curb: 6200, gvwrOverride: 14000 }).truck;
   assert.equal(withGvwr.gvwrConfirmed, true);
   assert.equal(withGvwr.id, 'medium');
+});
+
+
+test('2025 Camry Hybrid uses Toyota OEM dimensions and conservative trim-weight maximum', () => {
+  const v = find('Toyota', 'Camry Hybrid (2025)');
+  assert.equal(v.conf, 1);
+  assert.equal(v.sourceYear, 2025);
+  assert.match(v.source, /^https:\/\//);
+  assert.equal(v.gc, 5.4);
+  assert.equal(v.wb, 111.2);
+  assert.equal(v.curb, 3682);
+  assert.equal(v.len, 193.5);
+  assert.equal(v.wid, 72.4);
+  assert.equal(v.ht, 56.9);
+  const r = E.recommend(v, {});
+  assert.equal(r.clearance.status, 'unknown', 'OEM catalog values still cannot replace on-scene measurements');
 });
