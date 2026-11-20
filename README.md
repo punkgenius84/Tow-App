@@ -72,7 +72,7 @@ For this tinkering build, the release APK is signed with Gradle's debug certific
 
 ## Vehicle data provenance
 
-Bulk offline data source evaluation, attribution requirements, and safety rules are documented in [`docs/BULK_DATA_SOURCES.md`](docs/BULK_DATA_SOURCES.md).
+Bulk offline data source evaluation, attribution requirements, and safety rules are documented in [`docs/BULK_DATA_SOURCES.md`](docs/BULK_DATA_SOURCES.md). The CC BY 4.0 US model/year/body-style source is credited in [`ATTRIBUTION.md`](ATTRIBUTION.md) and the app's Info screen. The separate AutoEvolution-derived specification dataset remains on distribution hold.
 
 ## Vehicle catalog audit — release gate
 
