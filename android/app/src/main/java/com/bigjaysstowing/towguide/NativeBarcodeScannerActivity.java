@@ -1,0 +1,385 @@
+package com.bigjaysstowing.towguide;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.os.Bundle;
+import android.util.Size;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.FocusMeteringAction;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.mlkit.vision.barcode.BarcodeScanner;
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
+import com.google.mlkit.vision.barcode.BarcodeScanning;
+import com.google.mlkit.vision.barcode.common.Barcode;
+import com.google.mlkit.vision.common.InputImage;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Native continuous VIN barcode camera. CameraX owns the preview/lifecycle;
+ * ML Kit analyzes the newest frame only. The same VIN must be seen in two
+ * consecutive frames before it is returned to the Capacitor caller.
+ */
+public class NativeBarcodeScannerActivity extends AppCompatActivity {
+    private static final int CAMERA_PERMISSION_REQUEST = 7314;
+    private static final Pattern VIN_TOKEN = Pattern.compile("(?<![A-HJ-NPR-Z0-9])[A-HJ-NPR-Z0-9]{17}(?![A-HJ-NPR-Z0-9])");
+
+    private PreviewView previewView;
+    private TextView statusView;
+    private Button torchButton;
+    private Button zoomButton;
+    private Camera camera;
+    private BarcodeScanner scanner;
+    private ExecutorService cameraExecutor;
+    private boolean torchEnabled = false;
+    private volatile boolean finishedWithResult = false;
+    private String previousCandidate = "";
+    private int consecutiveMatches = 0;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        cameraExecutor = Executors.newSingleThreadExecutor();
+        buildScannerUi();
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            startCamera();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST);
+        }
+    }
+
+    private void buildScannerUi() {
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(0xFF080B10);
+
+        previewView = new PreviewView(this);
+        previewView.setImplementationMode(PreviewView.ImplementationMode.COMPATIBLE);
+        previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
+        root.addView(previewView, new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        root.addView(new AimOverlay(this), new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.VERTICAL);
+        top.setPadding(dp(20), dp(18), dp(20), dp(12));
+        top.setBackgroundColor(0x99000000);
+        TextView title = new TextView(this);
+        title.setText("SCAN VEHICLE VIN");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18);
+        title.setGravity(Gravity.CENTER);
+        top.addView(title);
+        TextView hint = new TextView(this);
+        hint.setText("Center the barcode in the guide. Move closer until it is sharp.");
+        hint.setTextColor(0xFFE1E7EF);
+        hint.setTextSize(13);
+        hint.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(-1, -2);
+        hintParams.topMargin = dp(6);
+        top.addView(hint, hintParams);
+        root.addView(top, new FrameLayout.LayoutParams(-1, -2, Gravity.TOP));
+
+        LinearLayout bottom = new LinearLayout(this);
+        bottom.setOrientation(LinearLayout.VERTICAL);
+        bottom.setPadding(dp(16), dp(14), dp(16), dp(18));
+        bottom.setBackgroundColor(0xDD080B10);
+
+        statusView = new TextView(this);
+        statusView.setText("Starting camera…");
+        statusView.setTextColor(0xFFFFFFFF);
+        statusView.setTextSize(14);
+        statusView.setGravity(Gravity.CENTER);
+        bottom.addView(statusView, new LinearLayout.LayoutParams(-1, -2));
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setGravity(Gravity.CENTER);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        torchButton = actionButton("Torch off");
+        torchButton.setOnClickListener(v -> toggleTorch());
+        actions.addView(torchButton, weightedButton());
+        zoomButton = actionButton("Zoom +");
+        zoomButton.setOnClickListener(v -> zoomIn());
+        LinearLayout.LayoutParams zoomParams = weightedButton();
+        zoomParams.leftMargin = dp(8);
+        actions.addView(zoomButton, zoomParams);
+        Button close = actionButton("Cancel");
+        close.setOnClickListener(v -> finish());
+        LinearLayout.LayoutParams closeParams = weightedButton();
+        closeParams.leftMargin = dp(8);
+        actions.addView(close, closeParams);
+        LinearLayout.LayoutParams actionsParams = new LinearLayout.LayoutParams(-1, -2);
+        actionsParams.topMargin = dp(12);
+        bottom.addView(actions, actionsParams);
+
+        FrameLayout.LayoutParams bottomParams = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM);
+        root.addView(bottom, bottomParams);
+        previewView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP && camera != null) {
+                try {
+                    FocusMeteringAction action = new FocusMeteringAction.Builder(
+                        previewView.getMeteringPointFactory().createPoint(event.getX(), event.getY()))
+                        .setAutoCancelDuration(3, TimeUnit.SECONDS).build();
+                    camera.getCameraControl().startFocusAndMetering(action);
+                    statusView.setText("Focusing… hold steady");
+                } catch (Exception ignored) { }
+            }
+            return true;
+        });
+        setContentView(root);
+    }
+
+    private Button actionButton(String label) {
+        Button button = new Button(this);
+        button.setText(label);
+        button.setAllCaps(false);
+        button.setTextSize(12);
+        return button;
+    }
+
+    private LinearLayout.LayoutParams weightedButton() {
+        return new LinearLayout.LayoutParams(0, dp(48), 1f);
+    }
+
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void startCamera() {
+        BarcodeScannerOptions options = new BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(
+                Barcode.FORMAT_DATA_MATRIX,
+                Barcode.FORMAT_QR_CODE,
+                Barcode.FORMAT_PDF417,
+                Barcode.FORMAT_AZTEC,
+                Barcode.FORMAT_CODE_39,
+                Barcode.FORMAT_CODE_128,
+                Barcode.FORMAT_CODE_93,
+                Barcode.FORMAT_CODABAR,
+                Barcode.FORMAT_ITF
+            )
+            .build();
+        scanner = BarcodeScanning.getClient(options);
+
+        ListenableFuture<ProcessCameraProvider> providerFuture = ProcessCameraProvider.getInstance(this);
+        providerFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider provider = providerFuture.get();
+                Preview preview = new Preview.Builder().build();
+                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+                ImageAnalysis analysis = new ImageAnalysis.Builder()
+                    .setTargetResolution(new Size(1280, 720))
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build();
+                analysis.setAnalyzer(cameraExecutor, this::analyzeFrame);
+
+                provider.unbindAll();
+                camera = provider.bindToLifecycle(
+                    this, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis);
+                statusView.setText("Camera ready. Center the VIN barcode and hold steady.");
+                if (!camera.getCameraInfo().hasFlashUnit()) {
+                    torchButton.setEnabled(false);
+                    torchButton.setText("No torch");
+                }
+                try {
+                    FocusMeteringAction focus = new FocusMeteringAction.Builder(
+                        previewView.getMeteringPointFactory().createPoint(0.5f, 0.5f))
+                        .setAutoCancelDuration(5, TimeUnit.SECONDS).build();
+                    camera.getCameraControl().startFocusAndMetering(focus);
+                } catch (Exception ignored) { }
+            } catch (Exception error) {
+                statusView.setText("Could not start the Android camera: " + safeMessage(error));
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void analyzeFrame(@NonNull ImageProxy proxy) {
+        if (finishedWithResult) {
+            proxy.close();
+            return;
+        }
+        android.media.Image mediaImage = proxy.getImage();
+        if (mediaImage == null) {
+            proxy.close();
+            return;
+        }
+        InputImage input = InputImage.fromMediaImage(mediaImage, proxy.getImageInfo().getRotationDegrees());
+        scanner.process(input)
+            .addOnSuccessListener(barcodes -> handleBarcodes(barcodes))
+            .addOnFailureListener(error -> runOnUiThread(() -> {
+                if (!finishedWithResult) statusView.setText("Barcode reader issue: " + safeMessage(error));
+            }))
+            .addOnCompleteListener(task -> proxy.close());
+    }
+
+    private void handleBarcodes(List<Barcode> barcodes) {
+        if (finishedWithResult || barcodes == null) return;
+        for (Barcode barcode : barcodes) {
+            String raw = barcode.getRawValue();
+            if (raw == null || raw.isEmpty()) {
+                byte[] rawBytes = barcode.getRawBytes();
+                if (rawBytes != null && rawBytes.length > 0) {
+                    raw = new String(rawBytes, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            }
+            String vin = findVin(raw);
+            if (vin.isEmpty()) continue;
+            if (vin.equals(previousCandidate)) consecutiveMatches++;
+            else {
+                previousCandidate = vin;
+                consecutiveMatches = 1;
+            }
+            String format = formatName(barcode.getFormat());
+            if (consecutiveMatches >= 2) {
+                returnVin(raw, vin, format);
+                return;
+            }
+            runOnUiThread(() -> {
+                if (!finishedWithResult) statusView.setText("VIN candidate detected (" + format + "). Hold steady…");
+            });
+            return;
+        }
+        previousCandidate = "";
+        consecutiveMatches = 0;
+    }
+
+    private String findVin(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return "";
+        String prepared = raw.toUpperCase(java.util.Locale.US)
+            .replaceAll("^\\\\][A-Z][0-9]", " ")
+            .replaceAll("(?i)VIN\\\\s*[:#-]?\\\\s*", " ")
+            .replaceAll("[*]", " ");
+        String trimmed = prepared.trim();
+        if (trimmed.length() == 18 && trimmed.charAt(0) == 'I' &&
+            VIN_TOKEN.matcher(trimmed.substring(1)).matches()) {
+            return trimmed.substring(1);
+        }
+        Matcher matcher = VIN_TOKEN.matcher(prepared);
+        return matcher.find() ? matcher.group() : "";
+    }
+
+    private String formatName(int format) {
+        switch (format) {
+            case Barcode.FORMAT_DATA_MATRIX: return "Data Matrix";
+            case Barcode.FORMAT_QR_CODE: return "QR";
+            case Barcode.FORMAT_PDF417: return "PDF417";
+            case Barcode.FORMAT_AZTEC: return "Aztec";
+            case Barcode.FORMAT_CODE_39: return "Code 39";
+            case Barcode.FORMAT_CODE_128: return "Code 128";
+            case Barcode.FORMAT_CODE_93: return "Code 93";
+            case Barcode.FORMAT_CODABAR: return "Codabar";
+            case Barcode.FORMAT_ITF: return "ITF";
+            default: return "barcode";
+        }
+    }
+
+    private void returnVin(String raw, String vin, String format) {
+        if (finishedWithResult) return;
+        finishedWithResult = true;
+        Intent result = new Intent();
+        result.putExtra("rawValue", raw);
+        result.putExtra("vin", vin);
+        result.putExtra("format", format);
+        setResult(RESULT_OK, result);
+        finish();
+    }
+
+    private void toggleTorch() {
+        if (camera == null || !camera.getCameraInfo().hasFlashUnit()) return;
+        torchEnabled = !torchEnabled;
+        camera.getCameraControl().enableTorch(torchEnabled);
+        torchButton.setText(torchEnabled ? "Torch on" : "Torch off");
+    }
+
+    private void zoomIn() {
+        if (camera == null) return;
+        try {
+            float current = camera.getCameraInfo().getZoomState().getValue().getZoomRatio();
+            float max = camera.getCameraInfo().getZoomState().getValue().getMaxZoomRatio();
+            float next = Math.min(max, current * 1.35f);
+            camera.getCameraControl().setZoomRatio(next);
+            zoomButton.setText("Zoom " + String.format(java.util.Locale.US, "%.1fx", next));
+        } catch (Exception ignored) { }
+    }
+
+    private String safeMessage(Throwable error) {
+        String message = error == null ? null : error.getLocalizedMessage();
+        return message == null || message.trim().isEmpty() ? "unknown error" : message;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == CAMERA_PERMISSION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) startCamera();
+            else {
+                setResult(RESULT_CANCELED, new Intent().putExtra("permissionDenied", true));
+                finish();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (camera != null) {
+            try { camera.getCameraControl().enableTorch(false); } catch (Exception ignored) { }
+        }
+        if (scanner != null) scanner.close();
+        if (cameraExecutor != null) cameraExecutor.shutdown();
+        super.onDestroy();
+    }
+
+    private static class AimOverlay extends View {
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        AimOverlay(AppCompatActivity context) {
+            super(context);
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            paint.setColor(0xEEFFFFFF);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(context.getResources().getDisplayMetrics().density * 2f);
+        }
+        @Override protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float width = getWidth();
+            float height = getHeight();
+            float boxWidth = width * 0.72f;
+            float boxHeight = Math.min(height * 0.24f, boxWidth * 0.55f);
+            float left = (width - boxWidth) / 2f;
+            float top = height * 0.47f - boxHeight / 2f;
+            canvas.drawRoundRect(new RectF(left, top, left + boxWidth, top + boxHeight), 18f, 18f, paint);
+        }
+    }
+}

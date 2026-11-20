@@ -284,9 +284,9 @@
   function normalizeVinCandidate(raw) {
     var value = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (value.length !== 17) return '';
-    // OCR commonly confuses these characters. Apply only unambiguous VIN rules;
-    // never guess between other letters and digits.
-    value = value.replace(/O/g, '0').replace(/[IQ]/g, '1');
+    // VINs cannot contain I, O or Q. OCR most often confuses O/Q with zero
+    // and I with one; apply those substitutions only to OCR text, never barcodes.
+    value = value.replace(/[OQ]/g, '0').replace(/I/g, '1');
     return /^[A-HJ-NPR-Z0-9]{17}$/.test(value) ? value : '';
   }
 
@@ -300,27 +300,63 @@
     return vin[8] === (check === 10 ? 'X' : String(check));
   }
 
+  function vinCandidateScore(vin, labelled) {
+    var score = 0;
+    // A matching North American check digit is the strongest available signal.
+    if (vinCheckDigitValid(vin)) score += 1000;
+    if (labelled) score += 180;
+    // Position 9 is the North American check digit; position 10 is a model-year code.
+    if (/^[0-9X]$/.test(vin.charAt(8))) score += 45;
+    if (/^[ABCDEFGHJKLMNPRSTVWXY123456789]$/.test(vin.charAt(9))) score += 35;
+    if (/^[A-HJ-NPR-Z0-9]{3}$/.test(vin.slice(0, 3)) && /[A-Z]/.test(vin.slice(0, 3))) score += 20;
+    if (/\d/.test(vin.slice(11))) score += 10;
+    return score;
+  }
+
   function extractVinCandidates(text) {
-    var found = [], lines = String(text || '').toUpperCase().split(/\r?\n/);
-    function addCandidate(raw) {
+    var found = [], metadata = {}, lines = String(text || '').toUpperCase().split(/\r?\n/);
+    function addCandidate(raw, labelled) {
       var candidate = normalizeVinCandidate(raw);
-      if (candidate && found.indexOf(candidate) === -1) found.push(candidate);
+      if (!candidate) return;
+      if (!metadata[candidate]) metadata[candidate] = { labelled: !!labelled };
+      else if (labelled) metadata[candidate].labelled = true;
+      if (found.indexOf(candidate) === -1) found.push(candidate);
     }
-    lines.forEach(function (line) {
-      var labelled = line.match(/\bVIN\b\s*[:#-]?\s*([A-Z0-9][A-Z0-9\s-]{15,24})/);
-      if (labelled) {
-        var labelledCompact = labelled[1].replace(/[^A-Z0-9]/g, '');
-        if (labelledCompact.length >= 17) {
-          addCandidate(labelledCompact.slice(0, 17));
-          return; // Do not create false candidates from the "VIN" label itself.
+    function addLabelledWindows(raw) {
+      var compact = String(raw || '').replace(/[^A-Z0-9]/g, '');
+      for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17), true);
+    }
+    lines.forEach(function (line, lineIndex) {
+      // Capture exactly 17 OCR characters after a VIN label, allowing spaces
+      // or hyphens between characters. Do not consume the rest of the sticker.
+      var vinLabel = /\b(?:VIN|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\b/;
+      var labelled = line.match(/\b(?:VIN|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\s*[:#-]?\s*((?:[A-Z0-9][\s-]?){17})/);
+      if (labelled) addLabelledWindows(labelled[1]);
+      else if (vinLabel.test(line)) {
+        // Some OCR engines put the VIN label on one line and the number on
+        // the next. Join at most the next two lines, and only accept exactly
+        // 17 characters so weight/tire/manufacturing fields cannot bleed in.
+        var nextLines = [lines[lineIndex + 1] || '', lines[lineIndex + 2] || ''];
+        for (var count = 1; count <= 2; count++) {
+          var followingText = nextLines.slice(0, count).join(' ');
+          if (/\b(?:GVWR|GAWR|MFD|MFG|TIRE|PRESSURE|FRONT|REAR|PLANT|ASSEMBLED|KPA|PSI)\b/.test(followingText)) continue;
+          var following = followingText.replace(/[^A-Z0-9]/g, '');
+          if (following.length === 17) addCandidate(following, true);
         }
       }
-      var compact = line.replace(/[^A-Z0-9]/g, '');
-      for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17));
+
+      // Without a VIN label, accept only a standalone 17-character token
+      // (or the known 18-character leading-I label prefix). Never slide a
+      // 17-character window across an entire door-sticker line: that creates
+      // convincing-looking VINs out of GVWR, tire and manufacturing fields.
+      line.split(/[^A-Z0-9]+/).filter(Boolean).forEach(function (token) {
+        if (token.length === 17) addCandidate(token, false);
+        else if (token.length === 18 && token.charAt(0) === 'I') addCandidate(token.slice(1), false);
+      });
     });
-    // Put candidates passing the North American check digit first, without
-    // discarding valid international VINs that do not use that checksum.
-    return found.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
+    return found.sort(function (a, b) {
+      return vinCandidateScore(b, metadata[b].labelled) - vinCandidateScore(a, metadata[a].labelled);
+    });
   }
 
   // Barcode payloads are machine-exact, so no OCR-style character swaps here. A VIN never contains I, O or Q.
@@ -350,7 +386,7 @@
     if (state.barcodeLoader) return state.barcodeLoader;
     state.barcodeLoader = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';
+      script.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.2.1/umd/zxing-browser.min.js';
       script.async = true;
       script.onload = function () {
         if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) resolve(window.ZXingBrowser);
@@ -389,43 +425,52 @@
   function startBarcodeScan() {
     var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
     if (!video) return;
+    if (state.barcodeScanning) return;
+    var cap = window.Capacitor;
     var nativeScanner = nativeVinScanner();
-    if (nativeScanner && nativeScanner.scanBarcode) {
-      // The Google scanner closes after the first barcode it sees. A door-jamb label carries several, so keep
-      // reopening it (a few times) until one of them contains a VIN.
-      var attempts = 0, MAX_ATTEMPTS = 5;
+
+    // Android uses a dedicated CameraX activity with ML Kit. The browser ZXing
+    // path remains as a fallback for non-Android browsers and older builds.
+    if (cap && typeof cap.getPlatform === 'function' && cap.getPlatform() === 'android' &&
+        nativeScanner && typeof nativeScanner.scanLiveBarcode === 'function') {
+      state.barcodeScanning = true;
       if (button) button.disabled = true;
-      var scanOnce = function () {
-        attempts++;
-        if (status) status.textContent = attempts === 1 ? 'Opening Android barcode scanner…' : 'That barcode was not a VIN. Scanning again (' + attempts + ' of ' + MAX_ATTEMPTS + ')…';
-        return nativeScanner.scanBarcode().then(function (result) {
-          var raw = result && (result.rawValue || result.displayValue) ? (result.rawValue || result.displayValue) : '';
-          var vin = extractBarcodeVin(raw);
+      if (status) status.textContent = 'Opening the native Android camera…';
+      nativeScanner.scanLiveBarcode().then(function (result) {
+        state.barcodeScanning = false;
+        if (result && result.cancelled) {
+          state.barcodeStatus = result.permissionDenied
+            ? 'Camera permission was denied. Allow camera access in Android settings, then try again.'
+            : 'Barcode scan cancelled. You can try again or use photo OCR.';
+        } else {
+          var payload = result && (result.rawValue || result.vin || result.displayValue) || '';
+          var vin = extractBarcodeVin(payload);
           if (vin) {
             state.vinText = vin;
+            state.vin = null;
+            state.vinMsg = '';
+            var format = result && result.format ? ' (' + result.format + ')' : '';
             state.barcodeStatus = vinCheckDigitValid(vin)
-              ? 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.'
-              : 'VIN barcode read, but its check digit did not validate (normal for some non-US vehicles). Verify the number carefully, then tap Decode VIN.';
-            return;
+              ? 'VIN captured from native barcode scanner' + format + '. Check digit is consistent; verify the number and tap Decode VIN.'
+              : 'VIN captured from native barcode scanner' + format + '. Verify every character and tap Decode VIN.';
+          } else {
+            state.barcodeStatus = 'The camera read a barcode, but its contents did not contain a complete VIN. Try centering the VIN code or use photo OCR.';
           }
-          if (attempts < MAX_ATTEMPTS) return scanOnce();
-          state.barcodeStatus = raw
-            ? 'Google read a barcode, but its value was not recognized as a VIN. Last value: ' + String(raw).replace(/[\\x00-\\x1f]/g, ' ').slice(0, 90) + '. Try the VIN-specific barcode on the door label, or use the photo option.'
-            : 'Google closed after detecting a barcode but returned no text value. Try another barcode on the label or use the photo option.';
-        });
-      };
-      scanOnce().catch(function (err) {
-        var msg = err && err.message ? err.message : '';
-        state.barcodeStatus = (err && err.code === 'CANCELLED') || /cancel/i.test(msg)
-          ? 'Barcode scan cancelled. Tap Start barcode scan to try again, or use the photo option.'
-          : (msg || 'Android barcode scanning failed. Try again or enter the VIN manually.');
-      }).then(function () {
+        }
         renderVin();
+      }).catch(function (err) {
+        state.barcodeScanning = false;
+        state.barcodeStatus = err && err.message
+          ? 'Native barcode scan failed: ' + err.message
+          : 'Native barcode scan failed. Try again or use photo OCR.';
+        renderVin();
+      }).finally(function () {
         var current = $('#vin-barcode-start');
         if (current) current.disabled = false;
       });
       return;
     }
+
     if (state.barcodeScanning) {
       stopBarcodeScanner();
       state.barcodeStatus = 'Barcode scanner stopped. You can start it again or use the photo option.';
@@ -452,16 +497,17 @@
         ]);
       }
       var reader = new ZXing.BrowserMultiFormatReader(hints, 350);
-      // Request the rear-facing camera by constraint. Device ordering is not
-      // consistent across Android manufacturers, so selecting the last camera
-      // from enumerateDevices can accidentally choose the selfie camera.
       return reader.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } } }, video, function (result, err, controls) {
         if (controls && !state.barcodeControls) state.barcodeControls = controls;
         if (result) {
           var vin = extractBarcodeVin(result.getText ? result.getText() : result.text);
           if (vin) {
             state.vinText = vin;
-            state.barcodeStatus = 'VIN barcode read successfully. Verify the number below, then tap Decode VIN.';
+            state.vin = null;
+            state.vinMsg = '';
+            state.barcodeStatus = vinCheckDigitValid(vin)
+              ? 'VIN captured from barcode. It passed the North American check digit; verify it below and tap Decode VIN.'
+              : 'VIN text captured from barcode. Verify every character before decoding.';
             stopBarcodeScanner();
             renderVin();
           } else if (status) {
@@ -504,7 +550,7 @@
     return state.ocrLoader;
   }
 
-  function prepareVinImage(file) {
+  function prepareVinImage(file, preserveOriginal) {
     return new Promise(function (resolve, reject) {
       var url = window.URL.createObjectURL(file);
       var img = new Image();
@@ -517,15 +563,17 @@
           var ctx = canvas.getContext('2d', { willReadFrequently: true });
           if (!ctx) throw new Error('Could not prepare the photo for text recognition.');
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          var data = pixels.data;
-          for (var i = 0; i < data.length; i += 4) {
-            var gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-            // Lift midtones and increase contrast so stamped/printed VIN characters stand out.
-            var enhanced = Math.max(0, Math.min(255, (gray - 128) * 1.55 + 128));
-            data[i] = data[i + 1] = data[i + 2] = enhanced;
+          if (!preserveOriginal) {
+            var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = pixels.data;
+            for (var i = 0; i < data.length; i += 4) {
+              var gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+              // Lift midtones and increase contrast so stamped/printed VIN characters stand out.
+              var enhanced = Math.max(0, Math.min(255, (gray - 128) * 1.55 + 128));
+              data[i] = data[i + 1] = data[i + 2] = enhanced;
+            }
+            ctx.putImageData(pixels, 0, 0);
           }
-          ctx.putImageData(pixels, 0, 0);
           window.URL.revokeObjectURL(url);
           resolve(canvas);
         } catch (err) {
@@ -566,18 +614,30 @@
     var nativeScanner = nativeVinScanner();
     if (nativeScanner && nativeScanner.recognizeText) {
       if (status) status.textContent = 'Preparing photo for Android text recognition…';
-      prepareVinImage(file).then(function (canvas) {
-        var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      function recognizeCanvas(canvas) {
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.94);
         return nativeScanner.recognizeText({ imageBase64: dataUrl.split(',')[1] || '' });
-      }).then(function (result) {
-        var text = result && result.text ? result.text : '';
+      }
+      // Run Android OCR against both contrast-enhanced and untouched versions.
+      // Some stamped VINs lose thin strokes during contrast enhancement.
+      prepareVinImage(file).then(function (enhancedCanvas) {
+        return recognizeCanvas(enhancedCanvas).then(function (enhancedResult) {
+          return prepareVinImage(file, true).then(function (originalCanvas) {
+            return recognizeCanvas(originalCanvas).then(function (originalResult) {
+              return { enhanced: enhancedResult && enhancedResult.text || '', original: originalResult && originalResult.text || '' };
+            });
+          });
+        });
+      }).then(function (readings) {
+        var text = 'Enhanced photo pass:\n' + readings.enhanced + '\n\nOriginal photo pass:\n' + readings.original;
         state.ocrRaw = text;
-        var candidates = extractVinCandidates(text);
-        candidates.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
+        // Re-parse the combined text so VIN-label proximity and check-digit
+        // ranking are applied once across both OCR passes.
+        var candidates = extractVinCandidates(readings.enhanced + '\n' + readings.original);
         if (candidates.length) {
           state.vinText = candidates[0];
           state.ocrStatus = candidates.length > 1
-            ? 'Android OCR found several possible VINs. The best check-digit match is shown first; verify every character.'
+            ? 'Android OCR found several possible VINs. The highest-ranked candidate is shown first using VIN structure and check-digit evidence; verify every character.'
             : (vinCheckDigitValid(candidates[0])
               ? 'Android OCR found a VIN with a consistent check digit. Verify every character before decoding.'
               : 'Android OCR found a possible VIN. Verify every character against the photo before decoding.');
@@ -615,12 +675,12 @@
       }).then(function () { return state.ocrWorker.recognize(file); })
         .then(function (retry) {
           var secondText = retry && retry.data ? retry.data.text : '';
-          var combined = firstCandidates.concat(extractVinCandidates(secondText));
-          var candidates = combined.filter(function (item, index) { return combined.indexOf(item) === index; });
-          candidates.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
-          state.ocrRaw = 'Enhanced photo pass:\\n' + String(firstText || '').trim() +
-            '\\n\\nOriginal photo pass:\\n' + String(secondText || '').trim();
-          return candidates;
+          var combinedText = String(firstText || '').trim() + '\n' + String(secondText || '').trim();
+          state.ocrRaw = 'Enhanced photo pass:\n' + String(firstText || '').trim() +
+            '\n\nOriginal photo pass:\n' + String(secondText || '').trim();
+          // Re-run the same label-aware parser over both passes instead of
+          // overriding its ranking with a check-digit-only sort.
+          return extractVinCandidates(combinedText);
         });
     }).then(function (candidates) {
       if (candidates.length === 1) {
@@ -629,7 +689,7 @@
           ? 'VIN found; its check digit is consistent. Verify every character before decoding.'
           : 'Possible VIN found. Verify every character against the photo before decoding.';
       } else if (candidates.length > 1) {
-        state.ocrStatus = 'Several possible VIN readings were found. The best checksum match is shown first; verify it against the photo.';
+        state.ocrStatus = 'Several possible VIN readings were found. The highest-ranked candidate uses VIN structure and check-digit evidence; verify it against the photo.';
         state.vinText = candidates[0];
       } else {
         state.ocrStatus = 'OCR could not isolate a complete 17-character VIN. The raw readings are shown below so you can spot the characters it missed.';
@@ -827,5 +887,5 @@
   render();
 
   // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && (n.scanBarcode || n.recognizeText)); } };
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); } };
 })();

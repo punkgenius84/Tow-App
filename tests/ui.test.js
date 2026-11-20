@@ -169,6 +169,47 @@ test('VIN OCR helper corrects common OCR-only I/O/Q substitutions but leaves rev
   assert.ok(Array.from(candidates).includes('1FTFW1E50NFA00000'));
 });
 
+test('VIN OCR ranks the labeled, checksum-valid VIN above door-sticker numbers', () => {
+  const { window: w } = boot();
+  const text = [
+    'GVWR 6200 LB GAWR FRONT 3450 LB',
+    'MFD BY AMERICAN MOTORS 11/2023',
+    'TIRE 235/65R17 104H PRESSURE 240 KPA',
+    'VIN NO: 1HGCM82633A004352',
+    'ASSEMBLED IN USA PLANT 2'
+  ].join('\n');
+  const candidates = Array.from(w.__tow.extractVinCandidates(text));
+  assert.equal(candidates[0], '1HGCM82633A004352');
+});
+
+test('VIN OCR accepts a VIN split over two lines immediately after its label', () => {
+  const { window: w } = boot();
+  const candidates = Array.from(w.__tow.extractVinCandidates(
+    'VEHICLE IDENTIFICATION NUMBER\n1HGCM8263\n3A004352\nGVWR 6200 LB'
+  ));
+  assert.equal(candidates[0], '1HGCM82633A004352');
+});
+
+test('VIN OCR does not join weight fields after a VIN label into a false VIN', () => {
+  const { window: w } = boot();
+  const candidates = w.__tow.extractVinCandidates('VIN\nGVWR 6200\nGAWR 3450');
+  assert.equal(candidates.length, 0);
+});
+
+test('VIN OCR does not manufacture VIN candidates by joining unrelated sticker fields', () => {
+  const { window: w } = boot();
+  const candidates = w.__tow.extractVinCandidates(
+    'GVWR6200LBGAWRFRONT3450LB\nMFD2023TIRE23565R17104H'
+  );
+  assert.equal(candidates.length, 0);
+});
+
+test('VIN OCR corrects Q as a zero only in OCR text and ranks checksum match first', () => {
+  const { window: w } = boot();
+  const candidates = Array.from(w.__tow.extractVinCandidates('VIN: 1HGCM82633AQQ4352'));
+  assert.equal(candidates[0], '1HGCM82633A004352');
+});
+
 
 test('VIN barcode scanner is available and accepts only a valid 17-character VIN', () => {
   const { window: w } = boot();
@@ -199,48 +240,78 @@ test('barcode VIN extraction handles real label payload shapes', () => {
   assert.equal(f(''), '');
 });
 
-test('native barcode scanner reopens until a barcode contains a VIN', async () => {
+test('Android uses the native CameraX scanner and returns the confirmed VIN to the form', async () => {
   const { window: w } = boot();
-  const calls = [];
-  const seq = [{ rawValue: 'PART-0001' }, { rawValue: 'I1HGCM82633A004352' }];
-  // Real Android shape: the bridge exposes plugins on Capacitor.Plugins and there is no registerPlugin().
-  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => { calls.push(1); return Promise.resolve(seq[calls.length - 1]); } } } };
   const d = w.document;
+  let nativeCalls = 0, browserCalls = 0;
+  w.Capacitor = {
+    getPlatform: () => 'android',
+    Plugins: { NativeVinScanner: {
+      scanLiveBarcode: () => {
+        nativeCalls++;
+        return Promise.resolve({ cancelled: false, rawValue: '1HGCM82633A004352', vin: '1HGCM82633A004352', format: 'Data Matrix' });
+      }
+    } }
+  };
+  w.ZXingBrowser = {
+    BrowserMultiFormatReader: function () {
+      this.decodeFromConstraints = () => { browserCalls++; return Promise.resolve({ stop: () => {} }); };
+    }
+  };
   click(w, d.querySelector('[data-tab="vin"]'));
   click(w, d.querySelector('#vin-barcode-start'));
-  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
-  assert.equal(calls.length, 2, 'scanner reopened after a non-VIN barcode');
+  await new Promise(r => setTimeout(r, 0));
+  assert.equal(nativeCalls, 1, 'Android launches the native CameraX scanner');
+  assert.equal(browserCalls, 0, 'Android does not start the browser ZXing camera');
   assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /native barcode scanner \(Data Matrix\)/i);
 });
 
-test('native barcode scanner uses displayValue when rawValue is unavailable', async () => {
+test('Android native barcode cancellation returns to the VIN form without losing OCR fallback', async () => {
   const { window: w } = boot();
-  w.Capacitor = { Plugins: { NativeVinScanner: {
-    scanBarcode: () => Promise.resolve({ rawValue: null, displayValue: '1HGCM82633A004352', format: 2 })
-  } } };
   const d = w.document;
+  w.Capacitor = {
+    getPlatform: () => 'android',
+    Plugins: { NativeVinScanner: { scanLiveBarcode: () => Promise.resolve({ cancelled: true, permissionDenied: true }) } }
+  };
   click(w, d.querySelector('[data-tab="vin"]'));
   click(w, d.querySelector('#vin-barcode-start'));
-  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
-  assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
-  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN barcode read successfully/i);
+  await new Promise(r => setTimeout(r, 0));
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /permission was denied/i);
+  assert.ok(d.querySelector('#vin-photo'));
+  assert.ok(d.querySelector('#vin-ocr'));
 });
 
-test('cancelling the native scanner is a calm message, not an error', async () => {
-  const { window: w } = boot();
-  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => Promise.reject(Object.assign(new Error('Barcode scan cancelled.'), { code: 'CANCELLED' })) } } };
-  const d = w.document;
-  click(w, d.querySelector('[data-tab="vin"]'));
-  click(w, d.querySelector('#vin-barcode-start'));
-  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
-  assert.match(d.querySelector('#vin-barcode-status').textContent, /cancelled/i);
-  assert.equal(d.querySelector('#vin-barcode-start').disabled, false);
+test('Android native scanner source declares supported formats and releases analyzed frames', () => {
+  const activity = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'src', 'main', 'java', 'com', 'bigjaysstowing', 'towguide', 'NativeBarcodeScannerActivity.java'), 'utf8');
+  const gradle = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'build.gradle'), 'utf8');
+  const manifest = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'src', 'main', 'AndroidManifest.xml'), 'utf8');
+  for (const format of ['FORMAT_DATA_MATRIX', 'FORMAT_QR_CODE', 'FORMAT_PDF417', 'FORMAT_AZTEC', 'FORMAT_CODE_39', 'FORMAT_CODE_128']) {
+    assert.ok(activity.includes(format), 'missing native barcode format ' + format);
+  }
+  assert.ok(activity.includes('STRATEGY_KEEP_ONLY_LATEST'));
+  assert.ok(activity.includes('addOnCompleteListener(task -> proxy.close())'), 'each analyzed camera frame must be released');
+  assert.ok(activity.includes('consecutiveMatches >= 2'), 'require a stable repeated VIN before returning it');
+  assert.ok(activity.includes('toggleTorch') && activity.includes('startFocusAndMetering'));
+  assert.ok(gradle.includes('com.google.mlkit:barcode-scanning:17.3.0'));
+  assert.ok(gradle.includes('androidx.camera:camera-lifecycle'));
+  assert.ok(manifest.includes('.NativeBarcodeScannerActivity'));
+});
+
+test('Android OCR reparses both photo passes together so candidate ranking is retained', () => {
+  const app = fs.readFileSync(path.join(WWW, 'app.js'), 'utf8');
+  const start = app.indexOf('function scanVinPhoto()');
+  const end = app.indexOf('function decodeVin()', start);
+  const androidPath = app.slice(start, end);
+  assert.match(androidPath, /prepareVinImage\(file, true\)/);
+  assert.ok(androidPath.includes("extractVinCandidates(readings.enhanced + '\\n' + readings.original)"));
+  assert.doesNotMatch(androidPath, /candidates\.sort\(function \(a, b\) \{ return Number\(vinCheckDigitValid/);
 });
 
 test('VIN scanners use working browser APIs and Android camera permission is declared', () => {
   const app = fs.readFileSync(path.join(WWW, 'app.js'), 'utf8');
   const manifest = fs.readFileSync(path.join(WWW, '..', 'android', 'app', 'src', 'main', 'AndroidManifest.xml'), 'utf8');
-  assert.ok(app.includes('@zxing/browser@0.1.5/umd/zxing-browser.min.js'));
+  assert.ok(app.includes('@zxing/browser@0.2.1/umd/zxing-browser.min.js'));
   assert.ok(app.includes("Tesseract.createWorker('eng'"));
   assert.ok(app.includes('worker.recognize(image)'));
   assert.ok(!app.includes('Tesseract.recognize('));
@@ -248,22 +319,14 @@ test('VIN scanners use working browser APIs and Android camera permission is dec
 });
 
 
-test('native scanner is found through Capacitor.Plugins (Android) or registerPlugin, and never faked', async () => {
-  // 1. Android bridge shape
-  let w = boot().window, hit = 0;
-  w.Capacitor = { Plugins: { NativeVinScanner: { scanBarcode: () => { hit++; return Promise.resolve({ rawValue: '1HGCM82633A004352' }); } } } };
-  click(w, w.document.querySelector('[data-tab="vin"]'));
-  click(w, w.document.querySelector('#vin-barcode-start'));
-  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
-  assert.equal(hit, 1);
-  // 2. bundled-runtime shape
-  w = boot().window; hit = 0;
-  w.Capacitor = { registerPlugin: () => ({ scanBarcode: () => { hit++; return Promise.resolve({ rawValue: '1HGCM82633A004352' }); } }) };
-  click(w, w.document.querySelector('[data-tab="vin"]'));
-  click(w, w.document.querySelector('#vin-barcode-start'));
-  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
-  assert.equal(hit, 1);
-  // 3. Capacitor present but no plugin and no registerPlugin: not treated as native
+
+test('native OCR plugin is detected through Capacitor.Plugins or registerPlugin, and never faked', () => {
+  let w = boot().window;
+  w.Capacitor = { Plugins: { NativeVinScanner: { recognizeText: () => Promise.resolve({ text: 'VIN 1HGCM82633A004352' }) } } };
+  assert.equal(w.__tow.nativeScannerAvailable(), true);
+  w = boot().window;
+  w.Capacitor = { registerPlugin: () => ({ recognizeText: () => Promise.resolve({ text: '' }) }) };
+  assert.equal(w.__tow.nativeScannerAvailable(), true);
   w = boot().window;
   w.Capacitor = { getPlatform: () => 'android' };
   assert.equal(w.__tow.nativeScannerAvailable(), false);
