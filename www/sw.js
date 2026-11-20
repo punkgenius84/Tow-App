@@ -1,5 +1,5 @@
 /* Network-first service worker: updates apply when online, app still works offline. */
-var CACHE = 'towguide-v1';
+var CACHE = 'towguide-v2';
 var ASSETS = ['./', 'index.html', 'styles.css', 'data.js', 'engine.js', 'app.js',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
