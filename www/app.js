@@ -422,8 +422,8 @@
     (readings || []).forEach(function (reading) {
       var rawText = String(reading && reading.text || '');
       extractVinCandidates(rawText).forEach(function (vin) {
-        var appearsBesideLabel = rawText.toUpperCase().split(/\\r?\\n/).some(function (line) {
-          return /\\b(?:VIN(?:\\s+(?:NO\\.?|NUMBER))?|V1N|VEHICLE\\s+IDENTIFICATION(?:\\s+NUMBER|\\s+NO\\.?)?)\\b/.test(line) &&
+        var appearsBesideLabel = rawText.toUpperCase().split(/\r?\n/).some(function (line) {
+          return /\b(?:VIN(?:\s+(?:NO\.?|NUMBER))?|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\b/.test(line) &&
             extractVinCandidates(line).indexOf(vin) !== -1;
         });
         add(vin, appearsBesideLabel);
