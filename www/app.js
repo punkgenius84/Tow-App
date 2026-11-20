@@ -163,8 +163,8 @@
       '<div class="stat"><b>' + (r.method.flatbedOnly ? 'Flatbed' : 'Flatbed') + '</b><span>unit type</span></div></div>' +
       ul(t.reasons) + '<div class="muted">' + esc(t.note) + '</div></div>';
 
-    var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad' }[k.status];
-    var klabel = { ok: 'SHOULD CLEAR', marginal: 'TIGHT', fail: 'WILL LIKELY SCRAPE' }[k.status];
+    var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad', unknown: 'info' }[k.status] || 'info';
+    var klabel = { ok: 'MEASURED: CLEARANCE INDICATED', marginal: 'TIGHT — CAUTION', fail: 'MEASURED: CONTACT LIKELY', unknown: 'MEASUREMENTS REQUIRED' }[k.status] || 'MEASUREMENTS REQUIRED';
     h += '<div class="card edge-' + kcls + '"><div class="label">GROUND CLEARANCE CHECK</div>' +
       '<div class="big"><span class="badge ' + kcls + '">' + klabel + '</span></div>' +
       '<div class="stats"><div class="stat"><b>' + k.gc + '"</b><span>clearance</span></div>' +
