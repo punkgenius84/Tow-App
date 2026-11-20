@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.orbitaledgelabs.towguide"
+    namespace "com.bigjaysstowing.towguide"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.orbitaledgelabs.towguide"
+        applicationId "com.bigjaysstowing.towguide"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
