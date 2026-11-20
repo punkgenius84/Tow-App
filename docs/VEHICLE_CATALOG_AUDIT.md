@@ -2,9 +2,9 @@
 
 **Status: IN PROGRESS — NOT APPROVED FOR RELEASE**
 
-**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 296 rows have been verified.
+**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 298 rows have been verified.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **296 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **298 rows across 47 makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
