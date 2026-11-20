@@ -265,7 +265,7 @@ test('Android OCR reparses both photo passes together so candidate ranking is re
   const end = app.indexOf('function decodeVin()', start);
   const androidPath = app.slice(start, end);
   assert.match(androidPath, /prepareVinImage\(file, true\)/);
-  assert.match(androidPath, /extractVinCandidates\(readings\.enhanced \+ '\\\\n' \+ readings\.original\)/);
+  assert.ok(androidPath.includes("extractVinCandidates(readings.enhanced + '\\n' + readings.original)"));
   assert.doesNotMatch(androidPath, /candidates\.sort\(function \(a, b\) \{ return Number\(vinCheckDigitValid/);
 });
 
