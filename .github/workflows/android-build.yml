@@ -10,6 +10,7 @@ on:
     paths:
       - 'android/**'
       - 'www/**'
+      - 'tests/**'
       - 'package.json'
       - 'package-lock.json'
       - 'capacitor.config.json'
