@@ -101,4 +101,6 @@ The Tacoma was completely redesigned for model year 2024. The catalog now separa
 
 ## Bulk aggregator rows (added 2026-11-20)
 
-`docs/vehicle-catalog-audit.csv` now also tracks every bulk-imported row with `audit_status = AGGREGATOR_UNVERIFIED` and the source page URL. These rows are low-confidence, carry no verified `source`, and do **not** satisfy the release gate: each still needs OEM verification per trim before any confidence upgrade. Curated rows remain 298; the release status stays **IN PROGRESS - NOT APPROVED FOR RELEASE**.
+`docs/vehicle-catalog-audit.csv` now also tracks every bulk-imported row with `audit_status = AGGREGATOR_UNVERIFIED` and the source page URL. These rows are low-confidence, carry no verified `source`, and do **not** satisfy the release gate: each still needs OEM verification per trim before any confidence upgrade. Curated rows remain 298 (142 flagged BROAD YEAR RANGE, 28 flagged LUMPED ENTRY); the release status stays **IN PROGRESS - NOT APPROVED FOR RELEASE**.
+
+Catalog size after the completeness pass: 2,817 rows (298 curated + 2,519 aggregator). Imported rows with unknown clearance: ~495; unknown wheelbase: ~21 (flagged in each note). Length/width/height present on 2,496 imported rows. Coverage of US models listed for 2015-2025: 595 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. Verified rows: 0.

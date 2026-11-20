@@ -142,8 +142,8 @@
       E.ANGLE_PRESETS.map(function (p) { return '<option value="' + p.deg + '"' + (p.deg === s.angle ? ' selected' : '') + '>' + esc(p.label) + '</option>'; }).join('') +
       '</select></div>';
     h += '<div class="grid2"><div><label class="f">Cargo / extra weight (lb)</label><input data-sel="extraLb" inputmode="numeric" placeholder="0"></div>' +
-      '<div><label class="f">Measured clearance (in)</label><input data-sel="gc" inputmode="decimal" placeholder="' + v.gc + '"></div></div>';
-    h += '<div><label class="f">Measured wheelbase (in, required for clearance check)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+      '<div><label class="f">Measured clearance (in)</label><input data-sel="gc" inputmode="decimal" placeholder="' + (v.gc || '') + '"></div></div>';
+    h += '<div><label class="f">Measured wheelbase (in, required for clearance check)</label><input data-sel="wb" inputmode="decimal" placeholder="' + (v.wb || '') + '"></div>';
     $('#controls').innerHTML = h;
   }
 
@@ -219,6 +219,7 @@
     h += detailsBlock('Vehicle specs used', '<table class="specs">' +
       row('Drive', sp.drive) + row('Powertrain', POWER[sp.power]) + row('Transmission', TRANS[sp.trans] || sp.trans) +
       row('Curb weight', E.fmt(sp.curb) + ' lb') + row('GVWR', sp.gvwr ? E.fmt(sp.gvwr) + ' lb' : 'n/a') +
+      (v.len ? row('Length × width × height', v.len + ' × ' + (v.wid || '?') + ' × ' + (v.ht || '?') + ' in (largest listed trim)') : '') +
       row('Wheelbase', k.wb + ' in') + row('Ground clearance', k.gc + ' in' + (sp.measured ? ' (measured)' : (sp.conf ? '' : ' (estimate)'))) +
       '</table><div class="muted" style="margin-top:8px">Typical values for the model range. Trim, tires, load and modifications change them.</div>');
 

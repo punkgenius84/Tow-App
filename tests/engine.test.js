@@ -249,8 +249,11 @@ test('database rows are well formed and unique', () => {
     assert.ok(['ICE', 'HEV', 'PHEV', 'EV'].includes(v.power), 'power ' + id);
     assert.ok(v.trans.every(t => ['AT', 'CVT', 'MT', 'DCT', 'EV'].includes(t)), 'trans ' + id);
     assert.ok(v.curb >= 1500 && v.curb <= 12000, 'curb ' + id);
-    assert.ok(v.wb >= 70 && v.wb <= 190, 'wheelbase ' + id);
-    assert.ok(v.gc >= 3.5 && v.gc <= 18, 'clearance ' + id);
+    assert.ok(v.wb === 0 || (v.wb >= 70 && v.wb <= 190), 'wheelbase ' + id);
+    assert.ok(v.gc === 0 || (v.gc >= 3.5 && v.gc <= 18), 'clearance ' + id);
+    if (v.len) assert.ok(v.len >= 100 && v.len <= 280, 'length ' + id);
+    if (v.wid) assert.ok(v.wid >= 55 && v.wid <= 100, 'width ' + id);
+    if (v.ht) assert.ok(v.ht >= 40 && v.ht <= 110, 'height ' + id);
     if (v.gvwr) assert.ok(v.gvwr >= v.curb, 'gvwr below curb ' + id);
     if (v.power === 'EV') assert.deepEqual(v.trans, ['EV'], 'EV trans ' + id);
   }
@@ -352,7 +355,7 @@ test('body-type guess for unlisted vehicles', () => {
 
 test('bulk aggregator rows are tagged, low-confidence, and never carry a verified source', () => {
   const bulk = D.vehicles.filter(v => v.agg);
-  assert.ok(bulk.length >= 1000, 'expected bulk import, got ' + bulk.length);
+  assert.ok(bulk.length >= 1500, 'expected bulk import, got ' + bulk.length);
   for (const v of bulk) {
     const id = v.make + ' ' + v.model + ' ' + v.yFrom;
     assert.equal(v.conf, 0, id);
@@ -369,4 +372,39 @@ test('every bulk row has a matching audit CSV row marked AGGREGATOR_UNVERIFIED',
   const agg = lines.filter(l => l.includes('"AGGREGATOR_UNVERIFIED"')).length;
   assert.equal(agg, D.vehicles.filter(v => v.agg).length);
   assert.equal(lines.length - 1, D.vehicles.length, 'audit CSV must track every catalog row');
+});
+
+
+test('unknown catalog clearance/wheelbase stay unknown: never low-flagged, never a verdict', () => {
+  const unk = D.vehicles.filter(v => v.agg && (v.gc === 0 || v.wb === 0));
+  assert.ok(unk.length > 0, 'expected rows with unknown clearance or wheelbase');
+  for (const v of unk) {
+    const id = v.make + ' ' + v.model + ' ' + v.yFrom;
+    assert.match(v.note, /NOT IN SOURCE/, id);
+    const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
+    assert.equal(r.clearance.status, 'unknown', id);
+    if (v.gc === 0) assert.equal(r.spec.low, !!v.low, id + ' unknown clearance must not set the low flag');
+  }
+  const r = E.recommend(unk[0], { drive: unk[0].drives[0], trans: unk[0].trans[0], gc: 6, wb: 110 });
+  assert.notEqual(r.clearance.status, 'unknown', 'measured values still produce a verdict');
+});
+
+test('pickups do not offer FWD except for known FWD-based models', () => {
+  for (const v of D.vehicles) {
+    if (/Pickup/.test(v.body) && v.drives.includes('FWD')) {
+      assert.match(v.model, /maverick|ridgeline|santa cruz|rampage|caddy|rabbit/i, v.make + ' ' + v.model);
+    }
+  }
+});
+
+test('broad or lumped hand-entered rows carry an explicit warning note', () => {
+  const broad = D.vehicles.filter(v => !v.agg && v.yTo - v.yFrom >= 8);
+  assert.ok(broad.length > 0);
+  for (const v of broad) assert.match(v.note, /BROAD YEAR RANGE/, v.make + ' ' + v.model);
+  for (const v of D.vehicles.filter(v => !v.agg && / \/ /.test(v.model))) assert.match(v.note, /LUMPED ENTRY/, v.model);
+});
+
+test('bulk rows expose length/width/height when the source has them', () => {
+  const withDims = D.vehicles.filter(v => v.agg && v.len && v.wid && v.ht);
+  assert.ok(withDims.length >= 1000, 'dimension coverage ' + withDims.length);
 });

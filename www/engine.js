@@ -51,8 +51,8 @@
     sel = sel || {};
     var drives = (v.drives && v.drives.length) ? v.drives : ['FWD'];
     var trans = (v.trans && v.trans.length) ? v.trans : ['AT'];
-    var gc = posNum(sel.gc, v.gc);
-    var wb = posNum(sel.wb, v.wb);
+    var gc = posNum(sel.gc, posNum(v.gc, 0));
+    var wb = posNum(sel.wb, posNum(v.wb, 0));
     return {
       name: ((v.make || '') + ' ' + (v.model || '')).trim(),
       body: v.body || '',
@@ -66,7 +66,7 @@
       measured: posNum(sel.gc, 0) > 0 && posNum(sel.wb, 0) > 0,
       dually: !!v.dually,
       air: v.air || false,
-      low: !!v.low || gc < LOW_CLEARANCE_IN,
+      low: !!v.low || (gc > 0 && gc < LOW_CLEARANCE_IN),
       conf: v.conf === 0 ? 0 : 1,
       note: v.note || '',
       extraLb: Math.max(0, +sel.extraLb || 0),
