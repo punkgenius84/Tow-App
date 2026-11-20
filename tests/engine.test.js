@@ -433,3 +433,36 @@ test('every OEM-verified row has an OEM_VERIFIED audit CSV row with the same sou
   const text = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8');
   for (const v of D.vehicles.filter(v => v.source)) assert.ok(text.includes('"OEM_VERIFIED"') && text.includes('"' + v.source + '"'), v.model);
 });
+
+
+test('unverified catalog curb weight produces an explicitly provisional truck class', () => {
+  const v = find('Ford', 'F-150');
+  assert.equal(v.conf, 0);
+  const t = E.recommend(v).truck;
+  assert.equal(t.provisional, true);
+  assert.equal(t.weightConfirmed, false);
+  assert.match(t.label, /^Provisional/);
+  assert.ok(t.reasons.some(x => /unverified catalog estimate/i.test(x)));
+});
+
+test('unverified catalog GVWR cannot silently upgrade truck class', () => {
+  const t = E.truckClass(E.resolve({
+    curb: 6800, gvwr: 14000, wb: 150, gc: 8,
+    drives: ['RWD'], trans: ['AT'], power: 'ICE', conf: 0
+  }, {}));
+  assert.equal(t.id, 'light');
+  assert.equal(t.gvwrConfirmed, false);
+  assert.ok(t.reasons.some(x => /GVWR is unverified/i.test(x)));
+  assert.equal(t.provisional, true);
+});
+
+test('operator-entered curb weight and GVWR overrides are treated as confirmed inputs', () => {
+  const v = find('Ford', 'F-150');
+  const curbOnly = E.recommend(v, { curb: 6200 }).truck;
+  assert.equal(curbOnly.provisional, false);
+  assert.equal(curbOnly.weightConfirmed, true);
+  assert.equal(curbOnly.gvwrConfirmed, false);
+  const withGvwr = E.recommend(v, { curb: 6200, gvwrOverride: 14000 }).truck;
+  assert.equal(withGvwr.gvwrConfirmed, true);
+  assert.equal(withGvwr.id, 'medium');
+});
