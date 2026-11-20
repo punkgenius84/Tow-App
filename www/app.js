@@ -512,32 +512,38 @@
         tessedit_pageseg_mode: '6'
       }).then(function () { return worker.recognize(image); });
     }).then(function (result) {
-      var text = result && result.data ? result.data.text : '';
-      state.ocrRaw = String(text || '').trim();
-      var candidates = extractVinCandidates(text);
-      if (!candidates.length && state.ocrWorker) {
-        return state.ocrWorker.setParameters({ tessedit_pageseg_mode: '11' })
-          .then(function () { return state.ocrWorker.recognize(file); })
-          .then(function (retry) { return { candidates: extractVinCandidates(retry && retry.data ? retry.data.text : ''), original: candidates }; });
-      }
-      return { candidates: candidates, original: candidates };
-    }).then(function (result) {
-      var candidates = result.candidates;
+      var firstText = result && result.data ? result.data.text : '';
+      var firstCandidates = extractVinCandidates(firstText);
+      // Always make a second pass against the untouched original photo. This
+      // catches cases where contrast enhancement makes a clear character look
+      // like a different digit/letter.
+      return state.ocrWorker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+        tessedit_pageseg_mode: '11'
+      }).then(function () { return state.ocrWorker.recognize(file); })
+        .then(function (retry) {
+          var secondText = retry && retry.data ? retry.data.text : '';
+          var combined = firstCandidates.concat(extractVinCandidates(secondText));
+          var candidates = combined.filter(function (item, index) { return combined.indexOf(item) === index; });
+          candidates.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
+          state.ocrRaw = 'Enhanced photo pass:\\n' + String(firstText || '').trim() +
+            '\\n\\nOriginal photo pass:\\n' + String(secondText || '').trim();
+          return candidates;
+        });
+    }).then(function (candidates) {
       if (candidates.length === 1) {
         state.vinText = candidates[0];
-        state.ocrStatus = 'VIN found. Check every character below, then tap Decode VIN.';
+        state.ocrStatus = vinCheckDigitValid(candidates[0])
+          ? 'VIN found; its check digit is consistent. Verify every character before decoding.'
+          : 'Possible VIN found. Verify every character against the photo before decoding.';
       } else if (candidates.length > 1) {
-        state.ocrStatus = 'More than one possible VIN was found. Choose and verify the correct 17 characters below.';
+        state.ocrStatus = 'Several possible VIN readings were found. The best checksum match is shown first; verify it against the photo.';
         state.vinText = candidates[0];
       } else {
-        state.ocrStatus = 'No clear 17-character VIN found. Try filling more of the frame with the VIN, avoid glare, or enter it manually.';
+        state.ocrStatus = 'OCR could not isolate a complete 17-character VIN. The raw readings are shown below so you can spot the characters it missed.';
       }
       renderVin();
-      if (candidates.length > 1) {
-        var msg = $('#vin-ocr-status');
-        if (msg) msg.textContent += ' First candidate shown; compare it with the photo.';
-      }
-    }).catch(function (err) {
+    }    }).catch(function (err) {
       state.ocrStatus = err && err.message ? err.message : 'Photo reading failed. Please try again or enter the VIN manually.';
       renderVin();
     }).finally(function () {
