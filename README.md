@@ -79,3 +79,10 @@ The catalog-wide audit is **in progress**. It covers all 263 current rows across
 ## Catalog confidence safeguard
 
 Until the complete source audit is finished, every vehicle's database-derived specifications are treated as low-confidence by the app. This prevents a short year range or plausible-looking specification from being mistaken for manufacturer verification. Measure the vehicle on scene and verify the actual configuration before making a loading decision.
+
+
+## Verification status
+
+The application currently treats all 263 catalog entries as low-confidence until their model-year / configuration-specific manufacturer sources are reviewed. The audit CSV is the source-of-work checklist and must not be interpreted as a completed verification report.
+
+A separate **Vehicle catalog and app tests** workflow runs `npm test` only; it does not build or upload an APK. The Android APK workflow remains manual-only and is not to be dispatched during the audit.
