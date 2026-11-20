@@ -75,7 +75,7 @@ Bulk offline data source evaluation, attribution requirements, and safety rules 
 
 ## Vehicle catalog audit — release gate
 
-The catalog-wide audit is **in progress**. It covers all 289 current rows across 47 makes, not only selected examples. Each entry must be checked for model-year generation boundaries, drivetrain / trim differences, ground clearance, wheelbase, curb weight and source provenance. Unverified values must remain identified as estimates; the audit must not upgrade confidence based only on plausible-looking numbers.
+The catalog-wide audit is **in progress — not approved for release**. It covers all 2,819 current rows across 47 makes: 300 curated entries (298 estimate rows plus 2 OEM-source-verified single-year rows) and 2,519 aggregator-derived entries. Only 2 rows currently meet the OEM-source verification gate. Each remaining entry must be checked for model-year generation boundaries, drivetrain / trim differences, ground clearance, wheelbase, curb weight and source provenance. Unverified values must remain identified as estimates; the audit must not upgrade confidence based only on plausible-looking numbers.
 
 **No APKs are to be generated until the audit is complete, regression tests pass, documentation is updated, and the release is explicitly approved.** The Android build workflow is manual-only during this work.
 
@@ -87,6 +87,6 @@ Until the complete source audit is finished, every vehicle's database-derived sp
 
 ## Verification status
 
-The application currently treats all 289 catalog entries as low-confidence until their model-year / configuration-specific manufacturer sources are reviewed. The audit CSV is the source-of-work checklist and must not be interpreted as a completed verification report.
+The application treats 2,817 catalog entries as unverified and only 2 single-model-year entries (2025 Honda Passport and 2025 Hyundai Santa Cruz) as OEM-source verified. The audit CSV is the source-of-work checklist, not a completed verification report. The 2,519 AutoEvolution-derived specification rows have an unresolved redistribution-license status; do not treat the bundled dataset as cleared for public or commercial redistribution until that issue is resolved.
 
 A separate **Vehicle catalog and app tests** workflow runs `npm test` only; it does not build or upload an APK. The Android APK workflow remains manual-only and is not to be dispatched during the audit.
