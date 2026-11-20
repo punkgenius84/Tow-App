@@ -625,11 +625,11 @@
           });
         });
       }).then(function (readings) {
-        var text = 'Enhanced photo pass:\\n' + readings.enhanced + '\\n\\nOriginal photo pass:\\n' + readings.original;
+        var text = 'Enhanced photo pass:\n' + readings.enhanced + '\n\nOriginal photo pass:\n' + readings.original;
         state.ocrRaw = text;
         // Re-parse the combined text so VIN-label proximity and check-digit
         // ranking are applied once across both OCR passes.
-        var candidates = extractVinCandidates(readings.enhanced + '\\n' + readings.original);
+        var candidates = extractVinCandidates(readings.enhanced + '\n' + readings.original);
         if (candidates.length) {
           state.vinText = candidates[0];
           state.ocrStatus = candidates.length > 1
@@ -671,12 +671,12 @@
       }).then(function () { return state.ocrWorker.recognize(file); })
         .then(function (retry) {
           var secondText = retry && retry.data ? retry.data.text : '';
-          var combined = firstCandidates.concat(extractVinCandidates(secondText));
-          var candidates = combined.filter(function (item, index) { return combined.indexOf(item) === index; });
-          candidates.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
-          state.ocrRaw = 'Enhanced photo pass:\\n' + String(firstText || '').trim() +
-            '\\n\\nOriginal photo pass:\\n' + String(secondText || '').trim();
-          return candidates;
+          var combinedText = String(firstText || '').trim() + '\n' + String(secondText || '').trim();
+          state.ocrRaw = 'Enhanced photo pass:\n' + String(firstText || '').trim() +
+            '\n\nOriginal photo pass:\n' + String(secondText || '').trim();
+          // Re-run the same label-aware parser over both passes instead of
+          // overriding its ranking with a check-digit-only sort.
+          return extractVinCandidates(combinedText);
         });
     }).then(function (candidates) {
       if (candidates.length === 1) {
