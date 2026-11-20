@@ -74,3 +74,8 @@ For this tinkering build, the release APK is signed with Gradle's debug certific
 The catalog-wide audit is **in progress**. It covers all 263 current rows across 47 makes, not only selected examples. Each entry must be checked for model-year generation boundaries, drivetrain / trim differences, ground clearance, wheelbase, curb weight and source provenance. Unverified values must remain identified as estimates; the audit must not upgrade confidence based only on plausible-looking numbers.
 
 **No APKs are to be generated until the audit is complete, regression tests pass, documentation is updated, and the release is explicitly approved.** The Android build workflow is manual-only during this work.
+
+
+## Catalog confidence safeguard
+
+Until the complete source audit is finished, every vehicle's database-derived specifications are treated as low-confidence by the app. This prevents a short year range or plausible-looking specification from being mistaken for manufacturer verification. Measure the vehicle on scene and verify the actual configuration before making a loading decision.
