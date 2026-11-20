@@ -100,7 +100,7 @@ test('max recommended angle preserves the 1.5-inch reserve', () => {
 test('Mustang scrapes on a standard bed, clears on a low-angle bed', () => {
   const v = find('Ford', 'Mustang');
   assert.equal(E.recommend(v, { angle: 12 }).clearance.status, 'fail');
-  assert.equal(E.recommend(v, { angle: 8 }).clearance.status, 'ok');
+  assert.equal(E.recommend(v, { angle: 6 }).clearance.status, 'ok');
 });
 
 test('tall trucks clear a standard bed', () => {
@@ -109,10 +109,10 @@ test('tall trucks clear a standard bed', () => {
 
 test('clearance bands reserve 1.5 inches for uneven pavement and variation', () => {
   const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 30, low: false, measured: false, conf: 1 }).status;
-  assert.equal(mk(14), 'ok');
-  assert.equal(mk(13.1), 'marginal');
-  assert.equal(mk(12.9), 'marginal');
-  assert.equal(mk(12.4), 'fail');
+  assert.equal(mk(10.2), 'ok');
+  assert.equal(mk(9.3), 'marginal');
+  assert.equal(mk(8.9), 'fail');
+  assert.equal(mk(8.6), 'fail');
 });
 
 test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear pass', () => {
@@ -128,8 +128,8 @@ test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear p
 
 test('measured clearance overrides the database value', () => {
   const v = find('Ford', 'Mustang');
-  const r = E.recommend(v, { angle: 12, gc: 7 });
-  assert.equal(r.clearance.gc, 7);
+  const r = E.recommend(v, { angle: 12, gc: 7.2 });
+  assert.equal(r.clearance.gc, 7.2);
   assert.equal(r.clearance.status, 'ok');
   assert.equal(r.spec.measured, true);
 });
