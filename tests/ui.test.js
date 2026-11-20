@@ -22,7 +22,7 @@ test('index.html references only files that exist', () => {
   const html = fs.readFileSync(path.join(WWW, 'index.html'), 'utf8');
   const refs = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]).filter(r => !/^https?:/.test(r));
   assert.ok(refs.length >= 5);
-  for (const r of refs) assert.ok(fs.existsSync(path.join(WWW, r)), 'missing ' + r);
+  for (const r of refs) assert.ok(fs.existsSync(path.join(WWW, decodeURIComponent(r))), 'missing ' + r);
   const manifest = JSON.parse(fs.readFileSync(path.join(WWW, 'manifest.webmanifest'), 'utf8'));
   for (const i of manifest.icons) assert.ok(fs.existsSync(path.join(WWW, i.src)), 'missing icon ' + i.src);
 });
