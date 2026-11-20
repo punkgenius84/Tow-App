@@ -176,3 +176,18 @@ test('brand header uses the supplied logo rather than the orange BJ text badge',
   assert.match(html, /assets\/branding\/big_jays_logo_300x300\.png/);
   assert.doesNotMatch(html, /<span class="mark">BJ<\/span>/);
 });
+
+
+test('Info screen displays required US vehicle dataset attribution and licence links', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="info"]'));
+  const content = d.querySelector('#view').textContent;
+  assert.match(content, /US Car Models Data/);
+  assert.match(content, /Abhilash Reddy/);
+  assert.match(content, /Creative Commons Attribution 4\.0/);
+  const links = [...d.querySelectorAll('#view a')];
+  assert.ok(links.some(a => a.href === 'https://github.com/abhionlyone/us-car-models-data'));
+  assert.ok(links.some(a => a.href === 'https://creativecommons.org/licenses/by/4.0/'));
+  w.close();
+});
