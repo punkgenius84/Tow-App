@@ -1,4 +1,4 @@
-package com.orbitaledgelabs.towguide;
+package com.bigjaysstowing.towguide;
 
 import com.getcapacitor.BridgeActivity;
 
