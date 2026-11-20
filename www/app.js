@@ -425,7 +425,52 @@
   function startBarcodeScan() {
     var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
     if (!video) return;
-    // Barcode capture uses the continuous in-app ZXing reader on every platform.
+    if (state.barcodeScanning) return;
+    var cap = window.Capacitor;
+    var nativeScanner = nativeVinScanner();
+
+    // Android uses a dedicated CameraX activity with ML Kit. The browser ZXing
+    // path remains as a fallback for non-Android browsers and older builds.
+    if (cap && typeof cap.getPlatform === 'function' && cap.getPlatform() === 'android' &&
+        nativeScanner && typeof nativeScanner.scanLiveBarcode === 'function') {
+      state.barcodeScanning = true;
+      if (button) button.disabled = true;
+      if (status) status.textContent = 'Opening the native Android camera…';
+      nativeScanner.scanLiveBarcode().then(function (result) {
+        state.barcodeScanning = false;
+        if (result && result.cancelled) {
+          state.barcodeStatus = result.permissionDenied
+            ? 'Camera permission was denied. Allow camera access in Android settings, then try again.'
+            : 'Barcode scan cancelled. You can try again or use photo OCR.';
+        } else {
+          var payload = result && (result.rawValue || result.vin || result.displayValue) || '';
+          var vin = extractBarcodeVin(payload);
+          if (vin) {
+            state.vinText = vin;
+            state.vin = null;
+            state.vinMsg = '';
+            var format = result && result.format ? ' (' + result.format + ')' : '';
+            state.barcodeStatus = vinCheckDigitValid(vin)
+              ? 'VIN captured from native barcode scanner' + format + '. Check digit is consistent; verify the number and tap Decode VIN.'
+              : 'VIN captured from native barcode scanner' + format + '. Verify every character and tap Decode VIN.';
+          } else {
+            state.barcodeStatus = 'The camera read a barcode, but its contents did not contain a complete VIN. Try centering the VIN code or use photo OCR.';
+          }
+        }
+        renderVin();
+      }).catch(function (err) {
+        state.barcodeScanning = false;
+        state.barcodeStatus = err && err.message
+          ? 'Native barcode scan failed: ' + err.message
+          : 'Native barcode scan failed. Try again or use photo OCR.';
+        renderVin();
+      }).finally(function () {
+        var current = $('#vin-barcode-start');
+        if (current) current.disabled = false;
+      });
+      return;
+    }
+
     if (state.barcodeScanning) {
       stopBarcodeScanner();
       state.barcodeStatus = 'Barcode scanner stopped. You can start it again or use the photo option.';
@@ -452,9 +497,6 @@
         ]);
       }
       var reader = new ZXing.BrowserMultiFormatReader(hints, 350);
-      // Request the rear-facing camera by constraint. Device ordering is not
-      // consistent across Android manufacturers, so selecting the last camera
-      // from enumerateDevices can accidentally choose the selfie camera.
       return reader.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } } }, video, function (result, err, controls) {
         if (controls && !state.barcodeControls) state.barcodeControls = controls;
         if (result) {
