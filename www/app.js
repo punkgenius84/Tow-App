@@ -366,9 +366,14 @@
     state.barcodeScanning = false;
   }
 
+  var nativeVinScannerProxy = null;
   function nativeVinScanner() {
-    return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeVinScanner
-      ? window.Capacitor.Plugins.NativeVinScanner : null;
+    if (nativeVinScannerProxy) return nativeVinScannerProxy;
+    if (window.Capacitor && typeof window.Capacitor.registerPlugin === 'function') {
+      nativeVinScannerProxy = window.Capacitor.registerPlugin('NativeVinScanner');
+      return nativeVinScannerProxy;
+    }
+    return null;
   }
 
   function startBarcodeScan() {
