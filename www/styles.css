@@ -98,3 +98,9 @@ dl.gl dt { font-weight: 800; margin-top: 8px; } dl.gl dd { margin: 0; color: var
 .vin-preview[hidden] { display: none; }
 #vin-photo { padding: 10px; }
 #vin-ocr:disabled { opacity: .6; cursor: wait; }
+
+/* Live VIN barcode camera */
+.barcode-video { width: 100%; min-height: 190px; max-height: 300px; object-fit: cover; }
+.barcode-video[hidden] { display: none; }
+.divider-text { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 1px; }
+.divider-text::before, .divider-text::after { content: ''; flex: 1; height: 1px; background: var(--line); }
