@@ -14,30 +14,37 @@ The app works offline after its files are available on the device. VIN decoding 
 ## Branding and application identity
 
 - Customer-facing name: **Big Jay's Tow Guide**
-- Android application ID: com.bigjaysstowing.towguide
-- Launcher and web icon artwork: navy, white, and amber tow-truck mark
-- Web/PWA icon source: www/icons/icon.svg
+- Android application ID: `com.bigjaysstowing.towguide`
+- Original company artwork is retained in `www/assets/branding/`
+- Web/PWA icons are in `www/icons/`
+- Android launcher resources are in `android/app/src/main/res/`
 
 ## Run as a web app
 
-Host the www/ folder (GitHub Pages works), open it in Chrome on a phone, then use the browser menu and choose **Install app**. For local testing, run npm run serve.
+Host the `www/` folder (GitHub Pages works), open it in Chrome on a phone, then use the browser menu and choose **Install app**. For local testing, run `npm run serve`.
 
 ## Build the Android app
 
-1. Run npm install.
-2. Run npx cap sync android.
-3. Open the project with npx cap open android, or build from the Android folder with ./gradlew assembleDebug (Windows: gradlew.bat assembleDebug).
-4. The debug APK is written to android/app/build/outputs/apk/debug/app-debug.apk.
+The Android project uses Gradle 8.11.1 and requires **JDK 21** for compilation.
+
+1. Run `npm ci`.
+2. Run `npm test`.
+3. Run `npx cap sync android`.
+4. Build with `cd android && ./gradlew assembleDebug` (Windows: `gradlew.bat assembleDebug` from the `android` folder).
+
+You can also use the repository's **Build Android APK** GitHub Actions workflow. It runs the tests, synchronizes Capacitor, builds the debug APK with JDK 21, and uploads an artifact named `TowGuide-debug-apk`. Open the repository's **Actions** tab, select **Build Android APK**, choose **Run workflow**, and download the artifact when the run succeeds.
+
+The debug APK output path is `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 A Play Store release requires a separately signed release build and a Google Play developer account.
 
 ## Tests
 
-Run npm test for the tow-rule, clearance, tie-down, vehicle-database, VIN-decoding, and UI regression tests.
+Run `npm test` for the tow-rule, clearance, tie-down, vehicle-database, VIN-decoding, and UI regression tests.
 
 ## Adding vehicles
 
-Append a row to ROWS in www/data.js (format documented at the top of that file). The test suite checks row structure and database integrity.
+Append a row to `ROWS` in `www/data.js` (format documented at the top of that file). The test suite checks row structure and database integrity.
 
 ## Operational limits
 
