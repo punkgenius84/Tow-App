@@ -68,3 +68,12 @@ Add these under **Repository Settings → Secrets and variables → Actions**. N
 ## Clearance safety margin
 
 The clearance estimate now requires at least 1.5 inches beyond the calculated ramp-crest rise before showing a positive result. A smaller reserve is marked tight or likely to scrape and recommends a low-deck, long-bed rollback with adjustable tilt and long ramp extensions, or go-jacks/skates / a different carrier. This is a screening aid, not a guarantee: measure the lowest point, inspect approach/departure lips, and account for uneven pavement and suspension movement.
+
+
+## Expanded vehicle coverage and clearance guidance
+
+The US-market reference database now includes additional Mazda (including the 2014 Mazda 6 i Grand Touring example), Mercedes-Benz, Audi, BMW, Volkswagen, Hyundai, Kia, Mitsubishi, Volvo and Lexus model families, alongside the existing makes. Many entries are broad model/year estimates and are explicitly marked lower confidence. Confirm the exact year, trim, drivetrain, curb weight, wheelbase and lowest ground-clearance point before dispatch; use the custom vehicle inputs when the exact configuration is not listed.
+
+## Personal/testing APK signing
+
+For this tinkering build, the release APK is signed with Gradle's debug certificate so no private keystore or passwords are needed. This is suitable for personal sideload testing, not Play Store distribution. A debug certificate generated on a hosted runner may change between runs, so a later APK may require uninstalling the previous test build before installing the new one. No signing secrets need to be shared in chat or committed to the repository.
