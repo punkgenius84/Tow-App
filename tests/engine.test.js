@@ -109,10 +109,10 @@ test('tall trucks clear a standard bed', () => {
 
 test('clearance bands reserve 1.5 inches for uneven pavement and variation', () => {
   const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 30, low: false, measured: false, conf: 1 }).status;
-  assert.equal(mk(10.2), 'ok');
-  assert.equal(mk(9.3), 'marginal');
-  assert.equal(mk(8.9), 'fail');
-  assert.equal(mk(8.6), 'fail');
+  assert.equal(mk(26.5), 'ok');
+  assert.equal(mk(25.6), 'marginal');
+  assert.equal(mk(25.4), 'fail');
+  assert.equal(mk(24.0), 'fail');
 });
 
 test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear pass', () => {
