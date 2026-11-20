@@ -412,7 +412,13 @@
   function startBarcodeScan() {
     var video = $('#vin-barcode-video'), status = $('#vin-barcode-status'), button = $('#vin-barcode-start');
     if (!video) return;
-    var nativeScanner = nativeVinScanner();
+    var capacitor = window.Capacitor;
+    var platform = capacitor && typeof capacitor.getPlatform === 'function' ? capacitor.getPlatform() : '';
+    // On Android, use the continuous in-WebView camera scanner instead of the
+    // one-shot Google Play-services activity. Android can recreate the app
+    // while that external activity is open, leaving the Capacitor call pending.
+    // ZXing stays active until it sees a valid VIN and avoids that lost-result path.
+    var nativeScanner = platform === 'android' ? null : nativeVinScanner();
     if (nativeScanner && nativeScanner.scanBarcode) {
       // The Google scanner closes after the first barcode it sees. A door-jamb label carries several, so keep
       // reopening it (a few times) until one of them contains a VIN.
@@ -540,7 +546,7 @@
     return state.ocrLoader;
   }
 
-  function prepareVinImage(file) {
+  function prepareVinImage(file, preserveOriginal) {
     return new Promise(function (resolve, reject) {
       var url = window.URL.createObjectURL(file);
       var img = new Image();
@@ -553,15 +559,17 @@
           var ctx = canvas.getContext('2d', { willReadFrequently: true });
           if (!ctx) throw new Error('Could not prepare the photo for text recognition.');
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          var data = pixels.data;
-          for (var i = 0; i < data.length; i += 4) {
-            var gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-            // Lift midtones and increase contrast so stamped/printed VIN characters stand out.
-            var enhanced = Math.max(0, Math.min(255, (gray - 128) * 1.55 + 128));
-            data[i] = data[i + 1] = data[i + 2] = enhanced;
+          if (!preserveOriginal) {
+            var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = pixels.data;
+            for (var i = 0; i < data.length; i += 4) {
+              var gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+              // Lift midtones and increase contrast so stamped/printed VIN characters stand out.
+              var enhanced = Math.max(0, Math.min(255, (gray - 128) * 1.55 + 128));
+              data[i] = data[i + 1] = data[i + 2] = enhanced;
+            }
+            ctx.putImageData(pixels, 0, 0);
           }
-          ctx.putImageData(pixels, 0, 0);
           window.URL.revokeObjectURL(url);
           resolve(canvas);
         } catch (err) {
@@ -602,14 +610,26 @@
     var nativeScanner = nativeVinScanner();
     if (nativeScanner && nativeScanner.recognizeText) {
       if (status) status.textContent = 'Preparing photo for Android text recognition…';
-      prepareVinImage(file).then(function (canvas) {
-        var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      function recognizeCanvas(canvas) {
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.94);
         return nativeScanner.recognizeText({ imageBase64: dataUrl.split(',')[1] || '' });
-      }).then(function (result) {
-        var text = result && result.text ? result.text : '';
+      }
+      // Run Android OCR against both contrast-enhanced and untouched versions.
+      // Some stamped VINs lose thin strokes during contrast enhancement.
+      prepareVinImage(file).then(function (enhancedCanvas) {
+        return recognizeCanvas(enhancedCanvas).then(function (enhancedResult) {
+          return prepareVinImage(file, true).then(function (originalCanvas) {
+            return recognizeCanvas(originalCanvas).then(function (originalResult) {
+              return { enhanced: enhancedResult && enhancedResult.text || '', original: originalResult && originalResult.text || '' };
+            });
+          });
+        });
+      }).then(function (readings) {
+        var text = 'Enhanced photo pass:\\n' + readings.enhanced + '\\n\\nOriginal photo pass:\\n' + readings.original;
         state.ocrRaw = text;
-        var candidates = extractVinCandidates(text);
-        candidates.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
+        // Re-parse the combined text so VIN-label proximity and check-digit
+        // ranking are applied once across both OCR passes.
+        var candidates = extractVinCandidates(readings.enhanced + '\\n' + readings.original);
         if (candidates.length) {
           state.vinText = candidates[0];
           state.ocrStatus = candidates.length > 1
