@@ -428,6 +428,23 @@ test('OEM-verified rows still never produce a clearance verdict without on-scene
   }
 });
 
+
+test('audit CSV source URLs are in the correct column and verified rows are single-year scoped', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const lines = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8').trim().split('\n');
+  for (const line of lines.slice(1)) {
+    const cols = [...line.matchAll(/"(?:[^"]|"")*"/g)].map(m => m[0].slice(1, -1).replace(/""/g, '"'));
+    const status = cols[12], sourceUrl = cols[13];
+    if (sourceUrl) assert.match(sourceUrl, /^https:\/\//, cols[0] + ' ' + cols[1] + ' source URL column');
+    if (status === 'OEM_VERIFIED') {
+      assert.equal(cols[11], 'OEM_VERIFIED_SINGLE_YEAR', cols[0] + ' ' + cols[1]);
+      assert.equal(cols[2], cols[3], cols[0] + ' ' + cols[1] + ' must be single-year scoped');
+      assert.match(sourceUrl, /^https:\/\//, cols[0] + ' ' + cols[1]);
+      assert.equal(cols[15], cols[2], cols[0] + ' ' + cols[1] + ' source year must match row year');
+    }
+  }
+});
+
 test('every OEM-verified row has an OEM_VERIFIED audit CSV row with the same source URL', () => {
   const fs = require('node:fs'), path = require('node:path');
   const text = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8');
