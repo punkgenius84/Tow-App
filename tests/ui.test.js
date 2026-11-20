@@ -169,6 +169,25 @@ test('VIN OCR helper corrects common OCR-only I/O/Q substitutions but leaves rev
   assert.ok(Array.from(candidates).includes('1FTFW1E50NFA00000'));
 });
 
+test('VIN OCR ranks the labeled, checksum-valid VIN above door-sticker numbers', () => {
+  const { window: w } = boot();
+  const text = [
+    'GVWR 6200 LB GAWR FRONT 3450 LB',
+    'MFD BY AMERICAN MOTORS 11/2023',
+    'TIRE 235/65R17 104H PRESSURE 240 KPA',
+    'VIN NO: 1HGCM82633A004352',
+    'ASSEMBLED IN USA PLANT 2'
+  ].join('\\n');
+  const candidates = Array.from(w.__tow.extractVinCandidates(text));
+  assert.equal(candidates[0], '1HGCM82633A004352');
+});
+
+test('VIN OCR corrects Q as a zero only in OCR text and ranks checksum match first', () => {
+  const { window: w } = boot();
+  const candidates = Array.from(w.__tow.extractVinCandidates('VIN: 1HGCM82633AQQ4352'));
+  assert.equal(candidates[0], '1HGCM82633A004352');
+});
+
 
 test('VIN barcode scanner is available and accepts only a valid 17-character VIN', () => {
   const { window: w } = boot();
@@ -224,6 +243,19 @@ test('native barcode scanner uses displayValue when rawValue is unavailable', as
   for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
   assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
   assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN barcode read successfully/i);
+});
+
+test('native barcode scanner decodes raw payload bytes when text values are missing', async () => {
+  const { window: w } = boot();
+  w.Capacitor = { Plugins: { NativeVinScanner: {
+    scanBarcode: () => Promise.resolve({ rawValue: null, displayValue: null, rawBytesBase64: 'MUhHQ004MjYzM0EwMDQzNTI=', format: 2 })
+  } } };
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="vin"]'));
+  click(w, d.querySelector('#vin-barcode-start'));
+  for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+  assert.equal(d.querySelector('#vin').value, '1HGCM82633A004352');
+  assert.match(d.querySelector('#vin-barcode-status').textContent, /VIN captured from barcode/i);
 });
 
 test('cancelling the native scanner is a calm message, not an error', async () => {
