@@ -6,7 +6,7 @@
   var D = window.TowData;
   var LS_KEY = 'towguide.custom.v1';
 
-  var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null, vinFile: null, vinPreviewUrl: '', ocrStatus: '', barcodeStatus: '', barcodeScanning: false, barcodeControls: null, barcodeLoader: null };
+  var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null, vinFile: null, vinPreviewUrl: '', ocrStatus: '', ocrLoader: null, ocrWorker: null, barcodeStatus: '', barcodeScanning: false, barcodeControls: null, barcodeLoader: null };
   var custom = loadCustom();
 
   /* ---------- helpers ---------- */
@@ -369,37 +369,104 @@
   }
 
   function loadOcrEngine() {
-    if (window.Tesseract) return Promise.resolve(window.Tesseract);
+    if (window.Tesseract && window.Tesseract.createWorker) return Promise.resolve(window.Tesseract);
     if (state.ocrLoader) return state.ocrLoader;
     state.ocrLoader = new Promise(function (resolve, reject) {
       var script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
       script.async = true;
-      script.onload = function () { if (window.Tesseract) resolve(window.Tesseract); else reject(new Error('OCR engine did not initialize')); };
+      script.onload = function () {
+        if (window.Tesseract && window.Tesseract.createWorker) resolve(window.Tesseract);
+        else reject(new Error('OCR engine loaded, but its worker API is unavailable. Please reload the app.'));
+      };
       script.onerror = function () { reject(new Error('Could not load the OCR engine. Check your internet connection.')); };
       document.head.appendChild(script);
+    }).catch(function (err) {
+      state.ocrLoader = null;
+      throw err;
     });
     return state.ocrLoader;
+  }
+
+  function prepareVinImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = window.URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var scale = Math.min(3, Math.max(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight)));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          var ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (!ctx) throw new Error('Could not prepare the photo for text recognition.');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          var data = pixels.data;
+          for (var i = 0; i < data.length; i += 4) {
+            var gray = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+            // Lift midtones and increase contrast so stamped/printed VIN characters stand out.
+            var enhanced = Math.max(0, Math.min(255, (gray - 128) * 1.55 + 128));
+            data[i] = data[i + 1] = data[i + 2] = enhanced;
+          }
+          ctx.putImageData(pixels, 0, 0);
+          window.URL.revokeObjectURL(url);
+          resolve(canvas);
+        } catch (err) {
+          window.URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+      img.onerror = function () {
+        window.URL.revokeObjectURL(url);
+        reject(new Error('The photo could not be opened. Try taking it again.'));
+      };
+      img.src = url;
+    });
+  }
+
+  function getOcrWorker(Tesseract, status) {
+    if (state.ocrWorker) return Promise.resolve(state.ocrWorker);
+    return Tesseract.createWorker('eng', 1, {
+      logger: function (m) {
+        if (!status) return;
+        if (m.status === 'loading tesseract core') status.textContent = 'Preparing text recognition…';
+        else if (m.status === 'loading language traineddata') status.textContent = 'Downloading English recognition data…';
+        else if (m.status === 'recognizing text') status.textContent = 'Reading VIN… ' + Math.round((m.progress || 0) * 100) + '%';
+      }
+    }).then(function (worker) {
+      state.ocrWorker = worker;
+      return worker;
+    });
   }
 
   function scanVinPhoto() {
     var file = state.vinFile;
     if (!file) { state.ocrStatus = 'Take or choose a VIN photo first.'; return renderVin(); }
-    if (!/^image\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
+    if (!/^image\\//i.test(file.type)) { state.ocrStatus = 'Please choose an image file.'; return renderVin(); }
     var button = $('#vin-ocr');
     if (button) button.disabled = true;
     var status = $('#vin-ocr-status');
     if (status) status.textContent = 'Loading on-device text recognition…';
     loadOcrEngine().then(function (Tesseract) {
-      return Tesseract.recognize(file, 'eng', {
-        logger: function (m) {
-          if (!status) return;
-          if (m.status === 'recognizing text') status.textContent = 'Reading VIN… ' + Math.round((m.progress || 0) * 100) + '%';
-          else if (m.status === 'loading tesseract core') status.textContent = 'Preparing text recognition…';
-        }
-      });
+      return Promise.all([getOcrWorker(Tesseract, status), prepareVinImage(file)]);
+    }).then(function (items) {
+      var worker = items[0], image = items[1];
+      return worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+        tessedit_pageseg_mode: '6'
+      }).then(function () { return worker.recognize(image); });
     }).then(function (result) {
-      var candidates = extractVinCandidates(result && result.data ? result.data.text : '');
+      var text = result && result.data ? result.data.text : '';
+      var candidates = extractVinCandidates(text);
+      if (!candidates.length && state.ocrWorker) {
+        return state.ocrWorker.setParameters({ tessedit_pageseg_mode: '11' })
+          .then(function () { return state.ocrWorker.recognize(file); })
+          .then(function (retry) { return { candidates: extractVinCandidates(retry && retry.data ? retry.data.text : ''), original: candidates }; });
+      }
+      return { candidates: candidates, original: candidates };
+    }).then(function (result) {
+      var candidates = result.candidates;
       if (candidates.length === 1) {
         state.vinText = candidates[0];
         state.ocrStatus = 'VIN found. Check every character below, then tap Decode VIN.';
@@ -407,7 +474,7 @@
         state.ocrStatus = 'More than one possible VIN was found. Choose and verify the correct 17 characters below.';
         state.vinText = candidates[0];
       } else {
-        state.ocrStatus = 'No clear 17-character VIN found. Retake the photo closer, reduce glare, or enter it manually.';
+        state.ocrStatus = 'No clear 17-character VIN found. Try filling more of the frame with the VIN, avoid glare, or enter it manually.';
       }
       renderVin();
       if (candidates.length > 1) {
@@ -417,6 +484,9 @@
     }).catch(function (err) {
       state.ocrStatus = err && err.message ? err.message : 'Photo reading failed. Please try again or enter the VIN manually.';
       renderVin();
+    }).finally(function () {
+      var current = $('#vin-ocr');
+      if (current) current.disabled = false;
     });
   }
 
