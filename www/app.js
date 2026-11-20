@@ -372,7 +372,7 @@
       return Number(a.top) - Number(b.top) || Number(a.left) - Number(b.left);
     });
     var found = [];
-    var labelPattern = /\\b(?:VIN(?:\\s+(?:NO\\.?|NUMBER))?|V1N|VEHICLE\\s+IDENTIFICATION(?:\\s+NUMBER|\\s+NO\\.?)?)\\b/i;
+    var labelPattern = /\b(?:VIN(?:\s+(?:NO\.?|NUMBER))?|V1N|VEHICLE\s+IDENTIFICATION(?:\s+NUMBER|\s+NO\.?)?)\b/i;
     lines.forEach(function (label, index) {
       if (!labelPattern.test(label.text)) return;
       var h = Math.max(1, Number(label.height) || Number(label.bottom) - Number(label.top));
@@ -402,7 +402,7 @@
           var ph = Math.max(1, Number(pair.line.height) || Number(pair.line.bottom) - Number(pair.line.top));
           if (gap >= -ph * 0.2 && gap <= ph * 1.8 &&
               Math.abs(Number(next.left) - Number(pair.line.left)) <= ph * 3) {
-            pairedText += '\\n' + next.text;
+            pairedText += '\n' + next.text;
           }
         }
         extractVinCandidates(pairedText).forEach(function (vin) {
