@@ -250,6 +250,7 @@
       '<img id="vin-preview" class="vin-preview" alt="VIN photo preview" hidden>' +
       '<button class="btn block" id="vin-ocr" type="button">Read VIN from photo</button>' +
       '<div id="vin-ocr-status" class="muted" aria-live="polite">' + esc(state.ocrStatus || 'Camera scan works best in good light with minimal glare.') + '</div>' +
+      (state.ocrRaw ? '<details class="muted"><summary>See what OCR actually read</summary><pre class="ocr-raw">' + esc(state.ocrRaw) + '</pre></details>' : '') +
       '</div><div class="card stack"><div class="label">OR ENTER VIN MANUALLY</div>' +
       '<label class="f" for="vin">17-character VIN (NHTSA lookup needs internet)</label>' +
       '<input id="vin" autocapitalize="characters" autocomplete="off" maxlength="17" placeholder="1FTFW1E50NFA00000" value="' + esc(state.vinText || '') + '">' +
@@ -280,27 +281,53 @@
     if (preview && state.vinPreviewUrl) { preview.src = state.vinPreviewUrl; preview.hidden = false; }
   }
 
+  function normalizeVinCandidate(raw) {
+    var value = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (value.length !== 17) return '';
+    // OCR commonly confuses these characters. Apply only unambiguous VIN rules;
+    // never guess between other letters and digits.
+    value = value.replace(/O/g, '0').replace(/[IQ]/g, '1');
+    return /^[A-HJ-NPR-Z0-9]{17}$/.test(value) ? value : '';
+  }
+
+  function vinCheckDigitValid(vin) {
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return false;
+    var translit = { A:1, B:2, C:3, D:4, E:5, F:6, G:7, H:8, J:1, K:2, L:3, M:4, N:5, P:7, R:9,
+      S:2, T:3, U:4, V:5, W:6, X:7, Y:8, Z:9 };
+    var weights = [8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2], sum = 0;
+    for (var i = 0; i < 17; i++) sum += (/[0-9]/.test(vin[i]) ? Number(vin[i]) : translit[vin[i]]) * weights[i];
+    var check = sum % 11;
+    return vin[8] === (check === 10 ? 'X' : String(check));
+  }
+
   function extractVinCandidates(text) {
     var found = [], lines = String(text || '').toUpperCase().split(/\r?\n/);
     function addCandidate(raw) {
-      if (/^[A-HJ-NPR-Z0-9]{17}$/.test(raw) && found.indexOf(raw) === -1) found.push(raw);
-      var corrected = raw.replace(/O/g, '0').replace(/[IQ]/g, '1');
-      if (/^[A-HJ-NPR-Z0-9]{17}$/.test(corrected) && found.indexOf(corrected) === -1) found.push(corrected);
+      var candidate = normalizeVinCandidate(raw);
+      if (candidate && found.indexOf(candidate) === -1) found.push(candidate);
     }
     lines.forEach(function (line) {
-      // Prefer a VIN explicitly following its printed label; this avoids false
-      // overlapping 17-character fragments from nearby words such as "VIN:".
-      var labelled = line.match(/\bVIN\b\s*[:#-]?\s*([A-Z0-9]{17})/);
-      if (labelled) { addCandidate(labelled[1]); return; }
+      var labelled = line.match(/\bVIN\b\s*[:#-]?\s*([A-Z0-9][A-Z0-9\s-]{15,24})/);
+      if (labelled) addCandidate(labelled[1]);
       var compact = line.replace(/[^A-Z0-9]/g, '');
       for (var i = 0; i <= compact.length - 17; i++) addCandidate(compact.slice(i, i + 17));
     });
-    return found;
+    // Put candidates passing the North American check digit first, without
+    // discarding valid international VINs that do not use that checksum.
+    return found.sort(function (a, b) { return Number(vinCheckDigitValid(b)) - Number(vinCheckDigitValid(a)); });
   }
 
   function extractBarcodeVin(raw) {
-    var value = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    return /^[A-HJ-NPR-Z0-9]{17}$/.test(value) ? value : '';
+    var text = String(raw || '').toUpperCase().trim();
+    // Some manufacturers wrap the VIN in start/stop characters or encode it
+    // alongside a label. Try each 17-character run instead of requiring the
+    // entire decoded payload to be exactly 17 characters.
+    var compact = text.replace(/[^A-Z0-9]/g, '');
+    for (var i = 0; i <= compact.length - 17; i++) {
+      var candidate = normalizeVinCandidate(compact.slice(i, i + 17));
+      if (candidate) return candidate;
+    }
+    return '';
   }
 
   function loadBarcodeEngine() {
@@ -350,8 +377,23 @@
       video.hidden = false;
       if (button) button.textContent = 'Stop barcode scan';
       if (status) status.textContent = 'Starting camera… allow camera access, then aim at the VIN barcode.';
-      var reader = new ZXing.BrowserMultiFormatReader();
-      return reader.decodeFromVideoDevice(undefined, video, function (result, err, controls) {
+      var hints = new Map();
+      if (ZXing.DecodeHintType && ZXing.BarcodeFormat) {
+        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+          ZXing.BarcodeFormat.CODE_39, ZXing.BarcodeFormat.CODE_128,
+          ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.PDF_417,
+          ZXing.BarcodeFormat.QR_CODE, ZXing.BarcodeFormat.ITF
+        ]);
+      }
+      var reader = new ZXing.BrowserMultiFormatReader(hints, 350);
+      // Prefer the rear camera; undefined deviceId can select the front camera
+      // on Android phones and make small vehicle labels almost impossible to scan.
+      return reader.listVideoInputDevices().then(function (devices) {
+        var rear = (devices || []).find(function (device) { return /back|rear|environment/i.test(device.label || ''); });
+        var selected = rear || (devices && devices.length ? devices[devices.length - 1] : null);
+        if (!selected) throw new Error('No camera was found. Check camera permission or use the photo scanner.');
+        return reader.decodeFromVideoDevice(selected.deviceId, video, function (result, err, controls) {
         if (controls && !state.barcodeControls) state.barcodeControls = controls;
         if (result) {
           var vin = extractBarcodeVin(result.getText ? result.getText() : result.text);
@@ -364,6 +406,7 @@
             status.textContent = 'Barcode detected, but it did not contain a valid 17-character VIN. Keep scanning or use the photo/manual option.';
           }
         }
+        });
       });
     }).then(function (controls) {
       if (controls && state.barcodeScanning) {
@@ -470,6 +513,7 @@
       }).then(function () { return worker.recognize(image); });
     }).then(function (result) {
       var text = result && result.data ? result.data.text : '';
+      state.ocrRaw = String(text || '').trim();
       var candidates = extractVinCandidates(text);
       if (!candidates.length && state.ocrWorker) {
         return state.ocrWorker.setParameters({ tessedit_pageseg_mode: '11' })
