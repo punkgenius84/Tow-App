@@ -1,6 +1,6 @@
 {
-  "name": "Big Jay's Tow Guide - Tow Method, Truck and Clearance",
-  "short_name": "Big Jay's Tow Guide",
+  "name": "Big Jay's Tow Guide",
+  "short_name": "Big Jay's",
   "description": "Tells tow operators how to tow a vehicle, which truck is needed, and whether it will clear the ramp.",
   "start_url": "./index.html",
   "scope": "./",
@@ -9,6 +9,7 @@
   "background_color": "#071b3b",
   "theme_color": "#071b3b",
   "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
