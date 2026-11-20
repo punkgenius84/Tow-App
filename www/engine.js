@@ -63,7 +63,7 @@
       gvwr: posNum(sel.gvwrOverride, v.gvwr || 0),
       wb: wb,
       gc: gc,
-      measured: posNum(sel.gc, 0) > 0 || posNum(sel.wb, 0) > 0,
+      measured: posNum(sel.gc, 0) > 0 && posNum(sel.wb, 0) > 0,
       dually: !!v.dually,
       air: v.air || false,
       low: !!v.low || gc < LOW_CLEARANCE_IN,
@@ -174,36 +174,42 @@
    * diffuser (approach/departure) still have to be checked by eye.
    */
   function clearanceCheck(n) {
+    var advice = [];
+    // Catalog dimensions are currently unverified. A positive clearance result
+    // is only allowed after the operator enters BOTH on-scene measurements.
+    if (!n.measured) {
+      advice.push('NO CLEARANCE VERDICT: catalog dimensions are unverified. Measure the lowest point and wheelbase on the actual vehicle on level ground before loading.');
+      advice.push('Do not use this estimate as a go/no-go decision. Check the front lip, side skirts, belly and rear bumper, and use a low-angle setup until verified.');
+      return {
+        gc: '—', wb: '—', angle: r1(n.angle),
+        neededIn: '—', remainingIn: '—', reserveIn: CLEARANCE_RESERVE_IN,
+        maxAngleDeg: '—', status: 'unknown',
+        setup: 'Do not assume the vehicle will clear. Obtain both actual measurements and reassess; otherwise use a safer alternate carrier or loading method.',
+        advice: advice
+      };
+    }
     var need = (n.wb / 4) * Math.sin(n.angle * DEG);
     var usableGc = Math.max(0, n.gc - CLEARANCE_RESERVE_IN);
     var maxAngle = Math.asin(Math.min(1, (4 * usableGc) / n.wb)) / DEG;
     var remaining = n.gc - need;
     var status = remaining >= CLEARANCE_RESERVE_IN ? 'ok' : (remaining >= 0.5 ? 'marginal' : 'fail');
-    var advice = [];
-    var setup = status === 'ok' ? 'Use a rollback with a long, low-angle deck and full-width ramp extensions; keep a spotter watching the lowest point.' : 'Choose a low-deck, long-bed rollback with adjustable tilt and long ramp extensions. If the measured reserve is still under 1.5 inches, use go-jacks/skates or a different carrier rather than forcing the load.';
-
+    var setup = status === 'ok' ? 'Measured dimensions indicate clearance at the selected angle; use a rollback with a long, low-angle deck and full-width ramp extensions, with a spotter.' : 'Choose a low-deck, long-bed rollback with adjustable tilt and long ramp extensions. If the measured reserve is still under 1.5 inches, use go-jacks/skates or a different carrier rather than forcing the load.';
     if (status === 'ok') {
-      advice.push('Calculated belly clearance leaves ' + r1(remaining) + ' inches of reserve at ' + r1(n.angle) + '°. The app requires at least 1.5 inches for uneven pavement and real-world variation.');
+      advice.push('Measured belly clearance leaves ' + r1(remaining) + ' inches of reserve at ' + r1(n.angle) + '°. Maintain at least 1.5 inches for uneven pavement and real-world variation.');
       advice.push('Spot the belly, front lip and rear lip throughout loading; stop immediately if anything approaches contact.');
     } else if (status === 'marginal') {
-      advice.push('Only ' + r1(remaining) + ' inches of calculated reserve at ' + r1(n.angle) + '°. This is not a safe clearance margin for uneven pavement; do not treat this as a pass.');
+      advice.push('Only ' + r1(remaining) + ' inches of measured reserve at ' + r1(n.angle) + '°. This is not a safe clearance margin; do not treat this as a pass.');
       advice.push('Switch to a longer, lower-angle rollback with full-width ramp extensions or use go-jacks/skates. Recalculate before loading.');
     } else {
-      advice.push('Likely to scrape or hang up at ' + r1(n.angle) + '°. This vehicle needs a crest angle of about ' + r1(maxAngle) + '° or less to preserve the 1.5-inch reserve.');
+      advice.push('Measured geometry indicates likely contact at ' + r1(n.angle) + '°. The calculated angle to preserve the 1.5-inch reserve is about ' + r1(maxAngle) + '° or less.');
       advice.push('Use a low-angle or long bed, ramp extensions plus wood or wedge blocks at the crest, or go-jacks / skates to raise the low end.');
     }
-    if (n.low) {
-      advice.push('Low car: protect the front lip and splitter with boards or a wedge, and check side skirts.');
-    }
-    if (n.measured) {
-      advice.push('Using the clearance and wheelbase you entered.');
-    } else if (n.conf === 0) {
-      advice.push('Clearance for this model is an estimate. Measure the lowest point between the axles on level ground.');
-    }
+    if (n.low) advice.push('Low car: protect the front lip and splitter with boards or a wedge, and check side skirts.');
+    advice.push('Using both on-scene measurements entered by the operator.');
     return {
       gc: r1(n.gc), wb: r1(n.wb), angle: r1(n.angle),
-      neededIn: r1(need), remainingIn: r1(remaining), reserveIn: CLEARANCE_RESERVE_IN, maxAngleDeg: r1(maxAngle),
-      status: status, setup: setup, advice: advice
+      neededIn: r1(need), remainingIn: r1(remaining), reserveIn: CLEARANCE_RESERVE_IN,
+      maxAngleDeg: r1(maxAngle), status: status, setup: setup, advice: advice
     };
   }
 
