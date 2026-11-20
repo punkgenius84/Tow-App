@@ -172,7 +172,9 @@
     ['Mazda', '3 Hatchback', 2004, 2025, 'Hatchback', 'FWD|AWD', 'ICE', 'AT|MT', 3150, 107.3, 5.5, { c: 0 }],
     ['Mazda', 'CX-3', 2016, 2021, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3000, 101.2, 6.1, { c: 0 }],
     ['Mazda', 'CX-30', 2020, 2025, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3400, 104.5, 6.9, { c: 0 }],
-    ['Mazda', 'CX-5', 2013, 2025, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3700, 106.2, 7.5, { c: 0 }],
+    ['Mazda', 'CX-5 (first generation)', 2013, 2016, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3500, 106.3, 8.5, { c: 0, note: 'First-generation CX-5. Mazda published 8.5 in minimum ground clearance; verify exact trim, tires, load and lowest underbody point.' }],
+    ['Mazda', 'CX-5 (second generation)', 2017, 2021, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3700, 106.2, 7.5, { c: 0, note: 'Second-generation CX-5. Published figures vary by year/trim; 7.5 in is a conservative catalog estimate, not a trim-specific guarantee.' }],
+    ['Mazda', 'CX-5 (second generation, facelift)', 2022, 2025, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3700, 106.2, 7.5, { c: 0, note: 'Later second-generation CX-5. Ground clearance varies by year, wheel/tire and trim; 7.5 in is a conservative estimate. Verify actual vehicle.' }],
     ['Mazda', 'CX-50', 2023, 2025, 'SUV', 'AWD', 'ICE', 'AT', 3900, 110.8, 8.3, { c: 0 }],
     ['Mazda', 'CX-7', 2007, 2012, 'SUV', 'FWD|AWD', 'ICE', 'AT', 3900, 108.3, 8.1, { c: 0 }],
     ['Mazda', 'CX-9', 2007, 2023, 'SUV', 'FWD|AWD', 'ICE', 'AT', 4300, 115.3, 8.8, { c: 0 }],
@@ -314,13 +316,17 @@
 
   function toVehicle(r, i) {
     var o = r[11] || {};
+    // Broad year spans are treated as estimates unless a more specific row is added.
+    // A long model-year range can cross redesigns and trim changes even when its
+    // average dimensions look plausible. Prefer a conservative, measured check.
+    var spansMultipleModelYears = (r[3] - r[2]) >= 6;
     return {
       id: 'v' + i,
       make: r[0], model: r[1], yFrom: r[2], yTo: r[3], body: r[4],
       drives: r[5].split('|'), power: r[6], trans: r[7].split('|'),
       curb: r[8], wb: r[9], gc: r[10],
       gvwr: o.gvwr || 0, dually: !!o.dually, air: o.air || false,
-      low: !!o.low, note: o.note || '', conf: o.c === 0 ? 0 : 1
+      low: !!o.low, note: o.note || '', conf: (o.c === 0 || spansMultipleModelYears) ? 0 : 1
     };
   }
 
