@@ -64,6 +64,10 @@
       wb: wb,
       gc: gc,
       measured: posNum(sel.gc, 0) > 0 && posNum(sel.wb, 0) > 0,
+      // Catalog rows with conf=0 carry unverified weight/GVWR estimates. Only an
+      // operator-entered override or an OEM-verified row can support a firm class.
+      weightConfirmed: posNum(sel.curb, 0) > 0 || v.conf === 1 || v.conf === undefined,
+      gvwrConfirmed: posNum(sel.gvwrOverride, 0) > 0 || v.conf === 1 || v.conf === undefined,
       dually: !!v.dually,
       air: v.air || false,
       low: !!v.low || (gc > 0 && gc < LOW_CLEARANCE_IN),
@@ -139,13 +143,19 @@
     var reasons = [fmt(weight) + ' lb vehicle weight + 15% margin = ' + fmt(required) + ' lb to be rated for.'];
     var rank = required <= 10000 ? 0 : (required <= 20000 ? 1 : 2);
 
-    if (n.gvwr > 10000 && rank < 1) {
+    if (n.gvwrConfirmed && n.gvwr > 10000 && rank < 1) {
       rank = 1;
-      reasons.push('GVWR is ' + fmt(n.gvwr) + ' lb (over 10,000), so use at least a medium-duty unit.');
+      reasons.push('Verified / operator-entered GVWR is ' + fmt(n.gvwr) + ' lb (over 10,000), so use at least a medium-duty unit.');
     }
-    if (n.gvwr > 26000 && rank < 2) {
+    if (n.gvwrConfirmed && n.gvwr > 26000 && rank < 2) {
       rank = 2;
-      reasons.push('GVWR over 26,000 lb needs a heavy-duty unit.');
+      reasons.push('Verified / operator-entered GVWR over 26,000 lb needs a heavy-duty unit.');
+    }
+    if (!n.gvwrConfirmed && n.gvwr > 0) {
+      reasons.push('Catalog GVWR is unverified and was not used to upgrade the truck class. Check the vehicle certification label / OEM data.');
+    }
+    if (!n.weightConfirmed) {
+      reasons.push('PROVISIONAL TRUCK CLASS: curb weight is an unverified catalog estimate. Confirm the exact VIN/trim weight and any cargo before dispatch; do not use this class as a capacity approval.');
     }
     if (n.dually && rank < 1) {
       rank = 1;
@@ -159,9 +169,13 @@
     ];
     var c = classes[rank];
     return {
-      id: c.id, label: c.label, detail: c.detail,
+      id: c.id, label: n.weightConfirmed ? c.label : 'Provisional — ' + c.label,
+      detail: n.weightConfirmed ? c.detail : c.detail + ' This is a provisional estimate until the exact vehicle weight is confirmed.',
+      provisional: !n.weightConfirmed,
+      weightConfirmed: !!n.weightConfirmed,
+      gvwrConfirmed: !!n.gvwrConfirmed,
       weightLb: weight, requiredLb: required, reasons: reasons,
-      note: 'Always check the rating plate on the truck, not just its class.'
+      note: n.weightConfirmed ? 'Always check the rating plate on the truck, not just its class.' : 'ESTIMATE ONLY — confirm exact vehicle weight and truck ratings before dispatch.'
     };
   }
 
