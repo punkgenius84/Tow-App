@@ -4,7 +4,7 @@
 
 **Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 263 rows have been verified.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **263 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **${rows.length} rows across ${new Set(rows.map(x=>x.make)).size} makes**, spanning model years 1980–2025.
 
 ## Why this audit is required
 
@@ -15,6 +15,10 @@ The current database stores one curb weight, wheelbase and ground-clearance valu
 - **11 rows** currently receive the default higher-confidence flag despite having no recorded source provenance. That flag is not evidence of verification.
 
 The companion CSV, `docs/vehicle-catalog-audit.csv`, lists every current row and its audit status.
+
+## Identity / generation corrections applied
+
+The catalog now separates Mazda MX-5 Miata NA/NB/NC/ND generations, Mazda3 sedan and hatchback generation ranges, BMW 3 Series chassis generations E36/E46/E90/F30/G20, and Mercedes-Benz C-Class W202/W203/W204/W205/W206, E-Class W124/W210/W211/W212/W213/W214, and S-Class W140/W220/W221/W222/W223 model series. These are identity/year corrections only. Their curb weight, wheelbase and ground-clearance numbers remain provisional legacy baselines and are not verified for each generation or trim. They remain low-confidence and must not be used instead of measuring the actual vehicle.
 
 ## Verification standard
 
