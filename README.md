@@ -83,6 +83,6 @@ Until the complete source audit is finished, every vehicle's database-derived sp
 
 ## Verification status
 
-The application currently treats all 263 catalog entries as low-confidence until their model-year / configuration-specific manufacturer sources are reviewed. The audit CSV is the source-of-work checklist and must not be interpreted as a completed verification report.
+The application currently treats all 289 catalog entries as low-confidence until their model-year / configuration-specific manufacturer sources are reviewed. The audit CSV is the source-of-work checklist and must not be interpreted as a completed verification report.
 
 A separate **Vehicle catalog and app tests** workflow runs `npm test` only; it does not build or upload an APK. The Android APK workflow remains manual-only and is not to be dispatched during the audit.
