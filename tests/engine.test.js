@@ -116,7 +116,8 @@ test('clearance bands reserve 1.5 inches for uneven pavement and variation', () 
 });
 
 test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear pass', () => {
-  const mazda = { make: 'Mazda', model: '6 i Grand Touring', body: 'Sedan', drives: ['FWD'], trans: ['AT'], power: 'ICE', curb: 3300, wb: 107.4, gc: 5.5 };
+  const mazda = find('Mazda', '6 i Grand Touring');
+  assert.equal(mazda.gc, 5.5);
   const standard = E.recommend(mazda, { angle: 12, gc: 5.5 });
   assert.equal(standard.clearance.status, 'fail');
   assert.match(standard.clearance.setup, /low-deck, long-bed rollback/i);
@@ -220,7 +221,10 @@ test('database rows are well formed and unique', () => {
     if (v.gvwr) assert.ok(v.gvwr >= v.curb, 'gvwr below curb ' + id);
     if (v.power === 'EV') assert.deepEqual(v.trans, ['EV'], 'EV trans ' + id);
   }
-  assert.ok(D.vehicles.length >= 90);
+  assert.ok(D.vehicles.length >= 150);
+  for (const make of ['Mazda', 'Mercedes-Benz', 'Audi', 'BMW', 'Volkswagen', 'Hyundai', 'Kia', 'Volvo', 'Lexus']) {
+    assert.ok(D.makes.includes(make), 'missing manufacturer ' + make);
+  }
 });
 
 test('every vehicle produces a complete recommendation for every drive and transmission', () => {
