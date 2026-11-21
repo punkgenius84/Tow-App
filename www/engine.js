@@ -17,6 +17,7 @@
 
   var SAFETY_MARGIN = 1.15;      // weight margin added when sizing the truck
   var LOW_CLEARANCE_IN = 5.5;    // below this we treat the car as "low"
+  var CLEARANCE_RESERVE_IN = 1.5; // reserve for uneven pavement and real-world variation
   var DEG = Math.PI / 180;
 
   var ANGLE_PRESETS = [
@@ -50,8 +51,8 @@
     sel = sel || {};
     var drives = (v.drives && v.drives.length) ? v.drives : ['FWD'];
     var trans = (v.trans && v.trans.length) ? v.trans : ['AT'];
-    var gc = posNum(sel.gc, v.gc);
-    var wb = posNum(sel.wb, v.wb);
+    var gc = posNum(sel.gc, posNum(v.gc, 0));
+    var wb = posNum(sel.wb, posNum(v.wb, 0));
     return {
       name: ((v.make || '') + ' ' + (v.model || '')).trim(),
       body: v.body || '',
@@ -62,10 +63,23 @@
       gvwr: posNum(sel.gvwrOverride, v.gvwr || 0),
       wb: wb,
       gc: gc,
-      measured: posNum(sel.gc, 0) > 0 || posNum(sel.wb, 0) > 0,
+      catalogWb: posNum(v.wb, 0),
+      catalogGc: posNum(v.gc, 0),
+      len: posNum(v.len, 0),
+      wid: posNum(v.wid, 0),
+      ht: posNum(v.ht, 0),
+      source: v.source || '',
+      sourceYear: posNum(v.sourceYear, 0),
+      agg: v.agg || '',
+      dimensionsVerified: v.conf === 1 && !!v.source,
+      measured: posNum(sel.gc, 0) > 0 && posNum(sel.wb, 0) > 0,
+      // Catalog rows with conf=0 carry unverified weight/GVWR estimates. Only an
+      // operator-entered override or an OEM-verified row can support a firm class.
+      weightConfirmed: posNum(sel.curb, 0) > 0 || v.conf === 1 || v.conf === undefined,
+      gvwrConfirmed: posNum(sel.gvwrOverride, 0) > 0 || v.conf === 1 || v.conf === undefined,
       dually: !!v.dually,
       air: v.air || false,
-      low: !!v.low || gc < LOW_CLEARANCE_IN,
+      low: !!v.low || (gc > 0 && gc < LOW_CLEARANCE_IN),
       conf: v.conf === 0 ? 0 : 1,
       note: v.note || '',
       extraLb: Math.max(0, +sel.extraLb || 0),
@@ -85,16 +99,16 @@
     var lock = [];
 
     if (n.power === 'EV') {
-      lock.push('Electric drive: wheels turning while towed can damage the motor and drive unit and can back-feed the high-voltage system.');
+      lock.push('EV towing limits are model-specific. Driven-wheel rotation can damage the motor or drive unit; use a flatbed by default and follow the exact OEM transport / emergency-response procedure.');
       m.never.push('Do not tow with any wheel on the ground (no wheel-lift, no sling) unless the maker\'s guide explicitly allows it.');
     }
     if (n.trans === 'DCT') {
-      lock.push('Dual-clutch transmission: it is not lubricated with the engine off, so rolling the drive wheels can destroy it.');
+      lock.push('Dual-clutch transmission towing limits vary by vehicle and transmission design. Do not assume Neutral makes wheels-down towing safe; use a flatbed unless the OEM procedure explicitly permits another method.');
       m.never.push('Do not tow the drive wheels on the ground.');
     }
     if (n.drive === 'AWD' || n.drive === '4WD') {
       lock.push((n.drive === 'AWD' ? 'All-wheel drive' : 'Four-wheel drive') +
-        ' ties the front and rear axles together, so towing on one axle can wreck the center coupling, transfer case or differentials.');
+        ' systems vary. Lifting one axle can damage the coupling, transfer case, transmission or differentials; keep all wheels off the ground unless the exact OEM procedure explicitly allows otherwise.');
       m.never.push('Do not tow with only one axle on the ground unless the owner\'s manual says that is allowed.');
     }
 
@@ -112,7 +126,7 @@
       }
     } else {
       if (n.power === 'HEV' || n.power === 'PHEV') {
-        m.why.push('Hybrid: the electric motors turn with the drive wheels, so wheels-down towing can damage them. Flatbed is the safe default.');
+        m.why.push('Hybrid / plug-in hybrid towing limits are model-specific. Flatbed is the conservative default; do not assume Neutral or a particular axle-lift method is permitted.');
       } else {
         m.why.push('A flatbed is always the safest way to move a car. Wheel-lift is acceptable for this drivetrain if you lift the DRIVE wheels.');
       }
@@ -121,13 +135,32 @@
         m.never.push('Do not lift the rear and roll the front (drive) wheels on the ground.');
       } else {
         m.alternates.push('Wheel-lift under the REAR (drive) tires with the front wheels rolling. Unlock the steering and secure the front wheels straight.');
-        m.alternates.push('If the rear wheels must roll: remove the rear driveshaft (mark it first).');
+        m.alternates.push('If the OEM procedure requires a driveshaft disconnect, have a qualified technician perform that exact procedure; do not remove a driveshaft based on this general guide.');
         m.never.push('Do not tow a rear-drive automatic with the rear wheels rolling and the driveshaft still installed (beyond the manual\'s distance and speed limit).');
       }
       if (n.power === 'HEV' || n.power === 'PHEV') {
         m.alternates.push('Wheel-lift only if the owner\'s manual allows it, and lift the drive wheels.');
       }
     }
+    // Separate preferred and conditionally usable truck TYPES from the
+    // weight-based truck class. This is guidance, not a live fleet inventory.
+    m.truckOptions = {
+      preferred: 'Flatbed / rollback — transport with all four wheels off the ground.',
+      usable: ['Flatbed / rollback, provided the unit is rated for the calculated load.']
+    };
+    if (!m.flatbedOnly && n.power !== 'HEV' && n.power !== 'PHEV') {
+      m.truckOptions.usable.push('Wheel-lift — lift the drive wheels and follow the exact OEM towing procedure.');
+    } else if (!m.flatbedOnly && (n.power === 'HEV' || n.power === 'PHEV')) {
+      m.truckOptions.usable.push('Wheel-lift — conditional only; use it only when the exact OEM manual permits it and the drive wheels are lifted.');
+    } else if (n.power === 'EV') {
+      m.truckOptions.usable.push('Four-wheel dollies / skates — only when the exact OEM emergency or towing guide permits this setup.');
+    } else if (n.drive === 'AWD' || n.drive === '4WD') {
+      m.truckOptions.usable.push('Wheel-lift plus dollies / skates — only when all four wheels remain off the ground and the OEM procedure permits it.');
+    } else if (n.trans === 'DCT') {
+      m.truckOptions.usable.push('Wheel-lift — exception only when the exact OEM procedure explicitly permits the method.');
+    }
+    m.truckOptions.note = 'Usable means the towing method may be suitable under the stated conditions. Confirm the truck rating plate, equipment ratings, vehicle condition and OEM procedure before dispatch.';
+
     return m;
   }
 
@@ -138,13 +171,19 @@
     var reasons = [fmt(weight) + ' lb vehicle weight + 15% margin = ' + fmt(required) + ' lb to be rated for.'];
     var rank = required <= 10000 ? 0 : (required <= 20000 ? 1 : 2);
 
-    if (n.gvwr > 10000 && rank < 1) {
+    if (n.gvwrConfirmed && n.gvwr > 10000 && rank < 1) {
       rank = 1;
-      reasons.push('GVWR is ' + fmt(n.gvwr) + ' lb (over 10,000), so use at least a medium-duty unit.');
+      reasons.push('Verified / operator-entered GVWR is ' + fmt(n.gvwr) + ' lb (over 10,000), so use at least a medium-duty unit.');
     }
-    if (n.gvwr > 26000 && rank < 2) {
+    if (n.gvwrConfirmed && n.gvwr > 26000 && rank < 2) {
       rank = 2;
-      reasons.push('GVWR over 26,000 lb needs a heavy-duty unit.');
+      reasons.push('Verified / operator-entered GVWR over 26,000 lb needs a heavy-duty unit.');
+    }
+    if (!n.gvwrConfirmed && n.gvwr > 0) {
+      reasons.push('Catalog GVWR is unverified and was not used to upgrade the truck class. Check the vehicle certification label / OEM data.');
+    }
+    if (!n.weightConfirmed) {
+      reasons.push('PROVISIONAL TRUCK CLASS: curb weight is an unverified catalog estimate. Confirm the exact VIN/trim weight and any cargo before dispatch; do not use this class as a capacity approval.');
     }
     if (n.dually && rank < 1) {
       rank = 1;
@@ -158,9 +197,13 @@
     ];
     var c = classes[rank];
     return {
-      id: c.id, label: c.label, detail: c.detail,
+      id: c.id, label: n.weightConfirmed ? c.label : 'Provisional — ' + c.label,
+      detail: n.weightConfirmed ? c.detail : c.detail + ' This is a provisional estimate until the exact vehicle weight is confirmed.',
+      provisional: !n.weightConfirmed,
+      weightConfirmed: !!n.weightConfirmed,
+      gvwrConfirmed: !!n.gvwrConfirmed,
       weightLb: weight, requiredLb: required, reasons: reasons,
-      note: 'Always check the rating plate on the truck, not just its class.'
+      note: n.weightConfirmed ? 'Always check the rating plate on the truck, not just its class.' : 'ESTIMATE ONLY — confirm exact vehicle weight and truck ratings before dispatch.'
     };
   }
 
@@ -173,32 +216,42 @@
    * diffuser (approach/departure) still have to be checked by eye.
    */
   function clearanceCheck(n) {
-    var need = (n.wb / 4) * Math.sin(n.angle * DEG);
-    var maxAngle = Math.asin(Math.min(1, (4 * n.gc) / n.wb)) / DEG;
-    var ratio = need > 0 ? n.gc / need : Infinity;
-    var status = ratio >= 1.15 ? 'ok' : (ratio >= 0.9 ? 'marginal' : 'fail');
     var advice = [];
-
+    // Catalog dimensions are currently unverified. A positive clearance result
+    // is only allowed after the operator enters BOTH on-scene measurements.
+    if (!n.measured) {
+      advice.push('NO CLEARANCE VERDICT: catalog dimensions are unverified. Measure the lowest point and wheelbase on the actual vehicle on level ground before loading.');
+      advice.push('Do not use this estimate as a go/no-go decision. Check the front lip, side skirts, belly and rear bumper, and use a low-angle setup until verified.');
+      return {
+        gc: '—', wb: '—', angle: r1(n.angle),
+        neededIn: '—', remainingIn: '—', reserveIn: CLEARANCE_RESERVE_IN,
+        maxAngleDeg: '—', status: 'unknown',
+        setup: 'Do not assume the vehicle will clear. Obtain both actual measurements and reassess; otherwise use a safer alternate carrier or loading method.',
+        advice: advice
+      };
+    }
+    var need = (n.wb / 4) * Math.sin(n.angle * DEG);
+    var usableGc = Math.max(0, n.gc - CLEARANCE_RESERVE_IN);
+    var maxAngle = Math.asin(Math.min(1, (4 * usableGc) / n.wb)) / DEG;
+    var remaining = n.gc - need;
+    var status = remaining >= CLEARANCE_RESERVE_IN ? 'ok' : (remaining >= 0.5 ? 'marginal' : 'fail');
+    var setup = status === 'ok' ? 'Measured dimensions indicate clearance at the selected angle; use a rollback with a long, low-angle deck and full-width ramp extensions, with a spotter.' : 'Choose a low-deck, long-bed rollback with adjustable tilt and long ramp extensions. If the measured reserve is still under 1.5 inches, use go-jacks/skates or a different carrier rather than forcing the load.';
     if (status === 'ok') {
-      advice.push('Should clear at ' + r1(n.angle) + '°. Still spot the belly and the front and rear lips while loading.');
+      advice.push('Measured belly clearance leaves ' + r1(remaining) + ' inches of reserve at ' + r1(n.angle) + '°. Maintain at least 1.5 inches for uneven pavement and real-world variation.');
+      advice.push('Spot the belly, front lip and rear lip throughout loading; stop immediately if anything approaches contact.');
     } else if (status === 'marginal') {
-      advice.push('Tight at ' + r1(n.angle) + '°. Reduce the angle with ramp extensions or blocks, load slowly with a spotter, and consider go-jacks.');
+      advice.push('Only ' + r1(remaining) + ' inches of measured reserve at ' + r1(n.angle) + '°. This is not a safe clearance margin; do not treat this as a pass.');
+      advice.push('Switch to a longer, lower-angle rollback with full-width ramp extensions or use go-jacks/skates. Recalculate before loading.');
     } else {
-      advice.push('Likely to scrape or hang up at ' + r1(n.angle) + '°. This vehicle needs a crest angle of about ' + r1(maxAngle) + '° or less.');
+      advice.push('Measured geometry indicates likely contact at ' + r1(n.angle) + '°. The calculated angle to preserve the 1.5-inch reserve is about ' + r1(maxAngle) + '° or less.');
       advice.push('Use a low-angle or long bed, ramp extensions plus wood or wedge blocks at the crest, or go-jacks / skates to raise the low end.');
     }
-    if (n.low) {
-      advice.push('Low car: protect the front lip and splitter with boards or a wedge, and check side skirts.');
-    }
-    if (n.measured) {
-      advice.push('Using the clearance and wheelbase you entered.');
-    } else if (n.conf === 0) {
-      advice.push('Clearance for this model is an estimate. Measure the lowest point between the axles on level ground.');
-    }
+    if (n.low) advice.push('Low car: protect the front lip and splitter with boards or a wedge, and check side skirts.');
+    advice.push('Using both on-scene measurements entered by the operator.');
     return {
       gc: r1(n.gc), wb: r1(n.wb), angle: r1(n.angle),
-      neededIn: r1(need), maxAngleDeg: r1(maxAngle),
-      status: status, advice: advice
+      neededIn: r1(need), remainingIn: r1(remaining), reserveIn: CLEARANCE_RESERVE_IN,
+      maxAngleDeg: r1(maxAngle), status: status, setup: setup, advice: advice
     };
   }
 
@@ -243,7 +296,7 @@
     var s = [
       'Confirm the drivetrain (AWD/4WD, hybrid, EV, dual-clutch) from the VIN, badges and the owner\'s manual before choosing the method.',
       'Look up the maker\'s tow instructions (owner\'s manual "Emergency towing") for the neutral and Tow / Transport mode procedure.',
-      'Release the parking brake (electric parking brakes: use the manual\'s override) and put the vehicle in Neutral / Tow mode.',
+      'Use the exact OEM procedure to release the parking brake and select Neutral / Tow mode. Electronic shifters, parking brakes and transport modes vary; never force or guess.',
       'Unlock the steering. If wheels will roll, secure the steering straight.',
       'Strap to the maker\'s tie-down points or through the wheels with nets. Never to suspension arms or thin bumper brackets.',
       'Spot the belly, front lip and rear bumper while loading. Stop and add blocks if anything touches.',
@@ -297,7 +350,7 @@
 
     steps.prepare = [
       "If you have the key: ignition ON or ACC so the steering unlocks. Press the brake while shifting.",
-      "While winching the car onto the deck it has to roll: Neutral, parking brake OFF, steering straight.",
+      "Before winching, follow the exact OEM loading procedure for Neutral / Tow mode and parking-brake release. If the vehicle cannot be placed in the required mode, stop and use the maker-approved recovery method.",
       "Fold in the mirrors, close windows and sunroof, turn off any auto-start or auto-parking-brake features (see manual).",
       "Remove any hitch ball or ball mount that hangs below the bumper, or any aftermarket parts that could drag."
     ];
@@ -314,7 +367,7 @@
 
     steps.load = [
       "Put one spotter to the side where they can see the belly and both tires. Everyone else stays out of the line of the winch cable.",
-      "Attach the winch hook to the maker's tow eye or recovery point on the end going on first (usually the front). Never hook to a bumper cover, suspension arm, tie rod or exhaust. If there is no eye, use a chain or strap around the frame or solid axle point shown in the manual.",
+      "Attach the winch only to a manufacturer-designated recovery / winching point rated for that pull. A transport tie-down point is not automatically a recovery point. Never hook to a bumper cover, suspension arm, tie rod or exhaust; if no rated point is identified, stop and consult the OEM recovery instructions.",
       "Close the hook latch. Check the cable is straight with no twists.",
       "Winch at slow speed. Stop at the crest and look at the belly. If anything touches, stop, add blocks or use go-jacks, and try again.",
       "Pull the vehicle forward until its tires are about a hand-width from the headache rack (the frame behind the cab). Its weight should sit ahead of the truck's rear axle; never let most of the weight hang behind the rear axle, because it takes weight off the steering axle.",
@@ -350,7 +403,7 @@
     steps.unload = [
       "Park on level ground. Truck parking brake ON, chock the truck wheels.",
       "Remove tie-downs in reverse order (rear pair, then front). Keep the winch cable hooked and slightly tight while you do.",
-      "Slide and tilt the bed. Put the vehicle in Neutral, parking brake OFF, steering straight.",
+      "Slide and tilt the bed. Use the OEM unloading procedure for Neutral / Tow mode and parking-brake release; do not assume the loading sequence is reversible.",
       "Spotter at the side. Lower the car using the winch to control it; never let it free-roll.",
       "When the tires are on the ground: Park (or gear), parking brake ON, chock a wheel, unhook the cable, and take photos of the vehicle as it was delivered."
     ];
@@ -497,6 +550,8 @@
       ' deg -> ' + r.clearance.status.toUpperCase() + ' (needs ' + r.clearance.neededIn + ' in, max safe ' + r.clearance.maxAngleDeg + ' deg)');
     lines.push('Tie-downs: ' + r.tiedown.count + ' points, each rated ' + fmt(r.tiedown.perTiedownLb) + ' lb WLL or more (' + r.tiedown.gear + ')');
     r.warnings.forEach(function (x) { lines.push('  NOTE: ' + x); });
+    lines.push('Catalog dimensions (in): length ' + (n.len || 'not listed') + ', width ' + (n.wid || 'not listed') + ', height ' + (n.ht || 'not listed') + '.');
+    lines.push('Dimension status: ' + (n.dimensionsVerified ? 'OEM source-verified for model year ' + n.sourceYear : 'UNVERIFIED catalog reference; confirm exact trim and measure on scene'));
     lines.push('Specs are typical values. Confirm against the vehicle and the owner\'s manual.');
     return lines.join('\n');
   }
@@ -597,6 +652,7 @@
   return {
     SAFETY_MARGIN: SAFETY_MARGIN,
     LOW_CLEARANCE_IN: LOW_CLEARANCE_IN,
+    CLEARANCE_RESERVE_IN: CLEARANCE_RESERVE_IN,
     ANGLE_PRESETS: ANGLE_PRESETS,
     BODY_PRESETS: BODY_PRESETS,
     resolve: resolve,

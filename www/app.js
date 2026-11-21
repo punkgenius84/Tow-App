@@ -5,9 +5,11 @@
   var E = window.TowEngine;
   var D = window.TowData;
   var LS_KEY = 'towguide.custom.v1';
+  var FLEET_KEY = 'towguide.fleet.v1';
 
   var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null, vinFile: null, vinPreviewUrl: '', ocrStatus: '', ocrLoader: null, ocrWorker: null, barcodeStatus: '', barcodeScanning: false, barcodeControls: null, barcodeLoader: null };
   var custom = loadCustom();
+  var fleet = loadFleet();
 
   /* ---------- helpers ---------- */
   function $(s, r) { return (r || document).querySelector(s); }
@@ -29,6 +31,14 @@
   function saveCustom() {
     try { localStorage.setItem(LS_KEY, JSON.stringify(custom)); } catch (e) { /* storage blocked: ignore */ }
   }
+  function loadFleet() {
+    try { var a = JSON.parse(localStorage.getItem(FLEET_KEY) || '[]'); return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function saveFleet() {
+    try { localStorage.setItem(FLEET_KEY, JSON.stringify(fleet)); return true; }
+    catch (e) { return false; }
+  }
   function allVehicles() { return D.vehicles.concat(custom); }
   function findVehicle(id) {
     var all = allVehicles();
@@ -40,6 +50,12 @@
   var TRANS = { AT: 'Automatic', CVT: 'CVT', MT: 'Manual', DCT: 'Dual-clutch', EV: 'Single-speed' };
 
   /* ---------- navigation ---------- */
+  function handleBack() {
+    if (state.cur) { state.cur = null; render(); return true; }
+    if (state.tab !== 'find') { setTab('find'); return true; }
+    return false;
+  }
+
   function setTab(t) {
     stopBarcodeScanner();
     state.tab = t; state.cur = null; render();
@@ -53,6 +69,7 @@
     if (state.tab === 'find') return renderFind();
     if (state.tab === 'vin') return renderVin();
     if (state.tab === 'custom') return renderCustom();
+    if (state.tab === 'fleet') return renderFleet();
     return renderInfo();
   }
 
@@ -137,7 +154,8 @@
       '</select></div>';
     h += '<div class="grid2"><div><label class="f">Cargo / extra weight (lb)</label><input data-sel="extraLb" inputmode="numeric" placeholder="0"></div>' +
       '<div><label class="f">Measured clearance (in)</label><input data-sel="gc" inputmode="decimal" placeholder="' + v.gc + '"></div></div>';
-    h += '<div><label class="f">Measured wheelbase (in, optional)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+    h += '<div><label class="f">Measured wheelbase (in, required for clearance verdict)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+    h += '<div class="muted">For a clearance calculation, enter BOTH measurements taken on the actual vehicle on level ground: lowest fixed underbody point to ground, and wheel-center to wheel-center wheelbase. Catalog values are references only. Also inspect approach/departure points, lips, skirts and accessories separately.</div>';
     $('#controls').innerHTML = h;
   }
 
@@ -152,9 +170,9 @@
 
     h += '<div class="card ' + (m.flatbedOnly ? 'edge-bad' : 'edge-ok') + '"><div class="label">HOW TO TOW</div>' +
       '<div class="big">' + esc(m.primary) + '</div>' +
-      (m.flatbedOnly ? '<span class="badge bad">FLATBED ONLY</span>' : '<span class="badge ok">FLATBED PREFERRED</span>') +
+      (m.flatbedOnly ? '<span class="badge bad">FLATBED DEFAULT — VERIFY OEM</span>' : '<span class="badge ok">FLATBED PREFERRED</span>') +
       ul(m.why) +
-      (m.alternates.length ? '<h3>' + (m.flatbedOnly ? 'If no flatbed is possible' : 'Acceptable alternative') + '</h3>' + ul(m.alternates) : '') +
+      (m.alternates.length ? '<h3>' + (m.flatbedOnly ? 'Exception only if the OEM procedure permits' : 'Possible alternative — confirm OEM procedure first') + '</h3>' + ul(m.alternates) : '') +
       (m.never.length ? '<h3 class="neg">Never</h3>' + ul(m.never, 'neg') : '') + '</div>';
 
     h += '<div class="card edge-info"><div class="label">TRUCK REQUIRED</div><div class="big">' + esc(t.label) + '</div>' +
@@ -164,15 +182,27 @@
       '<div class="stat"><b>' + (r.method.flatbedOnly ? 'Flatbed' : 'Flatbed') + '</b><span>unit type</span></div></div>' +
       ul(t.reasons) + '<div class="muted">' + esc(t.note) + '</div></div>';
 
-    var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad' }[k.status];
-    var klabel = { ok: 'SHOULD CLEAR', marginal: 'TIGHT', fail: 'WILL LIKELY SCRAPE' }[k.status];
+    var matchedFleet = fleetMatches(r);
+    h += '<div class="card edge-info"><div class="label">BIG JAY’S FLEET MATCH</div>' +
+      (matchedFleet.length ? '<div class="big">Preferred unit: ' + esc(matchedFleet[0].name) + '</div>' +
+        ul(matchedFleet.map(function (x) { return x.name + ' — rated payload ' + E.fmt(x.payloadLb) + ' lb'; })) :
+        '<div class="big">No verified fleet match recorded</div><div>Enter the actual truck ratings in the Fleet tab. The required payload for this vehicle is ' + E.fmt(t.requiredLb) + ' lb. Only available flatbeds with a recorded payload at or above that requirement are listed. Do not substitute an unverified unit.</div>') +
+      '<div class="muted">Only supervisor-verified records with a rating-source reference are eligible. This is a screening result based on locally entered payload only. Confirm axle ratings, GVWR/GCWR, deck and winch limits, equipment condition, securement and OEM towing method before dispatch.</div></div>';
+
+    h += '<div class="card edge-info"><div class="label">USABLE &amp; PREFERRED TRUCK TYPES</div>' +
+      '<h3>Preferred</h3><div class="big">' + esc(m.truckOptions.preferred) + '</div>' +
+      '<h3>Usable options and conditions</h3>' + ul(m.truckOptions.usable) +
+      '<div class="muted">' + esc(m.truckOptions.note) + '</div></div>';
+
+    var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad', unknown: 'info' }[k.status];
+    var klabel = { ok: 'SHOULD CLEAR', marginal: 'TIGHT', fail: 'WILL LIKELY SCRAPE', unknown: 'NO VERDICT — MEASURE FIRST' }[k.status];
     h += '<div class="card edge-' + kcls + '"><div class="label">GROUND CLEARANCE CHECK</div>' +
       '<div class="big"><span class="badge ' + kcls + '">' + klabel + '</span></div>' +
       '<div class="stats"><div class="stat"><b>' + k.gc + '"</b><span>clearance</span></div>' +
       '<div class="stat"><b>' + k.neededIn + '"</b><span>needed at ' + k.angle + '°</span></div>' +
       '<div class="stat"><b>' + k.maxAngleDeg + '°</b><span>max safe angle</span></div></div>' +
       ul(k.advice) +
-      '<div class="muted">Covers belly breakover only. Also check the front lip, side skirts and rear bumper by eye.</div></div>';
+      '<div class="muted">Covers belly breakover only. Also check the front lip, side skirts and rear bumper by eye. A green geometry result is not a guarantee of safe loading; use a spotter and stop if any contact is possible.</div></div>';
 
     if (r.warnings.length) h += '<div class="card edge-warn"><div class="label">WATCH FOR</div>' + ul(r.warnings) + '</div>';
 
@@ -208,11 +238,21 @@
     h += detailsBlock('Terms', '<dl class="gl">' + td.glossary.map(function (g) { return '<dt>' + esc(g[0]) + '</dt><dd>' + esc(g[1]) + '</dd>'; }).join('') + '</dl>');
 
     var sp = r.spec;
-    h += detailsBlock('Vehicle specs used', '<table class="specs">' +
+    var dimensionStatus = sp.dimensionsVerified
+      ? 'OEM source-verified for model year ' + sp.sourceYear
+      : (sp.agg ? 'UNVERIFIED third-party catalog reference' : 'UNVERIFIED / no scoped OEM source');
+    h += detailsBlock('Vehicle specs and dimensions', '<table class="specs">' +
       row('Drive', sp.drive) + row('Powertrain', POWER[sp.power]) + row('Transmission', TRANS[sp.trans] || sp.trans) +
       row('Curb weight', E.fmt(sp.curb) + ' lb') + row('GVWR', sp.gvwr ? E.fmt(sp.gvwr) + ' lb' : 'n/a') +
-      row('Wheelbase', k.wb + ' in') + row('Ground clearance', k.gc + ' in' + (sp.measured ? ' (measured)' : (sp.conf ? '' : ' (estimate)'))) +
-      '</table><div class="muted" style="margin-top:8px">Typical values for the model range. Trim, tires, load and modifications change them.</div>');
+      row('Wheelbase (catalog)', sp.catalogWb ? sp.catalogWb + ' in' : 'Not in catalog') +
+      row('Ground clearance (catalog)', sp.catalogGc ? sp.catalogGc + ' in' : 'Not in catalog') +
+      row('Overall length (catalog)', sp.len ? sp.len + ' in' : 'Not in catalog') +
+      row('Overall width (catalog)', sp.wid ? sp.wid + ' in' : 'Not in catalog') +
+      row('Overall height (catalog)', sp.ht ? sp.ht + ' in' : 'Not in catalog') +
+      row('Dimension data status', dimensionStatus) +
+      row('OEM source', sp.dimensionsVerified ? sp.source : 'No scoped OEM source recorded for this row') +
+      (sp.measured ? row('On-scene measurements', sp.gc + ' in clearance; ' + sp.wb + ' in wheelbase') : '') +
+      '</table><div class="muted" style="margin-top:8px">Catalog dimensions are reference values, not fitment approval. Unverified entries may combine trims or model years. Manufacturer width may exclude mirrors; height may change with roof rails, racks, tires, suspension or accessories. Measure the actual vehicle, including mirrors and installed accessories, before choosing equipment or loading.</div>');
 
     h += '<div class="grid2"><button class="btn ghost" id="copy">Copy summary</button>' +
       (v.custom ? (isSaved(v) ? '<button class="btn danger" id="del-custom">Delete saved</button>' : '<button class="btn" id="save-custom">Save vehicle</button>') : '<span></span>') + '</div>';
@@ -853,6 +893,49 @@
     openVehicle(v);
   }
 
+  /* ---------- FLEET INVENTORY ---------- */
+  function renderFleet() {
+    var types = [
+      ['flatbed', 'Light-duty flatbed / rollback'],
+      ['medium-flatbed', 'Medium-duty flatbed / rollback'],
+      ['heavy-flatbed', 'Heavy-duty flatbed / carrier'],
+      ['wheel-lift', 'Wheel-lift / wrecker'],
+      ['rotator', 'Rotator / heavy wrecker']
+    ];
+    var rows = fleet.map(function (t) {
+      return '<div class="card"><div class="row2"><div><b>' + esc(t.name) + '</b><div class="muted">' + esc(t.unit) + ' · ' + esc((types.filter(function (x) { return x[0] === t.type; })[0] || [0, t.type])[1]) + '</div></div><button class="btn danger" data-fleet-del="' + esc(t.id) + '">Remove</button></div>' +
+        '<div class="stats"><div class="stat"><b>' + E.fmt(t.payloadLb) + '</b><span>rated payload lb</span></div><div class="stat"><b>' + (t.deckLengthIn || '—') + '"</b><span>deck length</span></div><div class="stat"><b>' + (t.deckWidthIn || '—') + '"</b><span>deck width</span></div></div>' +
+        '<div class="muted">' + (t.available ? 'Marked available' : 'Marked unavailable') + (t.dollies ? ' · Dollies recorded' : '') + (t.skates ? ' · Skates recorded' : '') + '</div></div>';
+    }).join('');
+    $('#view').innerHTML = '<section class="stack">' +
+      '<div class="card edge-info"><div class="label">BIG JAY’S FLEET</div><div class="big">' + fleet.length + ' registered unit' + (fleet.length === 1 ? '' : 's') + '</div>' +
+      '<div>Enter the actual unit information from each truck’s rating plate and equipment documentation. Recommendations use the rated payload you enter—not the truck’s marketing class or GVWR.</div>' +
+      '<div class="muted">Fleet records are saved locally on this device only. They are not synchronized to other employee phones.</div></div>' +
+      '<div class="card stack"><div class="label">ADD / UPDATE A TRUCK</div>' +
+      '<div><label class="f" for="fleet-name">Truck name / unit number</label><input id="fleet-name" maxlength="60" placeholder="e.g. Rollback 12"></div>' +
+      '<div><label class="f" for="fleet-unit">Make / model (optional)</label><input id="fleet-unit" maxlength="80" placeholder="e.g. Freightliner M2"></div>' +
+      '<div><label class="f" for="fleet-type">Truck type</label><select id="fleet-type">' + types.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="grid2"><div><label class="f" for="fleet-payload">Rated usable payload (lb) *</label><input id="fleet-payload" inputmode="numeric" placeholder="From rating documentation"></div>' +
+      '<div><label class="f" for="fleet-winch">Winch line pull rating (lb)</label><input id="fleet-winch" inputmode="numeric" placeholder="Optional"></div></div>' +
+      '<div class="grid2"><div><label class="f" for="fleet-length">Deck length (in)</label><input id="fleet-length" inputmode="numeric" placeholder="Optional"></div>' +
+      '<div><label class="f" for="fleet-width">Deck width (in)</label><input id="fleet-width" inputmode="numeric" placeholder="Optional"></div></div>' +
+      '<div><label class="f" for="fleet-rating-source">Rating source / document reference *</label><input id="fleet-rating-source" maxlength="120" placeholder="Carrier plate, body-builder spec, manual page"></div>' +
+      '<label class="check"><input id="fleet-verified" type="checkbox"> Supervisor verified payload and configuration against documentation</label>' +
+      '<div class="grid2"><label class="check"><input id="fleet-dollies" type="checkbox"> Dollies available</label><label class="check"><input id="fleet-skates" type="checkbox"> Skates available</label></div>' +
+      '<label class="check"><input id="fleet-available" type="checkbox" checked> Available for dispatch</label>' +
+      '<button class="btn block" id="fleet-add">Save truck to this device</button>' +
+      '<div class="muted">Do not enter GVWR as payload. Use the documented payload / deck capacity applicable to the actual configuration. Only supervisor-verified records can appear as fleet matches. Confirm all ratings before dispatch.</div></div>' +
+      (rows ? '<div class="label">REGISTERED TRUCKS</div>' + rows : '<div class="card edge-warn">No fleet trucks have been entered yet. Until real unit ratings are recorded, the app cannot name a specific Big Jay’s truck.</div>') +
+      '</section>';
+  }
+
+  function fleetMatches(result) {
+    var need = result.truck.requiredLb;
+    return fleet.filter(function (t) {
+      return t.available && t.verified === true && !!t.ratingSource && /flatbed/.test(t.type) && Number(t.payloadLb) >= need;
+    }).sort(function (a, b) { return Number(a.payloadLb) - Number(b.payloadLb); });
+  }
+
   /* ---------- INFO ---------- */
   function renderInfo() {
     $('#view').innerHTML = '<section class="stack">' +
@@ -896,6 +979,31 @@
     if (t.id === 'vin-ocr') return scanVinPhoto();
     if (t.id === 'vin-barcode-start') return startBarcodeScan();
     if (t.id === 'custom-go') return customGo();
+    if (t.id === 'fleet-add') {
+      var name = ($('#fleet-name').value || '').trim();
+      var payload = parseFloat($('#fleet-payload').value);
+      var ratingSource = ($('#fleet-rating-source').value || '').trim();
+      if (!name || !isFinite(payload) || payload <= 0 || !ratingSource) {
+        alert('Enter a truck name, positive rated payload, and rating document reference.');
+        return;
+      }
+      fleet.push({
+        id: 'fleet-' + Date.now(), name: name, unit: ($('#fleet-unit').value || '').trim(),
+        type: $('#fleet-type').value, payloadLb: payload,
+        winchLb: Math.max(0, parseFloat($('#fleet-winch').value) || 0),
+        deckLengthIn: Math.max(0, parseFloat($('#fleet-length').value) || 0),
+        deckWidthIn: Math.max(0, parseFloat($('#fleet-width').value) || 0),
+        ratingSource: ratingSource, verified: $('#fleet-verified').checked,
+        dollies: $('#fleet-dollies').checked, skates: $('#fleet-skates').checked,
+        available: $('#fleet-available').checked
+      });
+      if (!saveFleet()) { fleet.pop(); alert('Could not save fleet data on this device. Check device storage.'); return; }
+      return renderFleet();
+    }
+    if (t.hasAttribute('data-fleet-del')) {
+      fleet = fleet.filter(function (x) { return x.id !== t.getAttribute('data-fleet-del'); });
+      saveFleet(); return renderFleet();
+    }
     if (t.hasAttribute('data-vin-custom') && state.vin) {
       var p = state.vin;
       state.prefill = { name: ((p.year || '') + ' ' + p.make + ' ' + p.model).trim(), drive: p.drive, power: p.power, trans: p.trans,
@@ -949,11 +1057,17 @@
   function netBadge() {
     var n = $('#net'); if (!n) return;
     var on = navigator.onLine !== false;
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+      try { on = window.AndroidNetwork.isConnected() === true; } catch (e) { on = false; }
+    }
     n.textContent = on ? 'Online' : 'Offline (app works)';
     n.classList.toggle('off', !on);
   }
   window.addEventListener('online', netBadge);
   window.addEventListener('offline', netBadge);
+  if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+    window.setInterval(netBadge, 3000);
+  }
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* ignore */ }); });
@@ -962,6 +1076,7 @@
   netBadge();
   render();
 
-  // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractStructuredVinCandidates: extractStructuredVinCandidates, extractVinCandidatesFromOcrResults: extractVinCandidatesFromOcrResults, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); } };
+  // Native Android back handling and test access.
+  window.__towBack = handleBack;
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractStructuredVinCandidates: extractStructuredVinCandidates, extractVinCandidatesFromOcrResults: extractVinCandidatesFromOcrResults, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); }, handleBack: handleBack };
 })();

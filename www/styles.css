@@ -13,15 +13,15 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 
 .top { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center;
   padding: calc(10px + env(safe-area-inset-top)) 16px 10px; background: var(--bg); border-bottom: 1px solid var(--line); }
-.brand { font-weight: 800; font-size: 20px; letter-spacing: .3px; display: flex; align-items: center; gap: 10px; }
-.brand-logo { display: block; width: auto; height: 42px; max-width: min(48vw, 190px); object-fit: contain; object-position: left center; }
+.brand { min-width: 0; font-weight: 800; font-size: 18px; letter-spacing: .3px; display: flex; align-items: center; gap: 8px; }
+.brand-logo { display: block; flex: 0 1 auto; width: auto; height: 56px; max-width: min(48vw, 220px); object-fit: contain; object-position: left center; }
 .net { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 3px 10px; }
 .net.off { color: var(--warn); border-color: var(--warn); }
 
 main { padding: 14px 16px; max-width: 760px; margin: 0 auto; }
 .stack > * + * { margin-top: 12px; }
 
-.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr);
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
 .tabs button { background: none; border: 0; color: var(--muted); font: inherit; font-weight: 700; min-height: 60px; }
 .tabs button.on { color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
