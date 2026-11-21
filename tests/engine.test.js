@@ -237,7 +237,7 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 
 test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
   const curated = D.vehicles.filter(v => !v.agg);
-  assert.equal(curated.length, 303, '297 unverified estimate rows + 6 OEM-verified rows');
+  assert.equal(curated.length, 308, '297 unverified estimate rows + 11 OEM-verified rows');
   assert.ok(D.vehicles.length > 298, 'bulk rows imported');
   for (const v of D.vehicles) {
     const id = v.make + ' ' + v.model + ' ' + v.yFrom;
@@ -473,9 +473,35 @@ test('2025 CR-V gas and hybrid specifications are OEM-verified and variant-scope
   assert.equal(hybrid.curb, 3926);
 });
 
+test('five new 2025 OEM records are single-year scoped and carry complete source-backed dimensions', () => {
+  const cases = [
+    ['Honda', 'HR-V (2025)', 3333, 104.5, 7.0, 179.8, 72.4, 63.4],
+    ['Subaru', 'Crosstrek (2025, non-Wilderness)', 3349, 105.1, 8.7, 176.4, 70.9, 63.0],
+    ['Subaru', 'Crosstrek Wilderness (2025)', 3369, 104.9, 9.3, 176.4, 71.7, 63.6],
+    ['Subaru', 'Impreza (2025)', 3275, 105.1, 5.1, 176.2, 70.1, 58.3],
+    ['Toyota', 'Corolla (2025 gas)', 3150, 106.3, 4.7, 182.5, 70.1, 56.5]
+  ];
+  for (const [make, model, curb, wb, gc, len, wid, ht] of cases) {
+    const v = find(make, model);
+    assert.ok(v, make + ' ' + model + ' exists');
+    assert.equal(v.yFrom, 2025);
+    assert.equal(v.yTo, 2025);
+    assert.equal(v.conf, 1);
+    assert.equal(v.sourceYear, 2025);
+    assert.match(v.source, /^https:\\/\\//);
+    assert.equal(v.curb, curb);
+    assert.equal(v.wb, wb);
+    assert.equal(v.gc, gc);
+    assert.equal(v.len, len);
+    assert.equal(v.wid, wid);
+    assert.equal(v.ht, ht);
+    assert.equal(E.recommend(v).clearance.status, 'unknown');
+  }
+});
+
 test('OEM-verified rows still never produce a clearance verdict without on-scene measurements', () => {
   const ver = D.vehicles.filter(v => v.source);
-  assert.equal(ver.length, 6);
+  assert.equal(ver.length, 11);
   for (const v of ver) {
     const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
     assert.equal(r.clearance.status, 'unknown', v.model);
