@@ -228,7 +228,7 @@
       row('Dimension data status', dimensionStatus) +
       row('OEM source', sp.dimensionsVerified ? sp.source : 'No scoped OEM source recorded for this row') +
       (sp.measured ? row('On-scene measurements', sp.gc + ' in clearance; ' + sp.wb + ' in wheelbase') : '') +
-      '</table><div class="muted" style="margin-top:8px">Catalog dimensions are reference values, not fitment approval. Unverified entries may combine trims or model years. Confirm the exact VIN, year, trim, drivetrain and suspension against OEM documentation; measure the actual vehicle before choosing equipment or loading.</div>');
+      '</table><div class="muted" style="margin-top:8px">Catalog dimensions are reference values, not fitment approval. Unverified entries may combine trims or model years. Manufacturer width may exclude mirrors; height may change with roof rails, racks, tires, suspension or accessories. Measure the actual vehicle, including mirrors and installed accessories, before choosing equipment or loading.</div>');
 
     h += '<div class="grid2"><button class="btn ghost" id="copy">Copy summary</button>' +
       (v.custom ? (isSaved(v) ? '<button class="btn danger" id="del-custom">Delete saved</button>' : '<button class="btn" id="save-custom">Save vehicle</button>') : '<span></span>') + '</div>';
