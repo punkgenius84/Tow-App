@@ -4,7 +4,7 @@
 
 **Safety mitigation now active:** catalog-derived values are not treated as confirmed specifications unless a row has an explicit, scoped OEM verification record. Unverified values remain provisional and cannot substitute for on-scene measurements.
 
-This audit covers the complete current US-market catalog in `www/data.js`: **2,820 rows across 47 makes**, comprising **301 curated rows** and **2,519 aggregator-derived rows**, spanning model years 1980–2025. Of the 301 curated rows, 3 are OEM-source-verified for a single model year and 297 remain unverified. All 2,519 aggregator-derived rows remain unverified. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
+This audit covers the complete current US-market catalog in `www/data.js`: **2,820 rows across 47 makes**, comprising **301 curated rows** and **2,519 aggregator-derived rows**, spanning model years 1980–2025. Of the 301 curated rows, 4 are OEM-source-verified for a single model year and 297 remain unverified. All 2,519 aggregator-derived rows remain unverified. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
 ## Why this audit is required
 
@@ -99,9 +99,13 @@ The Tacoma was completely redesigned for model year 2024. The catalog now separa
 
 `docs/vehicle-catalog-audit.csv` now also tracks every bulk-imported row with `audit_status = AGGREGATOR_UNVERIFIED` and the source page URL. These rows are low-confidence, carry no verified `source`, and do **not** satisfy the release gate: each still needs OEM verification per trim before any confidence upgrade. The curated portion now contains 300 rows; broad year ranges and lumped multi-configuration entries remain explicit audit risks. The release status stays **IN PROGRESS - NOT APPROVED FOR RELEASE**.
 
-Catalog size after the completeness pass and four OEM-verified entries: 2,820 rows (301 curated: 297 unverified estimate rows + 4 OEM-verified single-year rows; 2,519 aggregator). Imported rows with unknown clearance: ~495; unknown wheelbase: ~21 (flagged in each note). Length/width/height present on 2,496 imported rows. Coverage of US models listed for 2015-2025: 596 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. OEM-verified rows: 4 (2025 Honda Passport, 2025 Hyundai Santa Cruz, and 2025 Toyota Camry Hybrid); all remaining 2,816 rows are unverified.
+Catalog size after the completeness pass and four OEM-verified entries: 2,820 rows (301 curated: 297 unverified estimate rows + 4 OEM-verified single-year rows; 2,519 aggregator). Exact field-presence audit: 495 rows have no ground-clearance value and 21 have no wheelbase value. Overall-body dimensions are present on all three fields (length, width and height) in 2,500 rows; 320 rows are missing at least one of those three dimensions. Per-field presence: length 2,513 rows, width 2,506 rows, height 2,511 rows. These are field-presence counts only—not evidence of accuracy or OEM verification. Coverage of US models listed for 2015-2025: 596 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. OEM-verified rows: 4 (2025 Honda Passport, 2025 Hyundai Santa Cruz, and two scoped 2025 Toyota Camry Hybrid entries); all remaining 2,816 rows are unverified.
 
-### OEM-verified rows (first batch)
+### Dimension inventory and operator display
+
+The audit CSV now includes `length_in`, `width_in`, `height_in`, and `dimension_status` for every catalog row. Status values distinguish `OEM_VERIFIED_SCOPED`, `AGGREGATOR_UNVERIFIED`, and `CURATED_UNVERIFIED`. The app's vehicle detail screen displays the available dimensions, identifies whether the row has a scoped OEM source, and labels all other dimensions as unverified references. A populated field is not a verified specification. The app must not use catalog dimensions as a substitute for on-scene measurements or the exact vehicle's OEM documentation.
+
+## OEM-verified rows (first batch)
 
 The first two rows added in the initial verification batch were `OEM_VERIFIED`, each scoped to a **single model year** with its primary source URL in the row and in the audit CSV: Honda Passport 2025 (Honda Info Center specification page) and Hyundai Santa Cruz 2025 (Hyundai product guide PDF; transmission type from secondary sources and flagged in the note). The 2025 Toyota Camry Hybrid was verified in a later update below, bringing the current total to four. A row can only be verified with an https source URL, a source year inside the row's years, and an explicit verified flag (enforced in `www/data.js` and tests). Verified rows still never give a clearance verdict from catalog numbers; on-scene measurements are always required. Everything else remains unverified. Third-party sites that agree with each other (KBB, JD Power, Edmunds, TrueDelta) are not treated as OEM sources.
 
