@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `abhionlyone/us-car-models-data` | US model/year identity and body style | Imported as a filter / identity source | CC BY 4.0 per upstream repository; retain attribution and licence notice |
 | `ilyasozkurt/automobile-models-and-specs` | Vehicle specifications scraped from AutoEvolution | 2,519 rows in current catalog, all marked unverified | **HOLD — no explicit dataset licence identified** |
-| OEM manufacturer pages / brochures | Specific model-year specifications | Used for the two current OEM-verified rows and ongoing research | Use the primary source URL and year on each row; retain source scope |
+| OEM manufacturer pages / brochures | Specific model-year specifications | Used for 11 current OEM-verified single-year rows and ongoing research | Use the primary source URL and year on each row; retain source scope |
 
 The AutoEvolution-derived upstream repository describes its contents as scraped from autoevolution.com. Its public README does not provide an explicit data licence. A public GitHub repository, public availability, factual numeric content, or an attribution string does not by itself establish permission to copy and redistribute the compiled dataset. This is an engineering release gate, not a legal opinion.
 
@@ -28,6 +28,6 @@ The AutoEvolution-derived upstream repository describes its contents as scraped 
 
 ## Data-quality status is separate from licensing
 
-As of this review, the catalog has 2,820 rows: 301 curated entries (297 unverified legacy/curated entries plus four OEM-source-verified single-year entries) and 2,519 AutoEvolution-derived entries. The audit CSV records 4 OEM-verified rows and 2,816 unverified rows. A source licence does not prove specification accuracy, and OEM verification does not resolve the rights status of unrelated imported rows.
+As of 2026-11-21, the catalog has 2,827 rows: 308 curated entries (297 unverified curated entries plus 11 OEM-source-verified single-year entries) and 2,519 AutoEvolution-derived entries. The audit CSV records 11 OEM-verified rows and 2,816 low-confidence/unverified rows. These figures were recomputed from all 2,827 CSV data rows. A source licence does not prove specification accuracy, and OEM verification does not resolve the rights status of unrelated imported rows. A source licence does not prove specification accuracy, and OEM verification does not resolve the rights status of unrelated imported rows.
 
 Ground-clearance values remain reference data only. No catalog value may produce a positive loading clearance verdict; the operator must measure the actual vehicle's lowest point and wheelbase on scene.
