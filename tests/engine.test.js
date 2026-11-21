@@ -456,9 +456,26 @@ test('bulk rows expose length/width/height when the source has them', () => {
 });
 
 
+test('2025 CR-V gas and hybrid specifications are OEM-verified and variant-scoped', () => {
+  const gas = find('Honda', 'CR-V (2025)');
+  const hybrid = find('Honda', 'CR-V Hybrid (2025)');
+  for (const v of [gas, hybrid]) {
+    assert.equal(v.conf, 1);
+    assert.equal(v.sourceYear, 2025);
+    assert.equal(v.wb, 106.3);
+    assert.equal(v.gc, 7.8);
+    assert.equal(v.len, 184.8);
+    assert.equal(v.wid, 73.5);
+    assert.equal(v.ht, 66.5);
+    assert.equal(E.recommend(v).clearance.status, 'unknown');
+  }
+  assert.equal(gas.curb, 3635);
+  assert.equal(hybrid.curb, 3926);
+});
+
 test('OEM-verified rows still never produce a clearance verdict without on-scene measurements', () => {
   const ver = D.vehicles.filter(v => v.source);
-  assert.equal(ver.length, 4);
+  assert.equal(ver.length, 6);
   for (const v of ver) {
     const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
     assert.equal(r.clearance.status, 'unknown', v.model);
