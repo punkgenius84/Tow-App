@@ -924,7 +924,7 @@
       '<div class="grid2"><label class="check"><input id="fleet-dollies" type="checkbox"> Dollies available</label><label class="check"><input id="fleet-skates" type="checkbox"> Skates available</label></div>' +
       '<label class="check"><input id="fleet-available" type="checkbox" checked> Available for dispatch</label>' +
       '<button class="btn block" id="fleet-add">Save truck to this device</button>' +
-      '<div class="muted">Do not enter GVWR as payload. Use the documented payload / deck capacity applicable to the actual configuration. Only supervisor-verified records can appear as fleet matches. Confirm all ratings before dispatch.</div></div>'
+      '<div class="muted">Do not enter GVWR as payload. Use the documented payload / deck capacity applicable to the actual configuration. Only supervisor-verified records can appear as fleet matches. Confirm all ratings before dispatch.</div></div>' +
       (rows ? '<div class="label">REGISTERED TRUCKS</div>' + rows : '<div class="card edge-warn">No fleet trucks have been entered yet. Until real unit ratings are recorded, the app cannot name a specific Big Jay’s truck.</div>') +
       '</section>';
   }
