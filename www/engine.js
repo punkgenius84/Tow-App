@@ -63,6 +63,15 @@
       gvwr: posNum(sel.gvwrOverride, v.gvwr || 0),
       wb: wb,
       gc: gc,
+      catalogWb: posNum(v.wb, 0),
+      catalogGc: posNum(v.gc, 0),
+      len: posNum(v.len, 0),
+      wid: posNum(v.wid, 0),
+      ht: posNum(v.ht, 0),
+      source: v.source || '',
+      sourceYear: posNum(v.sourceYear, 0),
+      agg: v.agg || '',
+      dimensionsVerified: v.conf === 1 && !!v.source,
       measured: posNum(sel.gc, 0) > 0 && posNum(sel.wb, 0) > 0,
       // Catalog rows with conf=0 carry unverified weight/GVWR estimates. Only an
       // operator-entered override or an OEM-verified row can support a firm class.
@@ -90,16 +99,16 @@
     var lock = [];
 
     if (n.power === 'EV') {
-      lock.push('Electric drive: wheels turning while towed can damage the motor and drive unit and can back-feed the high-voltage system.');
+      lock.push('EV towing limits are model-specific. Driven-wheel rotation can damage the motor or drive unit; use a flatbed by default and follow the exact OEM transport / emergency-response procedure.');
       m.never.push('Do not tow with any wheel on the ground (no wheel-lift, no sling) unless the maker\'s guide explicitly allows it.');
     }
     if (n.trans === 'DCT') {
-      lock.push('Dual-clutch transmission: it is not lubricated with the engine off, so rolling the drive wheels can destroy it.');
+      lock.push('Dual-clutch transmission towing limits vary by vehicle and transmission design. Do not assume Neutral makes wheels-down towing safe; use a flatbed unless the OEM procedure explicitly permits another method.');
       m.never.push('Do not tow the drive wheels on the ground.');
     }
     if (n.drive === 'AWD' || n.drive === '4WD') {
       lock.push((n.drive === 'AWD' ? 'All-wheel drive' : 'Four-wheel drive') +
-        ' ties the front and rear axles together, so towing on one axle can wreck the center coupling, transfer case or differentials.');
+        ' systems vary. Lifting one axle can damage the coupling, transfer case, transmission or differentials; keep all wheels off the ground unless the exact OEM procedure explicitly allows otherwise.');
       m.never.push('Do not tow with only one axle on the ground unless the owner\'s manual says that is allowed.');
     }
 
@@ -117,7 +126,7 @@
       }
     } else {
       if (n.power === 'HEV' || n.power === 'PHEV') {
-        m.why.push('Hybrid: the electric motors turn with the drive wheels, so wheels-down towing can damage them. Flatbed is the safe default.');
+        m.why.push('Hybrid / plug-in hybrid towing limits are model-specific. Flatbed is the conservative default; do not assume Neutral or a particular axle-lift method is permitted.');
       } else {
         m.why.push('A flatbed is always the safest way to move a car. Wheel-lift is acceptable for this drivetrain if you lift the DRIVE wheels.');
       }
@@ -126,7 +135,7 @@
         m.never.push('Do not lift the rear and roll the front (drive) wheels on the ground.');
       } else {
         m.alternates.push('Wheel-lift under the REAR (drive) tires with the front wheels rolling. Unlock the steering and secure the front wheels straight.');
-        m.alternates.push('If the rear wheels must roll: remove the rear driveshaft (mark it first).');
+        m.alternates.push('If the OEM procedure requires a driveshaft disconnect, have a qualified technician perform that exact procedure; do not remove a driveshaft based on this general guide.');
         m.never.push('Do not tow a rear-drive automatic with the rear wheels rolling and the driveshaft still installed (beyond the manual\'s distance and speed limit).');
       }
       if (n.power === 'HEV' || n.power === 'PHEV') {
@@ -268,7 +277,7 @@
     var s = [
       'Confirm the drivetrain (AWD/4WD, hybrid, EV, dual-clutch) from the VIN, badges and the owner\'s manual before choosing the method.',
       'Look up the maker\'s tow instructions (owner\'s manual "Emergency towing") for the neutral and Tow / Transport mode procedure.',
-      'Release the parking brake (electric parking brakes: use the manual\'s override) and put the vehicle in Neutral / Tow mode.',
+      'Use the exact OEM procedure to release the parking brake and select Neutral / Tow mode. Electronic shifters, parking brakes and transport modes vary; never force or guess.',
       'Unlock the steering. If wheels will roll, secure the steering straight.',
       'Strap to the maker\'s tie-down points or through the wheels with nets. Never to suspension arms or thin bumper brackets.',
       'Spot the belly, front lip and rear bumper while loading. Stop and add blocks if anything touches.',
@@ -322,7 +331,7 @@
 
     steps.prepare = [
       "If you have the key: ignition ON or ACC so the steering unlocks. Press the brake while shifting.",
-      "While winching the car onto the deck it has to roll: Neutral, parking brake OFF, steering straight.",
+      "Before winching, follow the exact OEM loading procedure for Neutral / Tow mode and parking-brake release. If the vehicle cannot be placed in the required mode, stop and use the maker-approved recovery method.",
       "Fold in the mirrors, close windows and sunroof, turn off any auto-start or auto-parking-brake features (see manual).",
       "Remove any hitch ball or ball mount that hangs below the bumper, or any aftermarket parts that could drag."
     ];
@@ -339,7 +348,7 @@
 
     steps.load = [
       "Put one spotter to the side where they can see the belly and both tires. Everyone else stays out of the line of the winch cable.",
-      "Attach the winch hook to the maker's tow eye or recovery point on the end going on first (usually the front). Never hook to a bumper cover, suspension arm, tie rod or exhaust. If there is no eye, use a chain or strap around the frame or solid axle point shown in the manual.",
+      "Attach the winch only to a manufacturer-designated recovery / winching point rated for that pull. A transport tie-down point is not automatically a recovery point. Never hook to a bumper cover, suspension arm, tie rod or exhaust; if no rated point is identified, stop and consult the OEM recovery instructions.",
       "Close the hook latch. Check the cable is straight with no twists.",
       "Winch at slow speed. Stop at the crest and look at the belly. If anything touches, stop, add blocks or use go-jacks, and try again.",
       "Pull the vehicle forward until its tires are about a hand-width from the headache rack (the frame behind the cab). Its weight should sit ahead of the truck's rear axle; never let most of the weight hang behind the rear axle, because it takes weight off the steering axle.",
@@ -375,7 +384,7 @@
     steps.unload = [
       "Park on level ground. Truck parking brake ON, chock the truck wheels.",
       "Remove tie-downs in reverse order (rear pair, then front). Keep the winch cable hooked and slightly tight while you do.",
-      "Slide and tilt the bed. Put the vehicle in Neutral, parking brake OFF, steering straight.",
+      "Slide and tilt the bed. Use the OEM unloading procedure for Neutral / Tow mode and parking-brake release; do not assume the loading sequence is reversible.",
       "Spotter at the side. Lower the car using the winch to control it; never let it free-roll.",
       "When the tires are on the ground: Park (or gear), parking brake ON, chock a wheel, unhook the cable, and take photos of the vehicle as it was delivered."
     ];
@@ -522,6 +531,8 @@
       ' deg -> ' + r.clearance.status.toUpperCase() + ' (needs ' + r.clearance.neededIn + ' in, max safe ' + r.clearance.maxAngleDeg + ' deg)');
     lines.push('Tie-downs: ' + r.tiedown.count + ' points, each rated ' + fmt(r.tiedown.perTiedownLb) + ' lb WLL or more (' + r.tiedown.gear + ')');
     r.warnings.forEach(function (x) { lines.push('  NOTE: ' + x); });
+    lines.push('Catalog dimensions (in): length ' + (n.len || 'not listed') + ', width ' + (n.wid || 'not listed') + ', height ' + (n.ht || 'not listed') + '.');
+    lines.push('Dimension status: ' + (n.dimensionsVerified ? 'OEM source-verified for model year ' + n.sourceYear : 'UNVERIFIED catalog reference; confirm exact trim and measure on scene'));
     lines.push('Specs are typical values. Confirm against the vehicle and the owner\'s manual.');
     return lines.join('\n');
   }
