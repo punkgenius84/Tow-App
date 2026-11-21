@@ -413,6 +413,7 @@ test('fleet screen records real truck payloads locally and removes units', () =>
   type(w, d.querySelector('#fleet-name'), 'Rollback 12');
   type(w, d.querySelector('#fleet-unit'), 'Carrier 5500');
   type(w, d.querySelector('#fleet-payload'), '9000');
+  type(w, d.querySelector('#fleet-rating-source'), 'Carrier plate / supervisor record');
   click(w, d.querySelector('#fleet-add'));
   assert.match(d.body.textContent, /Rollback 12/);
   assert.match(d.body.textContent, /9,000/);
@@ -427,6 +428,8 @@ test('vehicle result only names fleet units with sufficient recorded flatbed pay
   click(w, d.querySelector('[data-tab="fleet"]'));
   type(w, d.querySelector('#fleet-name'), 'Rollback 12');
   type(w, d.querySelector('#fleet-payload'), '9000');
+  type(w, d.querySelector('#fleet-rating-source'), 'Carrier plate / supervisor record');
+  d.querySelector('#fleet-verified').checked = true;
   click(w, d.querySelector('#fleet-add'));
   click(w, d.querySelector('[data-tab="find"]'));
   type(w, d.querySelector('#q'), 'mustang');
