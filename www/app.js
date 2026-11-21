@@ -170,6 +170,11 @@
       '<div class="stat"><b>' + (r.method.flatbedOnly ? 'Flatbed' : 'Flatbed') + '</b><span>unit type</span></div></div>' +
       ul(t.reasons) + '<div class="muted">' + esc(t.note) + '</div></div>';
 
+    h += '<div class="card edge-info"><div class="label">USABLE &amp; PREFERRED TRUCK TYPES</div>' +
+      '<h3>Preferred</h3><div class="big">' + esc(m.truckOptions.preferred) + '</div>' +
+      '<h3>Usable options and conditions</h3>' + ul(m.truckOptions.usable) +
+      '<div class="muted">' + esc(m.truckOptions.note) + '</div></div>';
+
     var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad' }[k.status];
     var klabel = { ok: 'SHOULD CLEAR', marginal: 'TIGHT', fail: 'WILL LIKELY SCRAPE' }[k.status];
     h += '<div class="card edge-' + kcls + '"><div class="label">GROUND CLEARANCE CHECK</div>' +
