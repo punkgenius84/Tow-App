@@ -5,7 +5,7 @@ A mobile-first towing reference app for Big Jay's Towing and Auto Center. Choose
 ## What it helps operators check
 
 1. **Tow method** - flatbed versus permitted wheel-lift use, including drive-wheel considerations for EVs, hybrids, AWD/4WD, dual-clutch, FWD, and RWD vehicles.
-2. **Truck suitability** - light, medium, or heavy-duty recommendations using vehicle weight, a planning margin, GVWR, and dual-wheel considerations.
+2. **Truck suitability** - the result separates the preferred truck type from other conditionally usable options, then identifies the minimum light-, medium-, or heavy-duty capacity class using vehicle weight, a planning margin, verified/operator-entered GVWR, and dual-wheel considerations. A suggested truck type is not a live fleet-availability check or a substitute for the unit's rating plate.
 3. **Ground clearance** - belly breakover at the ramp-to-deck crest and a calculated maximum angle.
 4. **Loading and securement** - an eight-phase workflow covering tie-down count, working-load-limit sizing, corner-by-corner routing, wheel nets, ratchet straps, chains and binders, equipment inspection, troubleshooting, wheel-lift and dolly procedures, and CDL notes.
 
@@ -15,8 +15,9 @@ The app works offline after its files are available on the device. VIN decoding 
 
 - Customer-facing name: **Big Jay's Tow Guide**
 - Android application ID: com.bigjaysstowing.towguide
-- Launcher and web icon artwork: navy, white, and amber tow-truck mark
-- Web/PWA icon source: www/icons/icon.svg
+- The in-app header uses the existing Big Jay's Towing Auto Centre logo and has been enlarged for better visibility.
+- The Android launcher icon still needs a final brand-aligned pass using the approved Big Jay's artwork; do not substitute generic tow-truck clip art.
+- Recommended export dimensions, adaptive-icon safe area, and review checklist: [docs/BRANDING_ASSETS.md](docs/BRANDING_ASSETS.md).
 
 ## Run as a web app
 
@@ -38,6 +39,10 @@ Run npm test for the tow-rule, clearance, tie-down, vehicle-database, VIN-decodi
 ## Adding vehicles
 
 Append a row to ROWS in www/data.js (format documented at the top of that file). The test suite checks row structure and database integrity.
+
+## Vehicle catalog verification and distribution status
+
+The vehicle catalog contains provisional third-party specification references and a smaller set of scoped OEM-verified entries. Catalog dimensions do not establish a clearance pass: operators must enter actual on-scene wheelbase and lowest-point ground-clearance measurements. The AutoEvolution-derived specification source has no identified explicit dataset redistribution licence; the catalog is **not cleared for public or commercial redistribution** until permission is obtained or those records are replaced with appropriately licensed/OEM-sourced data. See [docs/VEHICLE_CATALOG_AUDIT.md](docs/VEHICLE_CATALOG_AUDIT.md) and [docs/DATA_LICENSE_REMEDIATION.md](docs/DATA_LICENSE_REMEDIATION.md).
 
 ## Operational limits
 
