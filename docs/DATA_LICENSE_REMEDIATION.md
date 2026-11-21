@@ -28,6 +28,6 @@ The AutoEvolution-derived upstream repository describes its contents as scraped 
 
 ## Data-quality status is separate from licensing
 
-As of this review, the catalog has 2,819 rows: 300 curated entries (297 unverified legacy/curated entries plus three OEM-source-verified single-year entries) and 2,519 AutoEvolution-derived entries. The audit CSV records 3 OEM-verified rows and 2,816 unverified rows. A source licence does not prove specification accuracy, and OEM verification does not resolve the rights status of unrelated imported rows.
+As of this review, the catalog has 2,820 rows: 301 curated entries (297 unverified legacy/curated entries plus four OEM-source-verified single-year entries) and 2,519 AutoEvolution-derived entries. The audit CSV records 4 OEM-verified rows and 2,816 unverified rows. A source licence does not prove specification accuracy, and OEM verification does not resolve the rights status of unrelated imported rows.
 
 Ground-clearance values remain reference data only. No catalog value may produce a positive loading clearance verdict; the operator must measure the actual vehicle's lowest point and wheelbase on scene.

@@ -220,7 +220,7 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 
 test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
   const curated = D.vehicles.filter(v => !v.agg);
-  assert.equal(curated.length, 300, '297 unverified estimate rows + 3 OEM-verified rows');
+  assert.equal(curated.length, 301, '297 unverified estimate rows + 4 OEM-verified rows');
   assert.ok(D.vehicles.length > 298, 'bulk rows imported');
   for (const v of D.vehicles) {
     const id = v.make + ' ' + v.model + ' ' + v.yFrom;
@@ -235,6 +235,27 @@ test('all unverified catalog rows remain low-confidence until OEM provenance is 
       assert.equal(v.sourceYear, 0, id + ' has no reviewed source year yet');
     }
   }
+});
+
+test('2025 Toyota Crown Signia has exact single-year OEM specifications', () => {
+  const v = find('Toyota', 'Crown Signia');
+  assert.equal(v.yFrom, 2025);
+  assert.equal(v.yTo, 2025);
+  assert.equal(v.conf, 1);
+  assert.equal(v.source, 'https://www.toyota.com/content/dam/toyota/brochures/pdf/2025/toyotacrownsignia_ebrochure.pdf');
+  assert.equal(v.sourceYear, 2025);
+  assert.deepEqual(v.drives, ['AWD']);
+  assert.equal(v.power, 'HEV');
+  assert.deepEqual(v.trans, ['CVT']);
+  assert.equal(v.curb, 4210);
+  assert.equal(v.wb, 112.2);
+  assert.equal(v.gc, 6.7);
+  assert.equal(v.len, 194.1);
+  assert.equal(v.wid, 74.0);
+  assert.equal(v.ht, 64.0);
+  const recommendation = E.recommend(v);
+  assert.equal(recommendation.method.flatbedOnly, true);
+  assert.equal(recommendation.clearance.status, 'unknown');
 });
 
 /* ---------- database integrity ---------- */
