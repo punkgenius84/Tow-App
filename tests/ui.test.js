@@ -102,9 +102,9 @@ test('switching drive to AWD switches the method to flatbed only', () => {
   const d = w.document;
   type(w, d.querySelector('#q'), 'camry');
   click(w, [...d.querySelectorAll('.item')].find(b => /^Toyota Camry$/.test(b.querySelector('b').textContent)));
-  assert.doesNotMatch(d.body.textContent, /FLATBED ONLY/);
+  assert.doesNotMatch(d.body.textContent, /FLATBED DEFAULT/);
   click(w, d.querySelector('[data-seg="drive"][data-val="AWD"]'));
-  assert.match(d.body.textContent, /FLATBED ONLY/);
+  assert.match(d.body.textContent, /FLATBED DEFAULT/);
 });
 
 test('custom vehicle form validates and produces a result', () => {
@@ -152,7 +152,7 @@ test('VIN tab decodes, matches the database and pre-selects the drive', async ()
   await new Promise(r => setTimeout(r, 20));
   assert.match(d.body.textContent, /2021 Ford F-150/);
   click(w, d.querySelector('[data-open][data-pre]'));
-  assert.match(d.body.textContent, /FLATBED ONLY/, '4WD from the VIN is applied');
+  assert.match(d.body.textContent, /FLATBED DEFAULT/, '4WD from the VIN is applied');
 });
 
 test('VIN lookup failure shows a friendly message', async () => {
