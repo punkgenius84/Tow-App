@@ -75,7 +75,7 @@ test('opening a vehicle shows method, truck, clearance, tie-downs and every proc
   type(w, d.querySelector('#q'), 'mustang');
   click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
   const text = d.body.textContent;
-  for (const s of ['HOW TO TOW', 'TRUCK REQUIRED', 'GROUND CLEARANCE CHECK', 'TIE-DOWNS (SIZED', 'STEP-BY-STEP PROCEDURE', 'HANDS-ON TECHNIQUE',
+  for (const s of ['HOW TO TOW', 'TRUCK REQUIRED', 'USABLE & PREFERRED TRUCK TYPES', 'Preferred', 'GROUND CLEARANCE CHECK', 'TIE-DOWNS (SIZED', 'STEP-BY-STEP PROCEDURE', 'HANDS-ON TECHNIQUE',
     '5. Tie it down', 'Corner-by-corner strap routing', 'How to use wheel nets', 'How to use ratchet straps', 'How to use chains and binders',
     'If something goes wrong', 'Driver license and legal', 'Wheel-lift procedure']) {
     assert.ok(text.includes(s), 'missing section: ' + s);
