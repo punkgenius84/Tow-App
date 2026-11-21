@@ -142,6 +142,25 @@
         m.alternates.push('Wheel-lift only if the owner\'s manual allows it, and lift the drive wheels.');
       }
     }
+    // Separate preferred and conditionally usable truck TYPES from the
+    // weight-based truck class. This is guidance, not a live fleet inventory.
+    m.truckOptions = {
+      preferred: 'Flatbed / rollback — transport with all four wheels off the ground.',
+      usable: ['Flatbed / rollback, provided the unit is rated for the calculated load.']
+    };
+    if (!m.flatbedOnly && n.power !== 'HEV' && n.power !== 'PHEV') {
+      m.truckOptions.usable.push('Wheel-lift — lift the drive wheels and follow the exact OEM towing procedure.');
+    } else if (!m.flatbedOnly && (n.power === 'HEV' || n.power === 'PHEV')) {
+      m.truckOptions.usable.push('Wheel-lift — conditional only; use it only when the exact OEM manual permits it and the drive wheels are lifted.');
+    } else if (n.power === 'EV') {
+      m.truckOptions.usable.push('Four-wheel dollies / skates — only when the exact OEM emergency or towing guide permits this setup.');
+    } else if (n.drive === 'AWD' || n.drive === '4WD') {
+      m.truckOptions.usable.push('Wheel-lift plus dollies / skates — only when all four wheels remain off the ground and the OEM procedure permits it.');
+    } else if (n.trans === 'DCT') {
+      m.truckOptions.usable.push('Wheel-lift — exception only when the exact OEM procedure explicitly permits the method.');
+    }
+    m.truckOptions.note = 'Usable means the towing method may be suitable under the stated conditions. Confirm the truck rating plate, equipment ratings, vehicle condition and OEM procedure before dispatch.';
+
     return m;
   }
 
