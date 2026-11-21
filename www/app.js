@@ -186,7 +186,7 @@
       (matchedFleet.length ? '<div class="big">Preferred unit: ' + esc(matchedFleet[0].name) + '</div>' +
         ul(matchedFleet.map(function (x) { return x.name + ' — rated payload ' + E.fmt(x.payloadLb) + ' lb'; })) :
         '<div class="big">No verified fleet match recorded</div><div>Enter the actual truck ratings in the Fleet tab. The required payload for this vehicle is ' + E.fmt(t.requiredLb) + ' lb. Only available flatbeds with a recorded payload at or above that requirement are listed. Do not substitute an unverified unit.</div>') +
-      '<div class="muted">This is a screening result based on locally entered payload only. Confirm axle ratings, GVWR/GCWR, deck and winch limits, equipment condition, securement and OEM towing method before dispatch.</div></div>';
+      '<div class="muted">Only supervisor-verified records with a rating-source reference are eligible. This is a screening result based on locally entered payload only. Confirm axle ratings, GVWR/GCWR, deck and winch limits, equipment condition, securement and OEM towing method before dispatch.</div></div>';
 
     h += '<div class="card edge-info"><div class="label">USABLE &amp; PREFERRED TRUCK TYPES</div>' +
       '<h3>Preferred</h3><div class="big">' + esc(m.truckOptions.preferred) + '</div>' +
@@ -918,10 +918,12 @@
       '<div><label class="f" for="fleet-winch">Winch line pull rating (lb)</label><input id="fleet-winch" inputmode="numeric" placeholder="Optional"></div></div>' +
       '<div class="grid2"><div><label class="f" for="fleet-length">Deck length (in)</label><input id="fleet-length" inputmode="numeric" placeholder="Optional"></div>' +
       '<div><label class="f" for="fleet-width">Deck width (in)</label><input id="fleet-width" inputmode="numeric" placeholder="Optional"></div></div>' +
+      '<div><label class="f" for="fleet-rating-source">Rating source / document reference *</label><input id="fleet-rating-source" maxlength="120" placeholder="Carrier plate, body-builder spec, manual page"></div>' +
+      '<label class="check"><input id="fleet-verified" type="checkbox"> Supervisor verified payload and configuration against documentation</label>' +
       '<div class="grid2"><label class="check"><input id="fleet-dollies" type="checkbox"> Dollies available</label><label class="check"><input id="fleet-skates" type="checkbox"> Skates available</label></div>' +
       '<label class="check"><input id="fleet-available" type="checkbox" checked> Available for dispatch</label>' +
       '<button class="btn block" id="fleet-add">Save truck to this device</button>' +
-      '<div class="muted">Do not enter GVWR as payload. Use the documented payload / deck capacity applicable to the actual configuration. Confirm all ratings before dispatch.</div></div>' +
+      '<div class="muted">Do not enter GVWR as payload. Use the documented payload / deck capacity applicable to the actual configuration. Only supervisor-verified records can appear as fleet matches. Confirm all ratings before dispatch.</div></div>'
       (rows ? '<div class="label">REGISTERED TRUCKS</div>' + rows : '<div class="card edge-warn">No fleet trucks have been entered yet. Until real unit ratings are recorded, the app cannot name a specific Big Jay’s truck.</div>') +
       '</section>';
   }
@@ -929,7 +931,7 @@
   function fleetMatches(result) {
     var need = result.truck.requiredLb;
     return fleet.filter(function (t) {
-      return t.available && /flatbed/.test(t.type) && Number(t.payloadLb) >= need;
+      return t.available && t.verified === true && !!t.ratingSource && /flatbed/.test(t.type) && Number(t.payloadLb) >= need;
     }).sort(function (a, b) { return Number(a.payloadLb) - Number(b.payloadLb); });
   }
 
@@ -979,8 +981,9 @@
     if (t.id === 'fleet-add') {
       var name = ($('#fleet-name').value || '').trim();
       var payload = parseFloat($('#fleet-payload').value);
-      if (!name || !isFinite(payload) || payload <= 0) {
-        alert('Enter a truck name and a positive rated payload from the truck documentation.');
+      var ratingSource = ($('#fleet-rating-source').value || '').trim();
+      if (!name || !isFinite(payload) || payload <= 0 || !ratingSource) {
+        alert('Enter a truck name, positive rated payload, and rating document reference.');
         return;
       }
       fleet.push({
@@ -989,6 +992,7 @@
         winchLb: Math.max(0, parseFloat($('#fleet-winch').value) || 0),
         deckLengthIn: Math.max(0, parseFloat($('#fleet-length').value) || 0),
         deckWidthIn: Math.max(0, parseFloat($('#fleet-width').value) || 0),
+        ratingSource: ratingSource, verified: $('#fleet-verified').checked,
         dollies: $('#fleet-dollies').checked, skates: $('#fleet-skates').checked,
         available: $('#fleet-available').checked
       });
