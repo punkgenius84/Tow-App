@@ -403,3 +403,42 @@ test('native OCR plugin is detected through Capacitor.Plugins or registerPlugin,
   w.Capacitor = { getPlatform: () => 'android' };
   assert.equal(w.__tow.nativeScannerAvailable(), false);
 });
+
+
+test('fleet screen records real truck payloads locally and removes units', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="fleet"]'));
+  assert.match(d.body.textContent, /No fleet trucks have been entered yet/);
+  type(w, d.querySelector('#fleet-name'), 'Rollback 12');
+  type(w, d.querySelector('#fleet-unit'), 'Carrier 5500');
+  type(w, d.querySelector('#fleet-payload'), '9000');
+  click(w, d.querySelector('#fleet-add'));
+  assert.match(d.body.textContent, /Rollback 12/);
+  assert.match(d.body.textContent, /9,000/);
+  assert.equal(JSON.parse(w.localStorage.getItem('towguide.fleet.v1')).length, 1);
+  click(w, d.querySelector('[data-fleet-del]'));
+  assert.match(d.body.textContent, /No fleet trucks have been entered yet/);
+});
+
+test('vehicle result only names fleet units with sufficient recorded flatbed payload', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  click(w, d.querySelector('[data-tab="fleet"]'));
+  type(w, d.querySelector('#fleet-name'), 'Rollback 12');
+  type(w, d.querySelector('#fleet-payload'), '9000');
+  click(w, d.querySelector('#fleet-add'));
+  click(w, d.querySelector('[data-tab="find"]'));
+  type(w, d.querySelector('#q'), 'mustang');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  assert.match(d.body.textContent, /BIG JAY’S FLEET MATCH/);
+  assert.match(d.body.textContent, /Preferred unit: Rollback 12/);
+});
+
+test('unmeasured clearance is explicitly shown as no verdict', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  type(w, d.querySelector('#q'), 'mustang');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  assert.match(d.body.textContent, /NO VERDICT — MEASURE FIRST/);
+});
