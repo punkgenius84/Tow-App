@@ -194,7 +194,7 @@
       '<div class="muted">' + esc(m.truckOptions.note) + '</div></div>';
 
     var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad', unknown: 'info' }[k.status];
-    var klabel = { ok: 'MEASURED GEOMETRY — REVIEW', marginal: 'TIGHT — NOT A PASS', fail: 'LIKELY CONTACT', unknown: 'NO VERDICT — MEASURE FIRST' }[k.status];
+    var klabel = { ok: 'SHOULD CLEAR', marginal: 'TIGHT', fail: 'WILL LIKELY SCRAPE', unknown: 'NO VERDICT — MEASURE FIRST' }[k.status];
     h += '<div class="card edge-' + kcls + '"><div class="label">GROUND CLEARANCE CHECK</div>' +
       '<div class="big"><span class="badge ' + kcls + '">' + klabel + '</span></div>' +
       '<div class="stats"><div class="stat"><b>' + k.gc + '"</b><span>clearance</span></div>' +
