@@ -47,6 +47,28 @@ test('find screen lists vehicles and filters by search, make and year', () => {
   assert.ok(![...d.querySelectorAll('.item b')].some(b => /Model 3/.test(b.textContent)));
 });
 
+test('OEM-verified vehicle displays its complete dimensions and scoped source', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  type(w, d.querySelector('#q'), 'passport');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Passport/.test(b.querySelector('b').textContent)));
+  const text = d.body.textContent;
+  for (const s of ['Overall length (catalog)', '189.1 in', 'Overall width (catalog)', '78.6 in',
+    'Overall height (catalog)', '72.2 in', 'OEM source-verified for model year 2025',
+    'hondainfocenter.com/2025/Passport/Feature-Guide/Specifications/']) {
+    assert.ok(text.includes(s), 'missing dimension/provenance detail: ' + s);
+  }
+});
+
+test('unverified catalog dimensions are visibly labeled as unverified', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  type(w, d.querySelector('#q'), 'mustang');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  assert.match(d.body.textContent, /UNVERIFIED/);
+  assert.match(d.body.textContent, /Overall length \(catalog\)/);
+});
+
 test('opening a vehicle shows method, truck, clearance, tie-downs and every procedure section', () => {
   const { window: w } = boot();
   const d = w.document;
