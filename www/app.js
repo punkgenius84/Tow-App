@@ -158,9 +158,9 @@
 
     h += '<div class="card ' + (m.flatbedOnly ? 'edge-bad' : 'edge-ok') + '"><div class="label">HOW TO TOW</div>' +
       '<div class="big">' + esc(m.primary) + '</div>' +
-      (m.flatbedOnly ? '<span class="badge bad">FLATBED ONLY</span>' : '<span class="badge ok">FLATBED PREFERRED</span>') +
+      (m.flatbedOnly ? '<span class="badge bad">FLATBED DEFAULT — VERIFY OEM</span>' : '<span class="badge ok">FLATBED PREFERRED</span>') +
       ul(m.why) +
-      (m.alternates.length ? '<h3>' + (m.flatbedOnly ? 'If no flatbed is possible' : 'Acceptable alternative') + '</h3>' + ul(m.alternates) : '') +
+      (m.alternates.length ? '<h3>' + (m.flatbedOnly ? 'Exception only if the OEM procedure permits' : 'Possible alternative — confirm OEM procedure first') + '</h3>' + ul(m.alternates) : '') +
       (m.never.length ? '<h3 class="neg">Never</h3>' + ul(m.never, 'neg') : '') + '</div>';
 
     h += '<div class="card edge-info"><div class="label">TRUCK REQUIRED</div><div class="big">' + esc(t.label) + '</div>' +
@@ -214,11 +214,21 @@
     h += detailsBlock('Terms', '<dl class="gl">' + td.glossary.map(function (g) { return '<dt>' + esc(g[0]) + '</dt><dd>' + esc(g[1]) + '</dd>'; }).join('') + '</dl>');
 
     var sp = r.spec;
-    h += detailsBlock('Vehicle specs used', '<table class="specs">' +
+    var dimensionStatus = sp.dimensionsVerified
+      ? 'OEM source-verified for model year ' + sp.sourceYear
+      : (sp.agg ? 'UNVERIFIED third-party catalog reference' : 'UNVERIFIED / no scoped OEM source');
+    h += detailsBlock('Vehicle specs and dimensions', '<table class="specs">' +
       row('Drive', sp.drive) + row('Powertrain', POWER[sp.power]) + row('Transmission', TRANS[sp.trans] || sp.trans) +
       row('Curb weight', E.fmt(sp.curb) + ' lb') + row('GVWR', sp.gvwr ? E.fmt(sp.gvwr) + ' lb' : 'n/a') +
-      row('Wheelbase', k.wb + ' in') + row('Ground clearance', k.gc + ' in' + (sp.measured ? ' (measured)' : (sp.conf ? '' : ' (estimate)'))) +
-      '</table><div class="muted" style="margin-top:8px">Typical values for the model range. Trim, tires, load and modifications change them.</div>');
+      row('Wheelbase (catalog)', sp.catalogWb ? sp.catalogWb + ' in' : 'Not in catalog') +
+      row('Ground clearance (catalog)', sp.catalogGc ? sp.catalogGc + ' in' : 'Not in catalog') +
+      row('Overall length (catalog)', sp.len ? sp.len + ' in' : 'Not in catalog') +
+      row('Overall width (catalog)', sp.wid ? sp.wid + ' in' : 'Not in catalog') +
+      row('Overall height (catalog)', sp.ht ? sp.ht + ' in' : 'Not in catalog') +
+      row('Dimension data status', dimensionStatus) +
+      row('OEM source', sp.dimensionsVerified ? sp.source : 'No scoped OEM source recorded for this row') +
+      (sp.measured ? row('On-scene measurements', sp.gc + ' in clearance; ' + sp.wb + ' in wheelbase') : '') +
+      '</table><div class="muted" style="margin-top:8px">Catalog dimensions are reference values, not fitment approval. Unverified entries may combine trims or model years. Confirm the exact VIN, year, trim, drivetrain and suspension against OEM documentation; measure the actual vehicle before choosing equipment or loading.</div>');
 
     h += '<div class="grid2"><button class="btn ghost" id="copy">Copy summary</button>' +
       (v.custom ? (isSaved(v) ? '<button class="btn danger" id="del-custom">Delete saved</button>' : '<button class="btn" id="save-custom">Save vehicle</button>') : '<span></span>') + '</div>';
