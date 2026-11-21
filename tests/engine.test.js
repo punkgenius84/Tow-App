@@ -11,10 +11,27 @@ const find = (make, model) => {
 };
 
 /* ---------- tow method ---------- */
+test('resolved vehicle carries catalog dimensions and their provenance', () => {
+  const v = find('Honda', 'Passport');
+  const r = E.recommend(v);
+  assert.equal(r.spec.len, 189.1);
+  assert.equal(r.spec.wid, 78.6);
+  assert.equal(r.spec.ht, 72.2);
+  assert.equal(r.spec.dimensionsVerified, true);
+  assert.equal(r.spec.sourceYear, 2025);
+});
+
+test('catalog dimensions are not treated as on-scene measurements', () => {
+  const r = E.recommend(find('Ford', 'Mustang'));
+  assert.equal(r.spec.measured, false);
+  assert.equal(r.clearance.status, 'unknown');
+});
+
 test('EV is flatbed only', () => {
   const r = E.recommend(find('Tesla', 'Model 3'), { drive: 'RWD' });
   assert.equal(r.method.flatbedOnly, true);
   assert.match(r.method.primary, /Flatbed/);
+  assert.match(r.method.why.join(' '), /model-specific/);
 });
 
 test('AWD and 4WD are flatbed only', () => {
