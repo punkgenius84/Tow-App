@@ -2,19 +2,15 @@
 
 **Status: IN PROGRESS — NOT APPROVED FOR RELEASE**
 
-**Safety mitigation now active:** all catalog-derived vehicle rows are forced to low confidence until row-specific OEM source provenance and configuration scope are reviewed. This is intentionally conservative; it does not mean all 298 rows have been verified.
+**Safety mitigation now active:** catalog-derived values are not treated as confirmed specifications unless a row has an explicit, scoped OEM verification record. Unverified values remain provisional and cannot substitute for on-scene measurements.
 
-This audit covers the complete current US-market catalog in `www/data.js`, not a sample. The source currently contains **298 rows across 47 makes**, spanning model years 1980–2025.
+This audit covers the complete current US-market catalog in `www/data.js`: **2,819 rows across 47 makes**, comprising **300 curated rows** and **2,519 aggregator-derived rows**, spanning model years 1980–2025. Of the 300 curated rows, 3 are OEM-source-verified for a single model year and 297 remain unverified. All 2,519 aggregator-derived rows remain unverified. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
 ## Why this audit is required
 
-The current database stores one curb weight, wheelbase and ground-clearance value for each row, while many rows cover multiple redesigns and trim/drivetrain variants. The app's current confidence logic marks rows as lower confidence when the year span is broad, but a short year span is not proof that its specifications have been verified. The catalog has no per-row source provenance today. Until that is remedied, every catalog row is treated as unverified by the application, regardless of year-span length.
+The database stores one curb-weight, wheelbase and ground-clearance baseline per row, while many rows cover multiple redesigns, trims, drivetrains, wheel/tire packages or suspension configurations. A narrow model-year range is not proof that the values are correct for every configuration. Each row must retain clear provenance and scope before any specification can be treated as verified.
 
-- **199 rows** cover seven or more model years.
-- **114 rows** cover eleven or more model years.
-- **11 rows** currently receive the default higher-confidence flag despite having no recorded source provenance. That flag is not evidence of verification.
-
-The companion CSV, `docs/vehicle-catalog-audit.csv`, lists every current row and its audit status.
+The companion CSV, `docs/vehicle-catalog-audit.csv`, is intended to list every current row and its audit status. The release gate remains open until every row has a reviewed disposition, adequate source provenance, and a safe treatment for missing or configuration-dependent specifications.
 
 ## Identity / generation corrections applied
 
@@ -101,7 +97,7 @@ The Tacoma was completely redesigned for model year 2024. The catalog now separa
 
 ## Bulk aggregator rows (added 2026-11-20)
 
-`docs/vehicle-catalog-audit.csv` now also tracks every bulk-imported row with `audit_status = AGGREGATOR_UNVERIFIED` and the source page URL. These rows are low-confidence, carry no verified `source`, and do **not** satisfy the release gate: each still needs OEM verification per trim before any confidence upgrade. Curated rows remain 298 (142 flagged BROAD YEAR RANGE, 28 flagged LUMPED ENTRY); the release status stays **IN PROGRESS - NOT APPROVED FOR RELEASE**.
+`docs/vehicle-catalog-audit.csv` now also tracks every bulk-imported row with `audit_status = AGGREGATOR_UNVERIFIED` and the source page URL. These rows are low-confidence, carry no verified `source`, and do **not** satisfy the release gate: each still needs OEM verification per trim before any confidence upgrade. The curated portion now contains 300 rows; broad year ranges and lumped multi-configuration entries remain explicit audit risks. The release status stays **IN PROGRESS - NOT APPROVED FOR RELEASE**.
 
 Catalog size after the completeness pass and three OEM-verified entries: 2,819 rows (300 curated: 297 unverified estimate rows + 3 OEM-verified single-year rows; 2,519 aggregator). Imported rows with unknown clearance: ~495; unknown wheelbase: ~21 (flagged in each note). Length/width/height present on 2,496 imported rows. Coverage of US models listed for 2015-2025: 595 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. OEM-verified rows: 3 (2025 Honda Passport, 2025 Hyundai Santa Cruz, and 2025 Toyota Camry Hybrid); all remaining 2,816 rows are unverified.
 
