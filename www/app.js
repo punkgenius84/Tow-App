@@ -40,6 +40,12 @@
   var TRANS = { AT: 'Automatic', CVT: 'CVT', MT: 'Manual', DCT: 'Dual-clutch', EV: 'Single-speed' };
 
   /* ---------- navigation ---------- */
+  function handleBack() {
+    if (state.cur) { state.cur = null; render(); return true; }
+    if (state.tab !== 'find') { setTab('find'); return true; }
+    return false;
+  }
+
   function setTab(t) {
     stopBarcodeScanner();
     state.tab = t; state.cur = null; render();
@@ -949,11 +955,17 @@
   function netBadge() {
     var n = $('#net'); if (!n) return;
     var on = navigator.onLine !== false;
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+      try { on = window.AndroidNetwork.isConnected() === true; } catch (e) { on = false; }
+    }
     n.textContent = on ? 'Online' : 'Offline (app works)';
     n.classList.toggle('off', !on);
   }
   window.addEventListener('online', netBadge);
   window.addEventListener('offline', netBadge);
+  if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+    window.setInterval(netBadge, 3000);
+  }
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* ignore */ }); });
@@ -962,6 +974,7 @@
   netBadge();
   render();
 
-  // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractStructuredVinCandidates: extractStructuredVinCandidates, extractVinCandidatesFromOcrResults: extractVinCandidatesFromOcrResults, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); } };
+  // Native Android back handling and test access.
+  window.__towBack = handleBack;
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractStructuredVinCandidates: extractStructuredVinCandidates, extractVinCandidatesFromOcrResults: extractVinCandidatesFromOcrResults, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); }, handleBack: handleBack };
 })();

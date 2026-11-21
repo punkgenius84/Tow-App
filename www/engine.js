@@ -17,6 +17,7 @@
 
   var SAFETY_MARGIN = 1.15;      // weight margin added when sizing the truck
   var LOW_CLEARANCE_IN = 5.5;    // below this we treat the car as "low"
+  var CLEARANCE_RESERVE_IN = 1.5; // reserve for uneven pavement and real-world variation
   var DEG = Math.PI / 180;
 
   var ANGLE_PRESETS = [
@@ -50,8 +51,8 @@
     sel = sel || {};
     var drives = (v.drives && v.drives.length) ? v.drives : ['FWD'];
     var trans = (v.trans && v.trans.length) ? v.trans : ['AT'];
-    var gc = posNum(sel.gc, v.gc);
-    var wb = posNum(sel.wb, v.wb);
+    var gc = posNum(sel.gc, posNum(v.gc, 0));
+    var wb = posNum(sel.wb, posNum(v.wb, 0));
     return {
       name: ((v.make || '') + ' ' + (v.model || '')).trim(),
       body: v.body || '',
@@ -62,10 +63,14 @@
       gvwr: posNum(sel.gvwrOverride, v.gvwr || 0),
       wb: wb,
       gc: gc,
-      measured: posNum(sel.gc, 0) > 0 || posNum(sel.wb, 0) > 0,
+      measured: posNum(sel.gc, 0) > 0 && posNum(sel.wb, 0) > 0,
+      // Catalog rows with conf=0 carry unverified weight/GVWR estimates. Only an
+      // operator-entered override or an OEM-verified row can support a firm class.
+      weightConfirmed: posNum(sel.curb, 0) > 0 || v.conf === 1 || v.conf === undefined,
+      gvwrConfirmed: posNum(sel.gvwrOverride, 0) > 0 || v.conf === 1 || v.conf === undefined,
       dually: !!v.dually,
       air: v.air || false,
-      low: !!v.low || gc < LOW_CLEARANCE_IN,
+      low: !!v.low || (gc > 0 && gc < LOW_CLEARANCE_IN),
       conf: v.conf === 0 ? 0 : 1,
       note: v.note || '',
       extraLb: Math.max(0, +sel.extraLb || 0),
@@ -138,13 +143,19 @@
     var reasons = [fmt(weight) + ' lb vehicle weight + 15% margin = ' + fmt(required) + ' lb to be rated for.'];
     var rank = required <= 10000 ? 0 : (required <= 20000 ? 1 : 2);
 
-    if (n.gvwr > 10000 && rank < 1) {
+    if (n.gvwrConfirmed && n.gvwr > 10000 && rank < 1) {
       rank = 1;
-      reasons.push('GVWR is ' + fmt(n.gvwr) + ' lb (over 10,000), so use at least a medium-duty unit.');
+      reasons.push('Verified / operator-entered GVWR is ' + fmt(n.gvwr) + ' lb (over 10,000), so use at least a medium-duty unit.');
     }
-    if (n.gvwr > 26000 && rank < 2) {
+    if (n.gvwrConfirmed && n.gvwr > 26000 && rank < 2) {
       rank = 2;
-      reasons.push('GVWR over 26,000 lb needs a heavy-duty unit.');
+      reasons.push('Verified / operator-entered GVWR over 26,000 lb needs a heavy-duty unit.');
+    }
+    if (!n.gvwrConfirmed && n.gvwr > 0) {
+      reasons.push('Catalog GVWR is unverified and was not used to upgrade the truck class. Check the vehicle certification label / OEM data.');
+    }
+    if (!n.weightConfirmed) {
+      reasons.push('PROVISIONAL TRUCK CLASS: curb weight is an unverified catalog estimate. Confirm the exact VIN/trim weight and any cargo before dispatch; do not use this class as a capacity approval.');
     }
     if (n.dually && rank < 1) {
       rank = 1;
@@ -158,9 +169,13 @@
     ];
     var c = classes[rank];
     return {
-      id: c.id, label: c.label, detail: c.detail,
+      id: c.id, label: n.weightConfirmed ? c.label : 'Provisional — ' + c.label,
+      detail: n.weightConfirmed ? c.detail : c.detail + ' This is a provisional estimate until the exact vehicle weight is confirmed.',
+      provisional: !n.weightConfirmed,
+      weightConfirmed: !!n.weightConfirmed,
+      gvwrConfirmed: !!n.gvwrConfirmed,
       weightLb: weight, requiredLb: required, reasons: reasons,
-      note: 'Always check the rating plate on the truck, not just its class.'
+      note: n.weightConfirmed ? 'Always check the rating plate on the truck, not just its class.' : 'ESTIMATE ONLY — confirm exact vehicle weight and truck ratings before dispatch.'
     };
   }
 
@@ -173,32 +188,42 @@
    * diffuser (approach/departure) still have to be checked by eye.
    */
   function clearanceCheck(n) {
-    var need = (n.wb / 4) * Math.sin(n.angle * DEG);
-    var maxAngle = Math.asin(Math.min(1, (4 * n.gc) / n.wb)) / DEG;
-    var ratio = need > 0 ? n.gc / need : Infinity;
-    var status = ratio >= 1.15 ? 'ok' : (ratio >= 0.9 ? 'marginal' : 'fail');
     var advice = [];
-
+    // Catalog dimensions are currently unverified. A positive clearance result
+    // is only allowed after the operator enters BOTH on-scene measurements.
+    if (!n.measured) {
+      advice.push('NO CLEARANCE VERDICT: catalog dimensions are unverified. Measure the lowest point and wheelbase on the actual vehicle on level ground before loading.');
+      advice.push('Do not use this estimate as a go/no-go decision. Check the front lip, side skirts, belly and rear bumper, and use a low-angle setup until verified.');
+      return {
+        gc: '—', wb: '—', angle: r1(n.angle),
+        neededIn: '—', remainingIn: '—', reserveIn: CLEARANCE_RESERVE_IN,
+        maxAngleDeg: '—', status: 'unknown',
+        setup: 'Do not assume the vehicle will clear. Obtain both actual measurements and reassess; otherwise use a safer alternate carrier or loading method.',
+        advice: advice
+      };
+    }
+    var need = (n.wb / 4) * Math.sin(n.angle * DEG);
+    var usableGc = Math.max(0, n.gc - CLEARANCE_RESERVE_IN);
+    var maxAngle = Math.asin(Math.min(1, (4 * usableGc) / n.wb)) / DEG;
+    var remaining = n.gc - need;
+    var status = remaining >= CLEARANCE_RESERVE_IN ? 'ok' : (remaining >= 0.5 ? 'marginal' : 'fail');
+    var setup = status === 'ok' ? 'Measured dimensions indicate clearance at the selected angle; use a rollback with a long, low-angle deck and full-width ramp extensions, with a spotter.' : 'Choose a low-deck, long-bed rollback with adjustable tilt and long ramp extensions. If the measured reserve is still under 1.5 inches, use go-jacks/skates or a different carrier rather than forcing the load.';
     if (status === 'ok') {
-      advice.push('Should clear at ' + r1(n.angle) + '°. Still spot the belly and the front and rear lips while loading.');
+      advice.push('Measured belly clearance leaves ' + r1(remaining) + ' inches of reserve at ' + r1(n.angle) + '°. Maintain at least 1.5 inches for uneven pavement and real-world variation.');
+      advice.push('Spot the belly, front lip and rear lip throughout loading; stop immediately if anything approaches contact.');
     } else if (status === 'marginal') {
-      advice.push('Tight at ' + r1(n.angle) + '°. Reduce the angle with ramp extensions or blocks, load slowly with a spotter, and consider go-jacks.');
+      advice.push('Only ' + r1(remaining) + ' inches of measured reserve at ' + r1(n.angle) + '°. This is not a safe clearance margin; do not treat this as a pass.');
+      advice.push('Switch to a longer, lower-angle rollback with full-width ramp extensions or use go-jacks/skates. Recalculate before loading.');
     } else {
-      advice.push('Likely to scrape or hang up at ' + r1(n.angle) + '°. This vehicle needs a crest angle of about ' + r1(maxAngle) + '° or less.');
+      advice.push('Measured geometry indicates likely contact at ' + r1(n.angle) + '°. The calculated angle to preserve the 1.5-inch reserve is about ' + r1(maxAngle) + '° or less.');
       advice.push('Use a low-angle or long bed, ramp extensions plus wood or wedge blocks at the crest, or go-jacks / skates to raise the low end.');
     }
-    if (n.low) {
-      advice.push('Low car: protect the front lip and splitter with boards or a wedge, and check side skirts.');
-    }
-    if (n.measured) {
-      advice.push('Using the clearance and wheelbase you entered.');
-    } else if (n.conf === 0) {
-      advice.push('Clearance for this model is an estimate. Measure the lowest point between the axles on level ground.');
-    }
+    if (n.low) advice.push('Low car: protect the front lip and splitter with boards or a wedge, and check side skirts.');
+    advice.push('Using both on-scene measurements entered by the operator.');
     return {
       gc: r1(n.gc), wb: r1(n.wb), angle: r1(n.angle),
-      neededIn: r1(need), maxAngleDeg: r1(maxAngle),
-      status: status, advice: advice
+      neededIn: r1(need), remainingIn: r1(remaining), reserveIn: CLEARANCE_RESERVE_IN,
+      maxAngleDeg: r1(maxAngle), status: status, setup: setup, advice: advice
     };
   }
 
@@ -597,6 +622,7 @@
   return {
     SAFETY_MARGIN: SAFETY_MARGIN,
     LOW_CLEARANCE_IN: LOW_CLEARANCE_IN,
+    CLEARANCE_RESERVE_IN: CLEARANCE_RESERVE_IN,
     ANGLE_PRESETS: ANGLE_PRESETS,
     BODY_PRESETS: BODY_PRESETS,
     resolve: resolve,
