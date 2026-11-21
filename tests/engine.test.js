@@ -488,7 +488,7 @@ test('five new 2025 OEM records are single-year scoped and carry complete source
     assert.equal(v.yTo, 2025);
     assert.equal(v.conf, 1);
     assert.equal(v.sourceYear, 2025);
-    assert.match(v.source, /^https:\\/\\//);
+    assert.match(v.source, /^https:\/\//);
     assert.equal(v.curb, curb);
     assert.equal(v.wb, wb);
     assert.equal(v.gc, gc);
