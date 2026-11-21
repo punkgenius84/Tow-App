@@ -441,7 +441,7 @@ test('bulk rows expose length/width/height when the source has them', () => {
 
 test('OEM-verified rows still never produce a clearance verdict without on-scene measurements', () => {
   const ver = D.vehicles.filter(v => v.source);
-  assert.equal(ver.length, 3);
+  assert.equal(ver.length, 4);
   for (const v of ver) {
     const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
     assert.equal(r.clearance.status, 'unknown', v.model);
