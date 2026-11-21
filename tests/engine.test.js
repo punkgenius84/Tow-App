@@ -27,6 +27,20 @@ test('catalog dimensions are not treated as on-scene measurements', () => {
   assert.equal(r.clearance.status, 'unknown');
 });
 
+test('truck options distinguish preferred flatbed from conditional wheel-lift use', () => {
+  const fwd = E.recommend(find('Toyota', 'Corolla'), { drive: 'FWD' });
+  assert.match(fwd.method.truckOptions.preferred, /Flatbed/);
+  assert.ok(fwd.method.truckOptions.usable.some(x => /Wheel-lift/.test(x)));
+
+  const awd = E.recommend(find('Toyota', 'Camry'), { drive: 'AWD' });
+  assert.equal(awd.method.flatbedOnly, true);
+  assert.ok(awd.method.truckOptions.usable.some(x => /all four wheels remain off the ground/i.test(x)));
+  assert.ok(!awd.method.truckOptions.usable.some(x => /^Wheel-lift — lift the drive wheels/.test(x)));
+
+  const hybrid = E.recommend(find('Toyota', 'Prius (2016-2022)'), { drive: 'FWD' });
+  assert.ok(hybrid.method.truckOptions.usable.some(x => /conditional only/i.test(x)));
+});
+
 test('EV is flatbed only', () => {
   const r = E.recommend(find('Tesla', 'Model 3'), { drive: 'RWD' });
   assert.equal(r.method.flatbedOnly, true);
