@@ -154,7 +154,8 @@
       '</select></div>';
     h += '<div class="grid2"><div><label class="f">Cargo / extra weight (lb)</label><input data-sel="extraLb" inputmode="numeric" placeholder="0"></div>' +
       '<div><label class="f">Measured clearance (in)</label><input data-sel="gc" inputmode="decimal" placeholder="' + v.gc + '"></div></div>';
-    h += '<div><label class="f">Measured wheelbase (in, optional)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+    h += '<div><label class="f">Measured wheelbase (in, required for clearance verdict)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+    h += '<div class="muted">For a clearance calculation, enter BOTH measurements taken on the actual vehicle on level ground: lowest fixed underbody point to ground, and wheel-center to wheel-center wheelbase. Catalog values are references only. Also inspect approach/departure points, lips, skirts and accessories separately.</div>';
     $('#controls').innerHTML = h;
   }
 
