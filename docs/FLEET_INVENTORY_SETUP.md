@@ -27,10 +27,11 @@ The current screening logic:
 2. Filters to units marked available.
 3. Requires a recorded flatbed configuration.
 4. Requires recorded usable payload to meet or exceed the calculated requirement.
-5. Requires a rating-source reference and an explicit supervisor-verification checkbox before a unit can be considered.
-6. Lists the lowest-capacity matching flatbed first.
+5. Requires recorded deck length and width at least as large as the catalog body length and width. If either vehicle dimension or either deck dimension is missing, no candidate is shown.
+6. Requires a rating-source reference and an explicit supervisor-verification checkbox before a unit can be considered.
+7. Lists the lowest-capacity candidate first.
 
-The match does **not** certify axle loading, GCWR, deck dimensions, winch capacity, tie-down ratings, bridge/legal limits, vehicle loading geometry, or condition. The operator must verify all applicable ratings and company procedures before dispatch. A wheel-lift is not silently substituted when a flatbed does not match.
+The match is only a basic payload and body-envelope screen. Comparing catalog body length/width with recorded deck dimensions does not account for mirrors, protrusions, actual usable deck area, axle loading, GCWR, winch line-pull, tie-down ratings, bridge/legal limits, loading geometry, or equipment condition. The operator must verify all applicable ratings, physical fit, and company procedures before dispatch. A wheel-lift is not silently substituted when a flatbed does not match.
 
 ## Storage and rollout limitation
 
