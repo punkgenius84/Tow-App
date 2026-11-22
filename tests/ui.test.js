@@ -69,6 +69,17 @@ test('OEM-sourced catalog dimensions show their model-year verification scope', 
   assert.match(d.body.textContent, /Overall length \(catalog\)/);
 });
 
+test('app recommends required truck class without requiring company fleet records', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  assert.equal(d.querySelector('[data-tab="fleet"]'), null);
+  type(w, d.querySelector('#q'), 'mustang');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  assert.match(d.body.textContent, /TRUCK REQUIRED/);
+  assert.match(d.body.textContent, /USABLE & PREFERRED TRUCK TYPES/);
+  assert.doesNotMatch(d.body.textContent, /BIG JAY’S FLEET MATCH/);
+});
+
 test('opening a vehicle shows method, truck, clearance, tie-downs and every procedure section', () => {
   const { window: w } = boot();
   const d = w.document;
@@ -405,48 +416,9 @@ test('native OCR plugin is detected through Capacitor.Plugins or registerPlugin,
 });
 
 
-test('fleet screen records real truck payloads locally and removes units', () => {
-  const { window: w } = boot();
-  const d = w.document;
-  click(w, d.querySelector('[data-tab="fleet"]'));
-  assert.match(d.body.textContent, /No fleet trucks have been entered yet/);
-  assert.match(d.body.textContent, /Class A — light-duty wrecker/);
-  assert.match(d.body.textContent, /Class B — medium-duty wrecker/);
-  assert.match(d.body.textContent, /Class C — heavy-duty wrecker/);
-  type(w, d.querySelector('#fleet-name'), 'Rollback 12');
-  d.querySelector('#fleet-class').value = 'A';
-  type(w, d.querySelector('#fleet-unit'), 'Carrier 5500');
-  type(w, d.querySelector('#fleet-payload'), '9000');
-  type(w, d.querySelector('#fleet-length'), '240');
-  type(w, d.querySelector('#fleet-width'), '102');
-  type(w, d.querySelector('#fleet-rating-source'), 'Carrier plate / supervisor record');
-  click(w, d.querySelector('#fleet-add'));
-  assert.match(d.body.textContent, /Rollback 12/);
-  assert.match(d.body.textContent, /9,000/);
-  assert.equal(JSON.parse(w.localStorage.getItem('towguide.fleet.v1')).length, 1);
-  assert.equal(JSON.parse(w.localStorage.getItem('towguide.fleet.v1'))[0].wreckerClass, 'A');
-  click(w, d.querySelector('[data-fleet-del]'));
-  assert.match(d.body.textContent, /No fleet trucks have been entered yet/);
-});
 
-test('vehicle result only names fleet units with sufficient payload and deck-size screening', () => {
-  const { window: w } = boot();
-  const d = w.document;
-  click(w, d.querySelector('[data-tab="fleet"]'));
-  type(w, d.querySelector('#fleet-name'), 'Rollback 12');
-  type(w, d.querySelector('#fleet-payload'), '9000');
-  type(w, d.querySelector('#fleet-length'), '200');
-  type(w, d.querySelector('#fleet-width'), '80');
-  type(w, d.querySelector('#fleet-rating-source'), 'Carrier plate / supervisor record');
-  d.querySelector('#fleet-verified').checked = true;
-  click(w, d.querySelector('#fleet-add'));
-  click(w, d.querySelector('[data-tab="find"]'));
-  type(w, d.querySelector('#q'), 'accord');
-  type(w, d.querySelector('#year'), '2003');
-  click(w, [...d.querySelectorAll('.item')].find(b => /Accord$/.test(b.querySelector('b').textContent)));
-  assert.match(d.body.textContent, /BIG JAY’S FLEET MATCH/);
-  assert.match(d.body.textContent, /Payload & deck-size candidate: Rollback 12/);
-});
+
+
 
 test('unmeasured clearance is explicitly shown as no verdict', () => {
   const { window: w } = boot();
