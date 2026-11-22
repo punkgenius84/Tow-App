@@ -413,6 +413,8 @@ test('fleet screen records real truck payloads locally and removes units', () =>
   type(w, d.querySelector('#fleet-name'), 'Rollback 12');
   type(w, d.querySelector('#fleet-unit'), 'Carrier 5500');
   type(w, d.querySelector('#fleet-payload'), '9000');
+  type(w, d.querySelector('#fleet-length'), '240');
+  type(w, d.querySelector('#fleet-width'), '102');
   type(w, d.querySelector('#fleet-rating-source'), 'Carrier plate / supervisor record');
   click(w, d.querySelector('#fleet-add'));
   assert.match(d.body.textContent, /Rollback 12/);
@@ -422,7 +424,7 @@ test('fleet screen records real truck payloads locally and removes units', () =>
   assert.match(d.body.textContent, /No fleet trucks have been entered yet/);
 });
 
-test('vehicle result only names fleet units with sufficient recorded flatbed payload', () => {
+test('vehicle result only names fleet units with sufficient payload and deck-size screening', () => {
   const { window: w } = boot();
   const d = w.document;
   click(w, d.querySelector('[data-tab="fleet"]'));
@@ -435,7 +437,7 @@ test('vehicle result only names fleet units with sufficient recorded flatbed pay
   type(w, d.querySelector('#q'), 'mustang');
   click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
   assert.match(d.body.textContent, /BIG JAY’S FLEET MATCH/);
-  assert.match(d.body.textContent, /Preferred unit: Rollback 12/);
+  assert.match(d.body.textContent, /Payload & deck-size candidate: Rollback 12/);
 });
 
 test('unmeasured clearance is explicitly shown as no verdict', () => {
