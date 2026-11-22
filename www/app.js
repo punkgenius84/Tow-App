@@ -184,10 +184,10 @@
 
     var matchedFleet = fleetMatches(r);
     h += '<div class="card edge-info"><div class="label">BIG JAY’S FLEET MATCH</div>' +
-      (matchedFleet.length ? '<div class="big">Preferred unit: ' + esc(matchedFleet[0].name) + '</div>' +
-        ul(matchedFleet.map(function (x) { return x.name + ' — rated payload ' + E.fmt(x.payloadLb) + ' lb'; })) :
-        '<div class="big">No verified fleet match recorded</div><div>Enter the actual truck ratings in the Fleet tab. The required payload for this vehicle is ' + E.fmt(t.requiredLb) + ' lb. Only available flatbeds with a recorded payload at or above that requirement are listed. Do not substitute an unverified unit.</div>') +
-      '<div class="muted">Only supervisor-verified records with a rating-source reference are eligible. This is a screening result based on locally entered payload only. Confirm axle ratings, GVWR/GCWR, deck and winch limits, equipment condition, securement and OEM towing method before dispatch.</div></div>';
+      (matchedFleet.length ? '<div class="big">Payload &amp; deck-size candidate: ' + esc(matchedFleet[0].name) + '</div>' +
+        ul(matchedFleet.map(function (x) { return x.name + ' — payload ' + E.fmt(x.payloadLb) + ' lb; deck ' + x.deckLengthIn + ' × ' + x.deckWidthIn + ' in'; })) :
+        '<div class="big">No fully screened fleet candidate recorded</div><div>Enter supervisor-verified payload and deck dimensions in the Fleet tab. Screening requires payload at or above ' + E.fmt(t.requiredLb) + ' lb and a recorded deck length/width at least as large as the catalog body dimensions. Missing vehicle dimensions or missing truck deck dimensions produce no candidate.</div>') +
+      '<div class="muted">This is only a basic payload and body-envelope screen—not dispatch approval. It does not account for mirrors, wheel/tire protrusions, axle loading, GVWR/GCWR, actual deck usable area, winch line-pull, securement, equipment condition, or OEM towing method. Verify all ratings and fit on the actual units before dispatch.</div></div>';
 
     h += '<div class="card edge-info"><div class="label">USABLE &amp; PREFERRED TRUCK TYPES</div>' +
       '<h3>Preferred</h3><div class="big">' + esc(m.truckOptions.preferred) + '</div>' +
@@ -931,8 +931,15 @@
 
   function fleetMatches(result) {
     var need = result.truck.requiredLb;
+    var vehicleLength = Number(result.spec && result.spec.len);
+    var vehicleWidth = Number(result.spec && result.spec.wid);
+    // A payload-only match can be misleading: require recorded deck dimensions
+    // and screen for a basic body-envelope fit before listing a candidate.
+    if (!(vehicleLength > 0) || !(vehicleWidth > 0)) return [];
     return fleet.filter(function (t) {
-      return t.available && t.verified === true && !!t.ratingSource && /flatbed/.test(t.type) && Number(t.payloadLb) >= need;
+      return t.available && t.verified === true && !!t.ratingSource &&
+        /flatbed/.test(t.type) && Number(t.payloadLb) >= need &&
+        Number(t.deckLengthIn) >= vehicleLength && Number(t.deckWidthIn) >= vehicleWidth;
     }).sort(function (a, b) { return Number(a.payloadLb) - Number(b.payloadLb); });
   }
 
