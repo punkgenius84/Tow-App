@@ -12,7 +12,7 @@ For each unit, enter:
 - Make/model if useful for identification.
 - Truck configuration/type.
 - Rated usable payload / carrier capacity in pounds from the applicable rating documentation.
-- Deck length and width when available.
+- Documented usable deck length and width (both required for a fleet candidate).
 - Winch line-pull rating when available.
 - Whether dollies and skates are carried.
 - Current dispatch availability.
@@ -27,7 +27,7 @@ The current screening logic:
 2. Filters to units marked available.
 3. Requires a recorded flatbed configuration.
 4. Requires recorded usable payload to meet or exceed the calculated requirement.
-5. Requires recorded deck length and width at least as large as the catalog body length and width. If either vehicle dimension or either deck dimension is missing, no candidate is shown.
+5. Requires recorded deck length and width at least as large as the catalog body length and width. If either vehicle dimension or either deck dimension is missing, no candidate is shown. Fleet entry now requires both deck measurements.
 6. Requires a rating-source reference and an explicit supervisor-verification checkbox before a unit can be considered.
 7. Lists the lowest-capacity candidate first.
 
