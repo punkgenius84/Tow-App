@@ -430,12 +430,15 @@ test('vehicle result only names fleet units with sufficient payload and deck-siz
   click(w, d.querySelector('[data-tab="fleet"]'));
   type(w, d.querySelector('#fleet-name'), 'Rollback 12');
   type(w, d.querySelector('#fleet-payload'), '9000');
+  type(w, d.querySelector('#fleet-length'), '200');
+  type(w, d.querySelector('#fleet-width'), '80');
   type(w, d.querySelector('#fleet-rating-source'), 'Carrier plate / supervisor record');
   d.querySelector('#fleet-verified').checked = true;
   click(w, d.querySelector('#fleet-add'));
   click(w, d.querySelector('[data-tab="find"]'));
-  type(w, d.querySelector('#q'), 'mustang');
-  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  type(w, d.querySelector('#q'), 'accord');
+  type(w, d.querySelector('#year'), '2003');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Accord$/.test(b.querySelector('b').textContent)));
   assert.match(d.body.textContent, /BIG JAY’S FLEET MATCH/);
   assert.match(d.body.textContent, /Payload & deck-size candidate: Rollback 12/);
 });
