@@ -60,12 +60,12 @@ test('OEM-verified vehicle displays its complete dimensions and scoped source', 
   }
 });
 
-test('unverified catalog dimensions are visibly labeled as unverified', () => {
+test('OEM-sourced catalog dimensions show their model-year verification scope', () => {
   const { window: w } = boot();
   const d = w.document;
   type(w, d.querySelector('#q'), 'passport');
   click(w, [...d.querySelectorAll('.item')].find(b => /Passport$/.test(b.querySelector('b').textContent)));
-  assert.match(d.body.textContent, /UNVERIFIED/);
+  assert.match(d.body.textContent, /OEM-verified for model year 2025/);
   assert.match(d.body.textContent, /Overall length \(catalog\)/);
 });
 
