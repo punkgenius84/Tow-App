@@ -63,8 +63,8 @@ test('OEM-verified vehicle displays its complete dimensions and scoped source', 
 test('unverified catalog dimensions are visibly labeled as unverified', () => {
   const { window: w } = boot();
   const d = w.document;
-  type(w, d.querySelector('#q'), 'mustang');
-  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  type(w, d.querySelector('#q'), 'passport');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Passport$/.test(b.querySelector('b').textContent)));
   assert.match(d.body.textContent, /UNVERIFIED/);
   assert.match(d.body.textContent, /Overall length \(catalog\)/);
 });
