@@ -29,6 +29,10 @@ A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,82
 
 These are missing-field counts, not a statement that the remaining values are OEM verified. Fill gaps from manufacturer specifications where available, preserve model-year/trim scope and source URL, and leave a field blank when a reliable value cannot be established. Do not copy one cab, wheelbase, body style, or trim's dimensions across a broader model range without documenting the variant limitation.
 
+## Clearance input validation
+
+The clearance calculator requires both actual on-scene measurements: lowest fixed underbody clearance and wheelbase. It now refuses to calculate a verdict when entered values are outside the supported ranges: clearance 0.5–40 inches, wheelbase 40–400 inches, and crest angle greater than 0 through 30 degrees. An out-of-range entry returns **NO VERDICT** and directs the operator to recheck the measurements. These are input sanity limits for this calculator, not universal vehicle-dimension limits or an engineering certification.
+
 ## Why this audit is required
 
 The database stores one curb-weight, wheelbase and ground-clearance baseline per row, while many rows cover multiple redesigns, trims, drivetrains, wheel/tire packages or suspension configurations. A narrow model-year range is not proof that the values are correct for every configuration. Each row must retain clear provenance and scope before any specification can be treated as verified.
