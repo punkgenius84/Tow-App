@@ -4,11 +4,24 @@
 
 The Fleet tab stores actual Big Jay's truck records on the current device and screens vehicle recommendations against recorded flatbed payload ratings. It is intentionally empty by default: no company truck, capacity, winch, deck size, or equipment is assumed.
 
+## Wrecker class slots
+
+The Fleet screen provides one setup slot for each Florida wrecker class:
+
+- **Class A — light-duty**
+- **Class B — medium-duty**
+- **Class C — heavy-duty**
+
+These are placeholders for organizing the fleet, not actual Big Jay's truck records. No unit number, chassis, capacity, winch rating, deck size, availability, or equipment is assumed. Each real truck must be entered from its own rating plate and equipment documentation before it can be considered.
+
+Wrecker class and equipment configuration are separate fields. A rollback/car carrier is a body/equipment configuration; it should not be treated as a separate Class A/B/C wrecker class. Florida's current wrecker rule specifies different chassis and recovery-equipment requirements by class. See [Florida Administrative Code Rule 15B-9.005](https://flrules.elaws.us/fac/15b-9.005). Do not infer that a truck qualifies for a class from its marketing description alone.
+
 ## Required operator data
 
 For each unit, enter:
 
 - A unique truck name or unit number.
+- Wrecker class (A, B or C), if applicable to the actual approved configuration.
 - Make/model if useful for identification.
 - Truck configuration/type.
 - Rated usable payload / carrier capacity in pounds from the applicable rating documentation.
