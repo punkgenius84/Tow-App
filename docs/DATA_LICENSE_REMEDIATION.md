@@ -12,11 +12,11 @@
 | `ilyasozkurt/automobile-models-and-specs` | Vehicle specifications scraped from AutoEvolution | 2,519 rows in current catalog, all marked unverified | **HOLD — no explicit dataset licence identified** |
 | OEM manufacturer pages / brochures | Specific model-year specifications | Used for 11 current OEM-verified single-year rows and ongoing research | Use the primary source URL and year on each row; retain source scope |
 
-The AutoEvolution-derived upstream repository describes its contents as scraped from autoevolution.com. Its public README does not provide an explicit data licence. A public GitHub repository, public availability, factual numeric content, or an attribution string does not by itself establish permission to copy and redistribute the compiled dataset. This is an engineering release gate, not a legal opinion.
+The AutoEvolution-derived upstream repository describes its contents as scraped from autoevolution.com. Its public README does not provide an explicit data licence. This review does **not** assume that a royalty or individual credit is owed for every factual vehicle measurement: facts and individual numeric measurements are generally not protected by copyright in the United States. However, source prose, photographs, protected database rights in some jurisdictions, contractual terms, and the selection/arrangement of a compiled dataset can raise separate questions. Public accessibility alone does not establish that the entire upstream compilation is public domain or licensed for redistribution. This is an engineering risk note, not a legal opinion; it does not prevent continued research, independent recording of factual dimensions, or internal testing.
 
 ## What must happen before distribution
 
-1. Obtain written permission from the relevant rights holder covering extraction, modification, offline bundling, and redistribution to app users; or replace the affected values with independently sourced OEM data or a dataset with a licence that clearly permits the intended use.
+1. For any external release, confirm the applicable rights and terms for the specific source material being bundled. Where the data are independently recorded factual measurements, preserve the source URL and model-year/variant scope; do not copy protected prose, images, or other expressive material. If a source imposes applicable terms, comply with them or use an independently compiled alternative.
 2. Keep source URL, source year, variant scope, units, and licence/provenance information at row level.
 3. Preserve all required licence and attribution notices for the CC BY 4.0 identity/body-style source.
 4. Rebuild the audit CSV from the final catalog and verify the counts and source-status totals.
