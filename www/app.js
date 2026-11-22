@@ -5,11 +5,9 @@
   var E = window.TowEngine;
   var D = window.TowData;
   var LS_KEY = 'towguide.custom.v1';
-  var FLEET_KEY = 'towguide.fleet.v1';
 
   var state = { tab: 'find', q: '', make: '', year: '', cur: null, vin: null, vinMsg: '', prefill: null, vinFile: null, vinPreviewUrl: '', ocrStatus: '', ocrLoader: null, ocrWorker: null, barcodeStatus: '', barcodeScanning: false, barcodeControls: null, barcodeLoader: null };
   var custom = loadCustom();
-  var fleet = loadFleet();
 
   /* ---------- helpers ---------- */
   function $(s, r) { return (r || document).querySelector(s); }
@@ -30,14 +28,6 @@
   }
   function saveCustom() {
     try { localStorage.setItem(LS_KEY, JSON.stringify(custom)); } catch (e) { /* storage blocked: ignore */ }
-  }
-  function loadFleet() {
-    try { var a = JSON.parse(localStorage.getItem(FLEET_KEY) || '[]'); return Array.isArray(a) ? a : []; }
-    catch (e) { return []; }
-  }
-  function saveFleet() {
-    try { localStorage.setItem(FLEET_KEY, JSON.stringify(fleet)); return true; }
-    catch (e) { return false; }
   }
   function allVehicles() { return D.vehicles.concat(custom); }
   function findVehicle(id) {
@@ -69,7 +59,6 @@
     if (state.tab === 'find') return renderFind();
     if (state.tab === 'vin') return renderVin();
     if (state.tab === 'custom') return renderCustom();
-    if (state.tab === 'fleet') return renderFleet();
     return renderInfo();
   }
 
@@ -181,13 +170,6 @@
       '<div class="stat"><b>' + E.fmt(t.requiredLb) + '</b><span>rated for (lb)</span></div>' +
       '<div class="stat"><b>' + (r.method.flatbedOnly ? 'Flatbed' : 'Flatbed') + '</b><span>unit type</span></div></div>' +
       ul(t.reasons) + '<div class="muted">' + esc(t.note) + '</div></div>';
-
-    var matchedFleet = fleetMatches(r);
-    h += '<div class="card edge-info"><div class="label">BIG JAY’S FLEET MATCH</div>' +
-      (matchedFleet.length ? '<div class="big">Payload &amp; deck-size candidate: ' + esc(matchedFleet[0].name) + '</div>' +
-        ul(matchedFleet.map(function (x) { return x.name + ' — payload ' + E.fmt(x.payloadLb) + ' lb; deck ' + x.deckLengthIn + ' × ' + x.deckWidthIn + ' in'; })) :
-        '<div class="big">No fully screened fleet candidate recorded</div><div>Enter supervisor-verified payload and deck dimensions in the Fleet tab. Screening requires payload at or above ' + E.fmt(t.requiredLb) + ' lb and a recorded deck length/width at least as large as the catalog body dimensions. Missing vehicle dimensions or missing truck deck dimensions produce no candidate.</div>') +
-      '<div class="muted">This is only a basic payload and body-envelope screen—not dispatch approval. It does not account for mirrors, wheel/tire protrusions, axle loading, GVWR/GCWR, actual deck usable area, winch line-pull, securement, equipment condition, or OEM towing method. Verify all ratings and fit on the actual units before dispatch.</div></div>';
 
     h += '<div class="card edge-info"><div class="label">USABLE &amp; PREFERRED TRUCK TYPES</div>' +
       '<h3>Preferred</h3><div class="big">' + esc(m.truckOptions.preferred) + '</div>' +
@@ -893,69 +875,6 @@
     openVehicle(v);
   }
 
-  /* ---------- FLEET INVENTORY ---------- */
-  function renderFleet() {
-    var types = [
-      ['flatbed', 'Light-duty flatbed / rollback'],
-      ['medium-flatbed', 'Medium-duty flatbed / rollback'],
-      ['heavy-flatbed', 'Heavy-duty flatbed / carrier'],
-      ['wheel-lift', 'Wheel-lift / wrecker'],
-      ['rotator', 'Rotator / heavy wrecker']
-    ];
-    var classSlots = [
-      ['A', 'Class A — light-duty wrecker'],
-      ['B', 'Class B — medium-duty wrecker'],
-      ['C', 'Class C — heavy-duty wrecker']
-    ];
-    var slotCards = classSlots.map(function (x) {
-      var assigned = fleet.filter(function (t) { return t.wreckerClass === x[0]; });
-      return '<div class="card"><b>' + esc(x[1]) + '</b><div class="muted">' +
-        (assigned.length ? assigned.length + ' record' + (assigned.length === 1 ? '' : 's') + ' entered' : 'No unit assigned yet') +
-        '</div></div>';
-    }).join('');
-    var rows = fleet.map(function (t) {
-      return '<div class="card"><div class="row2"><div><b>' + esc(t.name) + '</b><div class="muted">' + esc(t.unit) + ' · ' + esc((types.filter(function (x) { return x[0] === t.type; })[0] || [0, t.type])[1]) + '</div></div><button class="btn danger" data-fleet-del="' + esc(t.id) + '">Remove</button></div>' +
-        '<div class="stats"><div class="stat"><b>' + E.fmt(t.payloadLb) + '</b><span>rated payload lb</span></div><div class="stat"><b>' + (t.deckLengthIn || '—') + '"</b><span>deck length</span></div><div class="stat"><b>' + (t.deckWidthIn || '—') + '"</b><span>deck width</span></div></div>' +
-        '<div class="muted">' + (t.available ? 'Marked available' : 'Marked unavailable') + (t.dollies ? ' · Dollies recorded' : '') + (t.skates ? ' · Skates recorded' : '') + '</div></div>';
-    }).join('');
-    $('#view').innerHTML = '<section class="stack">' +
-      '<div class="card edge-info"><div class="label">BIG JAY’S FLEET</div><div class="big">' + fleet.length + ' registered unit' + (fleet.length === 1 ? '' : 's') + '</div>' +
-      '<div>One setup slot is provided for each Florida wrecker class. These are categories, not assumed company trucks. Add actual unit details from each truck’s rating plate and equipment documentation.</div>' +
-      '<div class="muted">Class describes the wrecker capability; flatbed, wheel-lift and rotator describe equipment configuration. The two are recorded separately. Fleet records are saved locally on this device only.</div></div>' +
-      '<div class="label">CLASS SETUP SLOTS</div>' + slotCards +
-      '<div class="card stack"><div class="label">ADD / UPDATE A TRUCK</div>' +
-      '<div><label class="f" for="fleet-name">Truck name / unit number</label><input id="fleet-name" maxlength="60" placeholder="e.g. Rollback 12"></div>' +
-      '<div><label class="f" for="fleet-unit">Make / model (optional)</label><input id="fleet-unit" maxlength="80" placeholder="e.g. Freightliner M2"></div>' +
-      '<div class="grid2"><div><label class="f" for="fleet-class">Wrecker class</label><select id="fleet-class"><option value="">Not assigned</option><option value="A">Class A — light-duty</option><option value="B">Class B — medium-duty</option><option value="C">Class C — heavy-duty</option></select></div>' +
-      '<div><label class="f" for="fleet-type">Equipment type</label><select id="fleet-type">' + types.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div></div>' +
-      '<div class="grid2"><div><label class="f" for="fleet-payload">Rated usable payload (lb) *</label><input id="fleet-payload" inputmode="numeric" placeholder="From rating documentation"></div>' +
-      '<div><label class="f" for="fleet-winch">Winch line pull rating (lb)</label><input id="fleet-winch" inputmode="numeric" placeholder="Optional"></div></div>' +
-      '<div class="grid2"><div><label class="f" for="fleet-length">Deck length (in) *</label><input id="fleet-length" inputmode="numeric" placeholder="Optional"></div>' +
-      '<div><label class="f" for="fleet-width">Deck width (in) *</label><input id="fleet-width" inputmode="numeric" placeholder="Optional"></div></div>' +
-      '<div><label class="f" for="fleet-rating-source">Rating source / document reference *</label><input id="fleet-rating-source" maxlength="120" placeholder="Carrier plate, body-builder spec, manual page"></div>' +
-      '<label class="check"><input id="fleet-verified" type="checkbox"> Supervisor verified payload and configuration against documentation</label>' +
-      '<div class="grid2"><label class="check"><input id="fleet-dollies" type="checkbox"> Dollies available</label><label class="check"><input id="fleet-skates" type="checkbox"> Skates available</label></div>' +
-      '<label class="check"><input id="fleet-available" type="checkbox" checked> Available for dispatch</label>' +
-      '<button class="btn block" id="fleet-add">Save truck to this device</button>' +
-      '<div class="muted">Do not enter GVWR as payload. Use the documented payload / deck capacity applicable to the actual configuration. Only supervisor-verified records can appear as fleet matches. Confirm all ratings before dispatch.</div></div>' +
-      (rows ? '<div class="label">REGISTERED TRUCKS</div>' + rows : '<div class="card edge-warn">No fleet trucks have been entered yet. Until real unit ratings are recorded, the app cannot name a specific Big Jay’s truck.</div>') +
-      '</section>';
-  }
-
-  function fleetMatches(result) {
-    var need = result.truck.requiredLb;
-    var vehicleLength = Number(result.spec && result.spec.len);
-    var vehicleWidth = Number(result.spec && result.spec.wid);
-    // A payload-only match can be misleading: require recorded deck dimensions
-    // and screen for a basic body-envelope fit before listing a candidate.
-    if (!(vehicleLength > 0) || !(vehicleWidth > 0)) return [];
-    return fleet.filter(function (t) {
-      return t.available && t.verified === true && !!t.ratingSource &&
-        /flatbed/.test(t.type) && Number(t.payloadLb) >= need &&
-        Number(t.deckLengthIn) >= vehicleLength && Number(t.deckWidthIn) >= vehicleWidth;
-    }).sort(function (a, b) { return Number(a.payloadLb) - Number(b.payloadLb); });
-  }
-
   /* ---------- INFO ---------- */
   function renderInfo() {
     $('#view').innerHTML = '<section class="stack">' +
@@ -999,33 +918,6 @@
     if (t.id === 'vin-ocr') return scanVinPhoto();
     if (t.id === 'vin-barcode-start') return startBarcodeScan();
     if (t.id === 'custom-go') return customGo();
-    if (t.id === 'fleet-add') {
-      var name = ($('#fleet-name').value || '').trim();
-      var payload = parseFloat($('#fleet-payload').value);
-      var ratingSource = ($('#fleet-rating-source').value || '').trim();
-      var deckLength = parseFloat($('#fleet-length').value);
-      var deckWidth = parseFloat($('#fleet-width').value);
-      if (!name || !isFinite(payload) || payload <= 0 || !ratingSource || !isFinite(deckLength) || deckLength <= 0 || !isFinite(deckWidth) || deckWidth <= 0) {
-        alert('Enter a truck name, positive rated payload, deck length, deck width, and rating document reference.');
-        return;
-      }
-      fleet.push({
-        id: 'fleet-' + Date.now(), name: name, unit: ($('#fleet-unit').value || '').trim(),
-        wreckerClass: $('#fleet-class').value, type: $('#fleet-type').value, payloadLb: payload,
-        winchLb: Math.max(0, parseFloat($('#fleet-winch').value) || 0),
-        deckLengthIn: deckLength,
-        deckWidthIn: deckWidth,
-        ratingSource: ratingSource, verified: $('#fleet-verified').checked,
-        dollies: $('#fleet-dollies').checked, skates: $('#fleet-skates').checked,
-        available: $('#fleet-available').checked
-      });
-      if (!saveFleet()) { fleet.pop(); alert('Could not save fleet data on this device. Check device storage.'); return; }
-      return renderFleet();
-    }
-    if (t.hasAttribute('data-fleet-del')) {
-      fleet = fleet.filter(function (x) { return x.id !== t.getAttribute('data-fleet-del'); });
-      saveFleet(); return renderFleet();
-    }
     if (t.hasAttribute('data-vin-custom') && state.vin) {
       var p = state.vin;
       state.prefill = { name: ((p.year || '') + ' ' + p.make + ' ' + p.model).trim(), drive: p.drive, power: p.power, trans: p.trans,
