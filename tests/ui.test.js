@@ -410,7 +410,11 @@ test('fleet screen records real truck payloads locally and removes units', () =>
   const d = w.document;
   click(w, d.querySelector('[data-tab="fleet"]'));
   assert.match(d.body.textContent, /No fleet trucks have been entered yet/);
+  assert.match(d.body.textContent, /Class A — light-duty wrecker/);
+  assert.match(d.body.textContent, /Class B — medium-duty wrecker/);
+  assert.match(d.body.textContent, /Class C — heavy-duty wrecker/);
   type(w, d.querySelector('#fleet-name'), 'Rollback 12');
+  d.querySelector('#fleet-class').value = 'A';
   type(w, d.querySelector('#fleet-unit'), 'Carrier 5500');
   type(w, d.querySelector('#fleet-payload'), '9000');
   type(w, d.querySelector('#fleet-length'), '240');
@@ -420,6 +424,7 @@ test('fleet screen records real truck payloads locally and removes units', () =>
   assert.match(d.body.textContent, /Rollback 12/);
   assert.match(d.body.textContent, /9,000/);
   assert.equal(JSON.parse(w.localStorage.getItem('towguide.fleet.v1')).length, 1);
+  assert.equal(JSON.parse(w.localStorage.getItem('towguide.fleet.v1'))[0].wreckerClass, 'A');
   click(w, d.querySelector('[data-fleet-del]'));
   assert.match(d.body.textContent, /No fleet trucks have been entered yet/);
 });
