@@ -130,6 +130,22 @@ test('unverified catalog dimensions never produce a positive clearance verdict',
   assert.equal(measured.measured, true);
   assert.notEqual(E.clearanceCheck(measured).status, 'unknown');
 });
+test('implausible clearance measurements never produce a positive verdict', () => {
+  const invalid = [
+    { gc: 0.2, wb: 100, angle: 10 },
+    { gc: 45, wb: 100, angle: 10 },
+    { gc: 6, wb: 20, angle: 10 },
+    { gc: 6, wb: 450, angle: 10 },
+    { gc: 6, wb: 100, angle: 0 },
+    { gc: 6, wb: 100, angle: 45 }
+  ];
+  for (const input of invalid) {
+    const result = E.clearanceCheck({ ...input, measured: true, low: false });
+    assert.equal(result.status, 'unknown', JSON.stringify(input));
+    assert.match(result.advice.join(' '), /NO CLEARANCE VERDICT/);
+  }
+});
+
 test('breakover formula: (wb/4)*sin(angle)', () => {
   const k = E.clearanceCheck({ wb: 100, gc: 6, angle: 30, low: false, measured: true, conf: 1 });
   assert.equal(k.neededIn, 12.5);              // 100/4 * 0.5
