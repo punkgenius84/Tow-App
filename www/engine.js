@@ -217,9 +217,25 @@
    */
   function clearanceCheck(n) {
     var advice = [];
+    // Reject implausible inputs instead of allowing extreme or mistyped
+    // measurements to produce a reassuring clearance verdict.
+    var validMeasurements = n.measured && isFinite(n.gc) && isFinite(n.wb) &&
+      isFinite(n.angle) && n.gc >= 0.5 && n.gc <= 40 &&
+      n.wb >= 40 && n.wb <= 400 && n.angle > 0 && n.angle <= 30;
+    if (n.measured && !validMeasurements) {
+      advice.push('NO CLEARANCE VERDICT: one or more measurements are outside the supported input range. Recheck the on-scene clearance (0.5–40 in), wheelbase (40–400 in), and crest angle (over 0° through 30°).');
+      advice.push('Do not load based on an invalid measurement. Re-enter the values and inspect the front lip, side skirts, belly and rear bumper.');
+      return {
+        gc: '—', wb: '—', angle: r1(n.angle),
+        neededIn: '—', remainingIn: '—', reserveIn: CLEARANCE_RESERVE_IN,
+        maxAngleDeg: '—', status: 'unknown',
+        setup: 'Recheck measurements before calculating clearance.',
+        advice: advice
+      };
+    }
     // Catalog dimensions are currently unverified. A positive clearance result
     // is only allowed after the operator enters BOTH on-scene measurements.
-    if (!n.measured) {
+    if (!validMeasurements) {
       advice.push('NO CLEARANCE VERDICT: catalog dimensions are unverified. Measure the lowest point and wheelbase on the actual vehicle on level ground before loading.');
       advice.push('Do not use this estimate as a go/no-go decision. Check the front lip, side skirts, belly and rear bumper, and use a low-angle setup until verified.');
       return {
