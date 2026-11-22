@@ -917,8 +917,8 @@
       '<div><label class="f" for="fleet-type">Truck type</label><select id="fleet-type">' + types.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div>' +
       '<div class="grid2"><div><label class="f" for="fleet-payload">Rated usable payload (lb) *</label><input id="fleet-payload" inputmode="numeric" placeholder="From rating documentation"></div>' +
       '<div><label class="f" for="fleet-winch">Winch line pull rating (lb)</label><input id="fleet-winch" inputmode="numeric" placeholder="Optional"></div></div>' +
-      '<div class="grid2"><div><label class="f" for="fleet-length">Deck length (in)</label><input id="fleet-length" inputmode="numeric" placeholder="Optional"></div>' +
-      '<div><label class="f" for="fleet-width">Deck width (in)</label><input id="fleet-width" inputmode="numeric" placeholder="Optional"></div></div>' +
+      '<div class="grid2"><div><label class="f" for="fleet-length">Deck length (in) *</label><input id="fleet-length" inputmode="numeric" placeholder="Optional"></div>' +
+      '<div><label class="f" for="fleet-width">Deck width (in) *</label><input id="fleet-width" inputmode="numeric" placeholder="Optional"></div></div>' +
       '<div><label class="f" for="fleet-rating-source">Rating source / document reference *</label><input id="fleet-rating-source" maxlength="120" placeholder="Carrier plate, body-builder spec, manual page"></div>' +
       '<label class="check"><input id="fleet-verified" type="checkbox"> Supervisor verified payload and configuration against documentation</label>' +
       '<div class="grid2"><label class="check"><input id="fleet-dollies" type="checkbox"> Dollies available</label><label class="check"><input id="fleet-skates" type="checkbox"> Skates available</label></div>' +
@@ -990,16 +990,18 @@
       var name = ($('#fleet-name').value || '').trim();
       var payload = parseFloat($('#fleet-payload').value);
       var ratingSource = ($('#fleet-rating-source').value || '').trim();
-      if (!name || !isFinite(payload) || payload <= 0 || !ratingSource) {
-        alert('Enter a truck name, positive rated payload, and rating document reference.');
+      var deckLength = parseFloat($('#fleet-length').value);
+      var deckWidth = parseFloat($('#fleet-width').value);
+      if (!name || !isFinite(payload) || payload <= 0 || !ratingSource || !isFinite(deckLength) || deckLength <= 0 || !isFinite(deckWidth) || deckWidth <= 0) {
+        alert('Enter a truck name, positive rated payload, deck length, deck width, and rating document reference.');
         return;
       }
       fleet.push({
         id: 'fleet-' + Date.now(), name: name, unit: ($('#fleet-unit').value || '').trim(),
         type: $('#fleet-type').value, payloadLb: payload,
         winchLb: Math.max(0, parseFloat($('#fleet-winch').value) || 0),
-        deckLengthIn: Math.max(0, parseFloat($('#fleet-length').value) || 0),
-        deckWidthIn: Math.max(0, parseFloat($('#fleet-width').value) || 0),
+        deckLengthIn: deckLength,
+        deckWidthIn: deckWidth,
         ratingSource: ratingSource, verified: $('#fleet-verified').checked,
         dollies: $('#fleet-dollies').checked, skates: $('#fleet-skates').checked,
         available: $('#fleet-available').checked
