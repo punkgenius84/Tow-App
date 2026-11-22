@@ -6,6 +6,29 @@
 
 This audit covers the complete current US-market catalog in `www/data.js`: **2,827 rows across 47 makes**, comprising **308 curated rows** and **2,519 aggregator-derived rows**, spanning model years 1980–2025. Of the 308 curated rows, 11 are OEM-source-verified for a single model year and 297 remain unverified. All 2,519 aggregator-derived rows remain unverified. Across the full catalog, 2,816 rows remain unverified. All three body dimensions are present on 2,507 rows; 320 lack at least one. Field presence: length 2,526; width 2,513; height 2,518. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
+## Body-dimension gap inventory (2026-11-21)
+
+A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,827 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
+
+| Make | Rows missing one or more body dimensions |
+|---|---:|
+| Mazda | 34 |
+| Mercedes-Benz | 26 |
+| Ford | 22 |
+| Subaru | 17 |
+| Audi | 17 |
+| Chevrolet | 16 |
+| Toyota | 15 |
+| BMW | 14 |
+| Honda | 11 |
+| Mitsubishi | 9 |
+| Lexus | 8 |
+| GMC, Nissan, Kia, Volvo, Jeep, Porsche | 7 each |
+| Hyundai, Ram, Isuzu, Pontiac, Land Rover | 5–6 each |
+| Other makes | 1–4 each |
+
+These are missing-field counts, not a statement that the remaining values are OEM verified. Fill gaps from manufacturer specifications where available, preserve model-year/trim scope and source URL, and leave a field blank when a reliable value cannot be established. Do not copy one cab, wheelbase, body style, or trim's dimensions across a broader model range without documenting the variant limitation.
+
 ## Why this audit is required
 
 The database stores one curb-weight, wheelbase and ground-clearance baseline per row, while many rows cover multiple redesigns, trims, drivetrains, wheel/tire packages or suspension configurations. A narrow model-year range is not proof that the values are correct for every configuration. Each row must retain clear provenance and scope before any specification can be treated as verified.
