@@ -902,6 +902,17 @@
       ['wheel-lift', 'Wheel-lift / wrecker'],
       ['rotator', 'Rotator / heavy wrecker']
     ];
+    var classSlots = [
+      ['A', 'Class A — light-duty wrecker'],
+      ['B', 'Class B — medium-duty wrecker'],
+      ['C', 'Class C — heavy-duty wrecker']
+    ];
+    var slotCards = classSlots.map(function (x) {
+      var assigned = fleet.filter(function (t) { return t.wreckerClass === x[0]; });
+      return '<div class="card"><b>' + esc(x[1]) + '</b><div class="muted">' +
+        (assigned.length ? assigned.length + ' record' + (assigned.length === 1 ? '' : 's') + ' entered' : 'No unit assigned yet') +
+        '</div></div>';
+    }).join('');
     var rows = fleet.map(function (t) {
       return '<div class="card"><div class="row2"><div><b>' + esc(t.name) + '</b><div class="muted">' + esc(t.unit) + ' · ' + esc((types.filter(function (x) { return x[0] === t.type; })[0] || [0, t.type])[1]) + '</div></div><button class="btn danger" data-fleet-del="' + esc(t.id) + '">Remove</button></div>' +
         '<div class="stats"><div class="stat"><b>' + E.fmt(t.payloadLb) + '</b><span>rated payload lb</span></div><div class="stat"><b>' + (t.deckLengthIn || '—') + '"</b><span>deck length</span></div><div class="stat"><b>' + (t.deckWidthIn || '—') + '"</b><span>deck width</span></div></div>' +
@@ -909,12 +920,14 @@
     }).join('');
     $('#view').innerHTML = '<section class="stack">' +
       '<div class="card edge-info"><div class="label">BIG JAY’S FLEET</div><div class="big">' + fleet.length + ' registered unit' + (fleet.length === 1 ? '' : 's') + '</div>' +
-      '<div>Enter the actual unit information from each truck’s rating plate and equipment documentation. Recommendations use the rated payload you enter—not the truck’s marketing class or GVWR.</div>' +
-      '<div class="muted">Fleet records are saved locally on this device only. They are not synchronized to other employee phones.</div></div>' +
+      '<div>One setup slot is provided for each Florida wrecker class. These are categories, not assumed company trucks. Add actual unit details from each truck’s rating plate and equipment documentation.</div>' +
+      '<div class="muted">Class describes the wrecker capability; flatbed, wheel-lift and rotator describe equipment configuration. The two are recorded separately. Fleet records are saved locally on this device only.</div></div>' +
+      '<div class="label">CLASS SETUP SLOTS</div>' + slotCards +
       '<div class="card stack"><div class="label">ADD / UPDATE A TRUCK</div>' +
       '<div><label class="f" for="fleet-name">Truck name / unit number</label><input id="fleet-name" maxlength="60" placeholder="e.g. Rollback 12"></div>' +
       '<div><label class="f" for="fleet-unit">Make / model (optional)</label><input id="fleet-unit" maxlength="80" placeholder="e.g. Freightliner M2"></div>' +
-      '<div><label class="f" for="fleet-type">Truck type</label><select id="fleet-type">' + types.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="grid2"><div><label class="f" for="fleet-class">Wrecker class</label><select id="fleet-class"><option value="">Not assigned</option><option value="A">Class A — light-duty</option><option value="B">Class B — medium-duty</option><option value="C">Class C — heavy-duty</option></select></div>' +
+      '<div><label class="f" for="fleet-type">Equipment type</label><select id="fleet-type">' + types.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('') + '</select></div></div>' +
       '<div class="grid2"><div><label class="f" for="fleet-payload">Rated usable payload (lb) *</label><input id="fleet-payload" inputmode="numeric" placeholder="From rating documentation"></div>' +
       '<div><label class="f" for="fleet-winch">Winch line pull rating (lb)</label><input id="fleet-winch" inputmode="numeric" placeholder="Optional"></div></div>' +
       '<div class="grid2"><div><label class="f" for="fleet-length">Deck length (in) *</label><input id="fleet-length" inputmode="numeric" placeholder="Optional"></div>' +
@@ -998,7 +1011,7 @@
       }
       fleet.push({
         id: 'fleet-' + Date.now(), name: name, unit: ($('#fleet-unit').value || '').trim(),
-        type: $('#fleet-type').value, payloadLb: payload,
+        wreckerClass: $('#fleet-class').value, type: $('#fleet-type').value, payloadLb: payload,
         winchLb: Math.max(0, parseFloat($('#fleet-winch').value) || 0),
         deckLengthIn: deckLength,
         deckWidthIn: deckWidth,
