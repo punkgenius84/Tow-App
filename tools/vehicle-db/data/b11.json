@@ -1,0 +1,25 @@
+[
+ {
+  "make": "Fiat",
+  "model": "500",
+  "yFrom": 2012,
+  "yTo": 2019,
+  "body": "Hatchback",
+  "drives": "FWD",
+  "power": "ICE",
+  "trans": "AT|MT",
+  "curb": 2500,
+  "wb": 90.6,
+  "gc": 4.1,
+  "low": true,
+  "note": "Very low (4.1 in) incl Abarth; 500c convertible 4.6. Abarth/500c may weigh more than listed.",
+  "verified": false,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/fiat-500",
+   "https://www.kbb.com/fiat/500/2015/specs/"
+  ],
+  "check": "gc 4.1 autopadre 2012-2019 (incl Abarth) + KBB 2015; wb 90.6 KBB; curb 2477 KBB 2015 Turbo hatch (Abarth/500c weights not reached - fetch limit)",
+  "dually": false,
+  "air": false
+ }
+]

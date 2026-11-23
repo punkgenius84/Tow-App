@@ -156,9 +156,10 @@
   "air": false,
   "low": false,
   "note": "",
-  "verified": false,
+  "verified": true,
   "sources": [
-   "https://www.kbb.com/subaru/crosstrek/2024/specs/"
+   "https://www.kbb.com/subaru/crosstrek/2024/specs/",
+   "https://s3.amazonaws.com/subarumedia.iconicweb.com/mediasite/attachments/26MY_Crosstrek_Specs_Final.pdf"
   ],
   "check": "gc 8.7 KBB (Wilderness 9.3); wb 105.1 KBB; curb Wilderness 3,369 (KBB 2024); single source for gc"
  },
@@ -382,7 +383,7 @@
   "drives": "AWD",
   "power": "ICE",
   "trans": "CVT",
-  "curb": 3700,
+  "curb": 3750,
   "wb": 108.3,
   "gc": 5.9,
   "dually": false,

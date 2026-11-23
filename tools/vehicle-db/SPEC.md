@@ -85,3 +85,18 @@ Do not edit any other files. Do not touch the app repo.
 - **Lexus Canada** `media.lexus.ca/en/specifications/{year}/{year}-lexus-{model}-specifications.html` counts as maker data.
 - **Skip:** cars.com for gc (rounds to whole inches), GM media pages and Car and Driver / MotorTrend (blocked).
 - WebFetch has a shared hourly limit across all agents; run at most 3-4 research agents at once.
+
+## Round 3: full US-market coverage (owner request)
+Goal: every car, SUV, pickup and van sold new in the USA for model years 2005-2026, discontinued brands and models
+included, exotics included. Skip vehicles never sold new in the US (gray-market imports).
+- **Find what's missing:** read ALL `tools/vehicle-db/data/*.json` rows for your makes first (other files may hold some).
+  The model list on `https://www.autopadre.com/ground-clearance` (and each make's section) is a good checklist of
+  US-market models; cross-check NHTSA vPIC model names for the make.
+- **2025-2026 model years:** autopadre often stops around 2023-2024. For new generations and refreshes use, in order:
+  maker spec/press pages (Ford media, Toyota/Lexus pressroom + brochure PDFs, Honda/Acura news, Hyundai/Kia/Genesis
+  news sites, Nissan/Infiniti USA newsrooms, Stellantis media, BMW/Mercedes/VW/Audi/Volvo US press sites), then
+  Edmunds features-specs, KBB specs, iseecars, motor1/autoblog/carsdirect/thecarconnection spec pages.
+  Extend an existing row's `yTo` when the generation simply continues with the same numbers.
+- Don't add a row you can't source a ground clearance for (wheelbase and curb are usually easy); list it as dropped.
+- Never change an existing row's make, model or yFrom (ids must stay stable). You may extend yTo, correct values with a
+  better source, or add new rows.
