@@ -15,16 +15,16 @@
         android:pathData="M72,52 L81,52 L89,61 L72,61 Z" />
     <path
         android:fillColor="#17130A"
-        android:pathData="M20,67 A12,12 0,1 0,44 67 A12,12 0,1 0,20 67 Z" />
+        android:pathData="M32,55 A12,12 0,1 0,32,79 A12,12 0,1 0,32,55 Z" />
     <path
         android:fillColor="#17130A"
-        android:pathData="M68,67 A12,12 0,1 0,92 67 A12,12 0,1 0,68 67 Z" />
+        android:pathData="M80,55 A12,12 0,1 0,80,79 A12,12 0,1 0,80,55 Z" />
     <path
         android:fillColor="#FFB000"
-        android:pathData="M27,67 A5,5 0,1 0,37 67 A5,5 0,1 0,27 67 Z" />
+        android:pathData="M32,62 A5,5 0,1 0,32,72 A5,5 0,1 0,32,62 Z" />
     <path
         android:fillColor="#FFB000"
-        android:pathData="M75,67 A5,5 0,1 0,85 67 A5,5 0,1 0,75 67 Z" />
+        android:pathData="M80,62 A5,5 0,1 0,80,72 A5,5 0,1 0,80,62 Z" />
     <path
         android:fillColor="#17130A"
         android:pathData="M56,31 L63,26 L68,33 L61,38 Z" />
