@@ -1,26 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="#FFB000"
-        android:pathData="M12,0h84a12,12 0,0 1,12 12v84a12,12 0,0 1,-12 12h-84a12,12 0,0 1,-12 -12v-84a12,12 0,0 1,12 -12z" />
-    <path android:fillColor="#17130A"
-        android:pathData="M12,59 L58,32 L63,40 L29,60 L65,60 L65,70 L12,70 Z" />
-    <path android:fillColor="#17130A"
-        android:pathData="M64,48 L82,48 L96,62 L96,70 L64,70 Z" />
-    <path android:fillColor="#FFB000"
-        android:pathData="M72,52 L81,52 L89,61 L72,61 Z" />
-    <path android:fillColor="#17130A"
-        android:pathData="M32,55 A12,12 0,1 0,32,79 A12,12 0,1 0,32,55 Z" />
-    <path android:fillColor="#17130A"
-        android:pathData="M80,55 A12,12 0,1 0,80,79 A12,12 0,1 0,80,55 Z" />
-    <path android:fillColor="#FFB000"
-        android:pathData="M32,62 A5,5 0,1 0,32,72 A5,5 0,1 0,32,62 Z" />
-    <path android:fillColor="#FFB000"
-        android:pathData="M80,62 A5,5 0,1 0,80,72 A5,5 0,1 0,80,62 Z" />
-    <path android:fillColor="#17130A"
-        android:pathData="M56,31 L63,26 L68,33 L61,38 Z" />
-</vector>
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/launcher_logo"
+    android:gravity="center"
+    android:filter="true" />
