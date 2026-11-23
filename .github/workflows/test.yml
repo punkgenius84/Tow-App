@@ -1,0 +1,79 @@
+name: Vehicle catalog and app tests
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Node test suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Verify bulk importer fails closed without a data licence acknowledgement
+        run: |
+          python -m py_compile tools/import-bulk.py
+          python - <<'PY'
+          import os, subprocess, sys
+          env = os.environ.copy()
+          env.pop("TOW_ALLOW_UNLICENSED_SPEC_IMPORT", None)
+          result = subprocess.run(
+              [sys.executable, "tools/import-bulk.py"],
+              env=env, capture_output=True, text=True
+          )
+          output = result.stdout + result.stderr
+          assert result.returncode == 1, output
+          assert "BLOCKED:" in output, output
+          print("Bulk importer fails closed by default.")
+          PY
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+
+  android-debug-apk:
+    name: Build installable Android debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Run app regression tests
+        run: npm test
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: big-jays-tow-guide-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

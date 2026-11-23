@@ -47,13 +47,46 @@ test('find screen lists vehicles and filters by search, make and year', () => {
   assert.ok(![...d.querySelectorAll('.item b')].some(b => /Model 3/.test(b.textContent)));
 });
 
+test('OEM-verified vehicle displays its complete dimensions and scoped source', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  type(w, d.querySelector('#q'), 'passport');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Passport/.test(b.querySelector('b').textContent)));
+  const text = d.body.textContent;
+  for (const s of ['Overall length (catalog)', '189.1 in', 'Overall width (catalog)', '78.6 in',
+    'Overall height (catalog)', '72.2 in', 'OEM source-verified for model year 2025',
+    'hondainfocenter.com/2025/Passport/Feature-Guide/Specifications/']) {
+    assert.ok(text.includes(s), 'missing dimension/provenance detail: ' + s);
+  }
+});
+
+test('OEM-sourced catalog dimensions show their model-year verification scope', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  type(w, d.querySelector('#q'), 'passport');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Passport$/.test(b.querySelector('b').textContent)));
+  assert.match(d.body.textContent, /OEM-verified for model year 2025/);
+  assert.match(d.body.textContent, /Overall length \(catalog\)/);
+});
+
+test('app recommends required truck class without requiring company fleet records', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  assert.equal(d.querySelector('[data-tab="fleet"]'), null);
+  type(w, d.querySelector('#q'), 'mustang');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  assert.match(d.body.textContent, /TRUCK REQUIRED/);
+  assert.match(d.body.textContent, /USABLE & PREFERRED TRUCK TYPES/);
+  assert.doesNotMatch(d.body.textContent, /BIG JAY’S FLEET MATCH/);
+});
+
 test('opening a vehicle shows method, truck, clearance, tie-downs and every procedure section', () => {
   const { window: w } = boot();
   const d = w.document;
   type(w, d.querySelector('#q'), 'mustang');
   click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
   const text = d.body.textContent;
-  for (const s of ['HOW TO TOW', 'TRUCK REQUIRED', 'GROUND CLEARANCE CHECK', 'TIE-DOWNS (SIZED', 'STEP-BY-STEP PROCEDURE', 'HANDS-ON TECHNIQUE',
+  for (const s of ['HOW TO TOW', 'TRUCK REQUIRED', 'USABLE & PREFERRED TRUCK TYPES', 'Preferred', 'GROUND CLEARANCE CHECK', 'TIE-DOWNS (SIZED', 'STEP-BY-STEP PROCEDURE', 'HANDS-ON TECHNIQUE',
     '5. Tie it down', 'Corner-by-corner strap routing', 'How to use wheel nets', 'How to use ratchet straps', 'How to use chains and binders',
     'If something goes wrong', 'Driver license and legal', 'Wheel-lift procedure']) {
     assert.ok(text.includes(s), 'missing section: ' + s);
@@ -66,8 +99,11 @@ test('changing crest angle and measured clearance updates the verdict', () => {
   const d = w.document;
   type(w, d.querySelector('#q'), 'mustang');
   click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  // Supply the measurements now required by the safety engine.
+  const wb = d.querySelector('[data-sel="wb"]'); type(w, wb, '110');
+  const gc = d.querySelector('[data-sel="gc"]'); type(w, gc, '5');
   assert.match(d.body.textContent, /WILL LIKELY SCRAPE/);
-  const gc = d.querySelector('[data-sel="gc"]'); type(w, gc, '9');
+  type(w, gc, '9');
   assert.match(d.body.textContent, /SHOULD CLEAR/);
   assert.equal(d.querySelector('[data-sel="gc"]').value, '9', 'typed input is kept after re-render');
 });
@@ -77,9 +113,9 @@ test('switching drive to AWD switches the method to flatbed only', () => {
   const d = w.document;
   type(w, d.querySelector('#q'), 'camry');
   click(w, [...d.querySelectorAll('.item')].find(b => /^Toyota Camry$/.test(b.querySelector('b').textContent)));
-  assert.doesNotMatch(d.body.textContent, /FLATBED ONLY/);
+  assert.doesNotMatch(d.body.textContent, /FLATBED DEFAULT/);
   click(w, d.querySelector('[data-seg="drive"][data-val="AWD"]'));
-  assert.match(d.body.textContent, /FLATBED ONLY/);
+  assert.match(d.body.textContent, /FLATBED DEFAULT/);
 });
 
 test('custom vehicle form validates and produces a result', () => {
@@ -127,7 +163,7 @@ test('VIN tab decodes, matches the database and pre-selects the drive', async ()
   await new Promise(r => setTimeout(r, 20));
   assert.match(d.body.textContent, /2021 Ford F-150/);
   click(w, d.querySelector('[data-open][data-pre]'));
-  assert.match(d.body.textContent, /FLATBED ONLY/, '4WD from the VIN is applied');
+  assert.match(d.body.textContent, /FLATBED DEFAULT/, '4WD from the VIN is applied');
 });
 
 test('VIN lookup failure shows a friendly message', async () => {
@@ -377,4 +413,17 @@ test('native OCR plugin is detected through Capacitor.Plugins or registerPlugin,
   w = boot().window;
   w.Capacitor = { getPlatform: () => 'android' };
   assert.equal(w.__tow.nativeScannerAvailable(), false);
+});
+
+
+
+
+
+
+test('unmeasured clearance is explicitly shown as no verdict', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  type(w, d.querySelector('#q'), 'mustang');
+  click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
+  assert.match(d.body.textContent, /NO VERDICT — MEASURE FIRST/);
 });

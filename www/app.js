@@ -40,6 +40,12 @@
   var TRANS = { AT: 'Automatic', CVT: 'CVT', MT: 'Manual', DCT: 'Dual-clutch', EV: 'Single-speed' };
 
   /* ---------- navigation ---------- */
+  function handleBack() {
+    if (state.cur) { state.cur = null; render(); return true; }
+    if (state.tab !== 'find') { setTab('find'); return true; }
+    return false;
+  }
+
   function setTab(t) {
     stopBarcodeScanner();
     state.tab = t; state.cur = null; render();
@@ -137,7 +143,8 @@
       '</select></div>';
     h += '<div class="grid2"><div><label class="f">Cargo / extra weight (lb)</label><input data-sel="extraLb" inputmode="numeric" placeholder="0"></div>' +
       '<div><label class="f">Measured clearance (in)</label><input data-sel="gc" inputmode="decimal" placeholder="' + v.gc + '"></div></div>';
-    h += '<div><label class="f">Measured wheelbase (in, optional)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+    h += '<div><label class="f">Measured wheelbase (in, required for clearance verdict)</label><input data-sel="wb" inputmode="decimal" placeholder="' + v.wb + '"></div>';
+    h += '<div class="muted">For a clearance calculation, enter BOTH measurements taken on the actual vehicle on level ground: lowest fixed underbody point to ground, and wheel-center to wheel-center wheelbase. Catalog values are references only. Also inspect approach/departure points, lips, skirts and accessories separately.</div>';
     $('#controls').innerHTML = h;
   }
 
@@ -152,9 +159,9 @@
 
     h += '<div class="card ' + (m.flatbedOnly ? 'edge-bad' : 'edge-ok') + '"><div class="label">HOW TO TOW</div>' +
       '<div class="big">' + esc(m.primary) + '</div>' +
-      (m.flatbedOnly ? '<span class="badge bad">FLATBED ONLY</span>' : '<span class="badge ok">FLATBED PREFERRED</span>') +
+      (m.flatbedOnly ? '<span class="badge bad">FLATBED DEFAULT — VERIFY OEM</span>' : '<span class="badge ok">FLATBED PREFERRED</span>') +
       ul(m.why) +
-      (m.alternates.length ? '<h3>' + (m.flatbedOnly ? 'If no flatbed is possible' : 'Acceptable alternative') + '</h3>' + ul(m.alternates) : '') +
+      (m.alternates.length ? '<h3>' + (m.flatbedOnly ? 'Exception only if the OEM procedure permits' : 'Possible alternative — confirm OEM procedure first') + '</h3>' + ul(m.alternates) : '') +
       (m.never.length ? '<h3 class="neg">Never</h3>' + ul(m.never, 'neg') : '') + '</div>';
 
     h += '<div class="card edge-info"><div class="label">TRUCK REQUIRED</div><div class="big">' + esc(t.label) + '</div>' +
@@ -164,15 +171,20 @@
       '<div class="stat"><b>' + (r.method.flatbedOnly ? 'Flatbed' : 'Flatbed') + '</b><span>unit type</span></div></div>' +
       ul(t.reasons) + '<div class="muted">' + esc(t.note) + '</div></div>';
 
-    var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad' }[k.status];
-    var klabel = { ok: 'SHOULD CLEAR', marginal: 'TIGHT', fail: 'WILL LIKELY SCRAPE' }[k.status];
+    h += '<div class="card edge-info"><div class="label">USABLE &amp; PREFERRED TRUCK TYPES</div>' +
+      '<h3>Preferred</h3><div class="big">' + esc(m.truckOptions.preferred) + '</div>' +
+      '<h3>Usable options and conditions</h3>' + ul(m.truckOptions.usable) +
+      '<div class="muted">' + esc(m.truckOptions.note) + '</div></div>';
+
+    var kcls = { ok: 'ok', marginal: 'warn', fail: 'bad', unknown: 'info' }[k.status];
+    var klabel = { ok: 'SHOULD CLEAR', marginal: 'TIGHT', fail: 'WILL LIKELY SCRAPE', unknown: 'NO VERDICT — MEASURE FIRST' }[k.status];
     h += '<div class="card edge-' + kcls + '"><div class="label">GROUND CLEARANCE CHECK</div>' +
       '<div class="big"><span class="badge ' + kcls + '">' + klabel + '</span></div>' +
       '<div class="stats"><div class="stat"><b>' + k.gc + '"</b><span>clearance</span></div>' +
       '<div class="stat"><b>' + k.neededIn + '"</b><span>needed at ' + k.angle + '°</span></div>' +
       '<div class="stat"><b>' + k.maxAngleDeg + '°</b><span>max safe angle</span></div></div>' +
       ul(k.advice) +
-      '<div class="muted">Covers belly breakover only. Also check the front lip, side skirts and rear bumper by eye.</div></div>';
+      '<div class="muted">Covers belly breakover only. Also check the front lip, side skirts and rear bumper by eye. A green geometry result is not a guarantee of safe loading; use a spotter and stop if any contact is possible.</div></div>';
 
     if (r.warnings.length) h += '<div class="card edge-warn"><div class="label">WATCH FOR</div>' + ul(r.warnings) + '</div>';
 
@@ -208,11 +220,24 @@
     h += detailsBlock('Terms', '<dl class="gl">' + td.glossary.map(function (g) { return '<dt>' + esc(g[0]) + '</dt><dd>' + esc(g[1]) + '</dd>'; }).join('') + '</dl>');
 
     var sp = r.spec;
-    h += detailsBlock('Vehicle specs used', '<table class="specs">' +
+    var dimensionStatus = sp.dimensionsVerified
+      ? 'OEM source-verified for model year ' + sp.sourceYear
+      : (sp.agg ? 'UNVERIFIED third-party catalog reference' : 'UNVERIFIED / no scoped OEM source');
+    h += detailsBlock('Vehicle specs and dimensions', '<table class="specs">' +
       row('Drive', sp.drive) + row('Powertrain', POWER[sp.power]) + row('Transmission', TRANS[sp.trans] || sp.trans) +
       row('Curb weight', E.fmt(sp.curb) + ' lb') + row('GVWR', sp.gvwr ? E.fmt(sp.gvwr) + ' lb' : 'n/a') +
-      row('Wheelbase', k.wb + ' in') + row('Ground clearance', k.gc + ' in' + (sp.measured ? ' (measured)' : (sp.conf ? '' : ' (estimate)'))) +
-      '</table><div class="muted" style="margin-top:8px">Typical values for the model range. Trim, tires, load and modifications change them.</div>');
+      row('Wheelbase (catalog)', sp.catalogWb ? sp.catalogWb + ' in' : 'Not in catalog') +
+      row('Ground clearance (catalog)', sp.catalogGc ? sp.catalogGc + ' in' : 'Not in catalog') +
+      row('Ground-clearance source status', sp.clearanceVerified ? 'OEM-source verified for model year ' + sp.clearanceSourceYear + ' only; configuration-dependent' : 'Not OEM-source verified for this row') +
+      row('Ground-clearance source', sp.clearanceSource || 'No scoped OEM clearance source recorded') +
+      row('Ground-clearance source notes', sp.clearanceNote || 'No separate clearance-source notes') +
+      row('Overall length (catalog)', sp.len ? sp.len + ' in' : 'Not in catalog') +
+      row('Overall width (catalog)', sp.wid ? sp.wid + ' in' : 'Not in catalog') +
+      row('Overall height (catalog)', sp.ht ? sp.ht + ' in' : 'Not in catalog') +
+      row('Dimension data status', dimensionStatus) +
+      row('OEM source', sp.dimensionsVerified ? sp.source : 'No scoped OEM source recorded for this row') +
+      (sp.measured ? row('On-scene measurements', sp.gc + ' in clearance; ' + sp.wb + ' in wheelbase') : '') +
+      '</table><div class="muted" style="margin-top:8px">Catalog dimensions are reference values, not fitment approval. Unverified entries may combine trims or model years. Manufacturer width may exclude mirrors; height may change with roof rails, racks, tires, suspension or accessories. Measure the actual vehicle, including mirrors and installed accessories, before choosing equipment or loading.</div>');
 
     h += '<div class="grid2"><button class="btn ghost" id="copy">Copy summary</button>' +
       (v.custom ? (isSaved(v) ? '<button class="btn danger" id="del-custom">Delete saved</button>' : '<button class="btn" id="save-custom">Save vehicle</button>') : '<span></span>') + '</div>';
@@ -949,11 +974,17 @@
   function netBadge() {
     var n = $('#net'); if (!n) return;
     var on = navigator.onLine !== false;
+    if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+      try { on = window.AndroidNetwork.isConnected() === true; } catch (e) { on = false; }
+    }
     n.textContent = on ? 'Online' : 'Offline (app works)';
     n.classList.toggle('off', !on);
   }
   window.addEventListener('online', netBadge);
   window.addEventListener('offline', netBadge);
+  if (window.AndroidNetwork && typeof window.AndroidNetwork.isConnected === 'function') {
+    window.setInterval(netBadge, 3000);
+  }
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* ignore */ }); });
@@ -962,6 +993,7 @@
   netBadge();
   render();
 
-  // exposed for tests
-  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractStructuredVinCandidates: extractStructuredVinCandidates, extractVinCandidatesFromOcrResults: extractVinCandidatesFromOcrResults, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); } };
+  // Native Android back handling and test access.
+  window.__towBack = handleBack;
+  window.__tow = { state: state, openVehicle: openVehicle, findVehicle: findVehicle, render: render, extractVinCandidates: extractVinCandidates, extractStructuredVinCandidates: extractStructuredVinCandidates, extractVinCandidatesFromOcrResults: extractVinCandidatesFromOcrResults, extractBarcodeVin: extractBarcodeVin, nativeScannerAvailable: function () { var n = nativeVinScanner(); return !!(n && n.recognizeText); }, handleBack: handleBack };
 })();

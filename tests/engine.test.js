@@ -11,10 +11,41 @@ const find = (make, model) => {
 };
 
 /* ---------- tow method ---------- */
+test('resolved vehicle carries catalog dimensions and their provenance', () => {
+  const v = find('Honda', 'Passport');
+  const r = E.recommend(v);
+  assert.equal(r.spec.len, 189.1);
+  assert.equal(r.spec.wid, 78.6);
+  assert.equal(r.spec.ht, 72.2);
+  assert.equal(r.spec.dimensionsVerified, true);
+  assert.equal(r.spec.sourceYear, 2025);
+});
+
+test('catalog dimensions are not treated as on-scene measurements', () => {
+  const r = E.recommend(find('Ford', 'Mustang'));
+  assert.equal(r.spec.measured, false);
+  assert.equal(r.clearance.status, 'unknown');
+});
+
+test('truck options distinguish preferred flatbed from conditional wheel-lift use', () => {
+  const fwd = E.recommend(find('Toyota', 'Corolla'), { drive: 'FWD' });
+  assert.match(fwd.method.truckOptions.preferred, /Flatbed/);
+  assert.ok(fwd.method.truckOptions.usable.some(x => /Wheel-lift/.test(x)));
+
+  const awd = E.recommend(find('Toyota', 'Camry'), { drive: 'AWD' });
+  assert.equal(awd.method.flatbedOnly, true);
+  assert.ok(awd.method.truckOptions.usable.some(x => /all four wheels remain off the ground/i.test(x)));
+  assert.ok(!awd.method.truckOptions.usable.some(x => /^Wheel-lift — lift the drive wheels/.test(x)));
+
+  const hybrid = E.recommend(find('Toyota', 'Prius (2016-2022)'), { drive: 'FWD' });
+  assert.ok(hybrid.method.truckOptions.usable.some(x => /conditional only/i.test(x)));
+});
+
 test('EV is flatbed only', () => {
   const r = E.recommend(find('Tesla', 'Model 3'), { drive: 'RWD' });
   assert.equal(r.method.flatbedOnly, true);
   assert.match(r.method.primary, /Flatbed/);
+  assert.match(r.method.why.join(' '), /model-specific/);
 });
 
 test('AWD and 4WD are flatbed only', () => {
@@ -45,7 +76,7 @@ test('RWD automatic: lift the rear (drive) wheels or pull the driveshaft', () =>
 });
 
 test('hybrid FWD is explained as hybrid', () => {
-  const r = E.recommend(find('Toyota', 'Prius'), { drive: 'FWD' });
+  const r = E.recommend(find('Toyota', 'Prius (2016-2022)'), { drive: 'FWD' });
   assert.equal(r.method.flatbedOnly, false);
   assert.ok(r.method.why.some(w => /Hybrid/.test(w)));
 });
@@ -86,46 +117,88 @@ test('very heavy vehicles reach heavy-duty', () => {
 });
 
 /* ---------- clearance math ---------- */
+
+test('unverified catalog dimensions never produce a positive clearance verdict', () => {
+  const vehicle = D.vehicles.find(v => v.make === 'Mazda' && v.model === '6 i Grand Touring');
+  const estimate = E.recommend(vehicle, {});
+  assert.equal(estimate.clearance.status, 'unknown');
+  assert.match(estimate.clearance.advice.join(' '), /NO CLEARANCE VERDICT/);
+  const onlyClearance = E.resolve(vehicle, { gc: 5.5 });
+  assert.equal(onlyClearance.measured, false);
+  assert.equal(E.clearanceCheck(onlyClearance).status, 'unknown');
+  const measured = E.resolve(vehicle, { gc: 5.5, wb: 107.4 });
+  assert.equal(measured.measured, true);
+  assert.notEqual(E.clearanceCheck(measured).status, 'unknown');
+});
+test('implausible clearance measurements never produce a positive verdict', () => {
+  const invalid = [
+    { gc: 0.2, wb: 100, angle: 10 },
+    { gc: 45, wb: 100, angle: 10 },
+    { gc: 6, wb: 20, angle: 10 },
+    { gc: 6, wb: 450, angle: 10 },
+    { gc: 6, wb: 100, angle: 0 },
+    { gc: 6, wb: 100, angle: 45 }
+  ];
+  for (const input of invalid) {
+    const result = E.clearanceCheck({ ...input, measured: true, low: false });
+    assert.equal(result.status, 'unknown', JSON.stringify(input));
+    assert.match(result.advice.join(' '), /NO CLEARANCE VERDICT/);
+  }
+});
+
 test('breakover formula: (wb/4)*sin(angle)', () => {
-  const k = E.clearanceCheck({ wb: 100, gc: 6, angle: 30, low: false, measured: false, conf: 1 });
+  const k = E.clearanceCheck({ wb: 100, gc: 6, angle: 30, low: false, measured: true, conf: 1 });
   assert.equal(k.neededIn, 12.5);              // 100/4 * 0.5
 });
 
-test('max safe angle is asin(4*gc/wb)', () => {
-  const k = E.clearanceCheck({ wb: 100, gc: 12.5, angle: 10, low: false, measured: false, conf: 1 });
-  assert.equal(k.maxAngleDeg, 30);             // asin(0.5)
+test('max recommended angle preserves the 1.5-inch reserve', () => {
+  const k = E.clearanceCheck({ wb: 100, gc: 12.5, angle: 10, low: false, measured: true, conf: 1 });
+  assert.ok(k.maxAngleDeg < 30);
+  assert.ok(k.maxAngleDeg > 25);
 });
 
 test('Mustang scrapes on a standard bed, clears on a low-angle bed', () => {
   const v = find('Ford', 'Mustang');
-  assert.equal(E.recommend(v, { angle: 12 }).clearance.status, 'fail');
-  assert.equal(E.recommend(v, { angle: 8 }).clearance.status, 'ok');
+  assert.equal(E.recommend(v, { angle: 12, gc: v.gc, wb: v.wb }).clearance.status, 'fail');
+  assert.equal(E.recommend(v, { angle: 6, gc: v.gc, wb: v.wb }).clearance.status, 'ok');
 });
 
 test('tall trucks clear a standard bed', () => {
-  assert.equal(E.recommend(find('Jeep', 'Wrangler Unlimited (JL)')).clearance.status, 'ok');
+  assert.equal(E.recommend(find('Jeep', 'Wrangler Unlimited (JL)'), { gc: 9.7, wb: 118.4 }).clearance.status, 'ok');
 });
 
-test('status bands: ok >= 1.15, marginal >= 0.90, fail below', () => {
-  const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 30, low: false, measured: false, conf: 1 }).status;  // need 12.5
-  assert.equal(mk(14.4), 'ok');
-  assert.equal(mk(13), 'marginal');
-  assert.equal(mk(11.3), 'marginal');
-  assert.equal(mk(11.2), 'fail');
+test('clearance bands reserve 1.5 inches for uneven pavement and variation', () => {
+  const mk = gc => E.clearanceCheck({ wb: 100, gc, angle: 10, low: false, measured: true, conf: 1 }).status;
+  // At 100-inch wheelbase and 10 degrees, the modeled crest rise is about 4.3 inches.
+  assert.equal(mk(6.0), 'ok');       // about 1.7 inches remaining
+  assert.equal(mk(5.8), 'marginal'); // about 1.5 inches remaining (below reserve)
+  assert.equal(mk(4.8), 'fail');     // about 0.5 inches remaining
+  assert.equal(mk(4.5), 'fail');
+});
+
+test('Mazda 6 5.5-inch clearance needs a low-angle carrier, not a barely-clear pass', () => {
+  const mazda = find('Mazda', '6 i Grand Touring');
+  assert.equal(mazda.gc, 5.5);
+  const standard = E.recommend(mazda, { angle: 12, gc: 5.5, wb: mazda.wb });
+  assert.equal(standard.clearance.status, 'fail');
+  assert.match(standard.clearance.setup, /low-deck, long-bed rollback/i);
+  const lowAngle = E.recommend(mazda, { angle: 6, gc: 5.5, wb: mazda.wb });
+  assert.equal(lowAngle.clearance.status, 'ok');
+  assert.ok(lowAngle.clearance.remainingIn >= 1.5);
 });
 
 test('measured clearance overrides the database value', () => {
   const v = find('Ford', 'Mustang');
-  const r = E.recommend(v, { angle: 12, gc: 7 });
-  assert.equal(r.clearance.gc, 7);
+  const r = E.recommend(v, { angle: 12, gc: 7.2, wb: v.wb });
+  assert.equal(r.clearance.gc, 7.2);
   assert.equal(r.clearance.status, 'ok');
   assert.equal(r.spec.measured, true);
 });
 
 test('wheelbase 0 / bad numbers never produce NaN', () => {
   const r = E.recommend(find('Ford', 'Mustang'), { gc: NaN, wb: -3, angle: 0 });
-  assert.ok(Number.isFinite(r.clearance.neededIn));
-  assert.ok(Number.isFinite(r.clearance.maxAngleDeg));
+  assert.equal(r.clearance.status, 'unknown');
+  assert.equal(r.clearance.neededIn, '—');
 });
 
 /* ---------- tie-down plan ---------- */
@@ -191,7 +264,55 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
   assert.match(t, /Tie-downs:/);
 });
 
+
+test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
+  const curated = D.vehicles.filter(v => !v.agg);
+  assert.equal(curated.length, 318, '307 unverified estimate rows + 11 full-dimension OEM-verified rows');
+  assert.ok(D.vehicles.length > 298, 'bulk rows imported');
+  for (const v of D.vehicles) {
+    const id = v.make + ' ' + v.model + ' ' + v.yFrom;
+    if (v.source) {
+      // OEM-verified: only with an https primary source and a source year inside the row's years
+      assert.equal(v.conf, 1, id);
+      assert.match(v.source, /^https:\/\//, id);
+      assert.ok(v.sourceYear >= v.yFrom && v.sourceYear <= v.yTo, id + ' source year outside row years');
+      assert.ok(!v.agg, id + ' aggregator rows can never be verified');
+    } else {
+      assert.equal(v.conf, 0, id + ' must not imply verified specs');
+      assert.equal(v.sourceYear, 0, id + ' has no reviewed source year yet');
+    }
+  }
+});
+
+test('2025 Toyota Crown Signia has exact single-year OEM specifications', () => {
+  const v = find('Toyota', 'Crown Signia');
+  assert.equal(v.yFrom, 2025);
+  assert.equal(v.yTo, 2025);
+  assert.equal(v.conf, 1);
+  assert.equal(v.source, 'https://www.toyota.com/content/dam/toyota/brochures/pdf/2025/toyotacrownsignia_ebrochure.pdf');
+  assert.equal(v.sourceYear, 2025);
+  assert.deepEqual(v.drives, ['AWD']);
+  assert.equal(v.power, 'HEV');
+  assert.deepEqual(v.trans, ['CVT']);
+  assert.equal(v.curb, 4210);
+  assert.equal(v.wb, 112.2);
+  assert.equal(v.gc, 6.7);
+  assert.equal(v.len, 194.1);
+  assert.equal(v.wid, 74.0);
+  assert.equal(v.ht, 64.0);
+  const recommendation = E.recommend(v);
+  assert.equal(recommendation.method.flatbedOnly, true);
+  assert.equal(recommendation.clearance.status, 'unknown');
+});
+
 /* ---------- database integrity ---------- */
+test('US model-year catalog includes 1980-era Subaru and Mazda entries', () => {
+  assert.ok(find('Subaru', 'BRAT').yFrom <= 1980);
+  assert.ok(find('Subaru', 'Loyale / DL / GL').yFrom <= 1980);
+  assert.ok(find('Mazda', '626').yFrom <= 1980);
+  assert.ok(find('Mazda', 'RX-7').yFrom <= 1980);
+});
+
 test('database rows are well formed and unique', () => {
   const seen = new Set();
   for (const v of D.vehicles) {
@@ -199,17 +320,23 @@ test('database rows are well formed and unique', () => {
     assert.ok(!seen.has(id), 'duplicate ' + id);
     seen.add(id);
     assert.ok(v.make && v.model && v.body, id);
-    assert.ok(v.yFrom >= 1990 && v.yTo <= 2030 && v.yFrom <= v.yTo, 'years ' + id);
+    assert.ok(v.yFrom >= 1980 && v.yTo <= 2030 && v.yFrom <= v.yTo, 'years ' + id);
     assert.ok(v.drives.length >= 1 && v.drives.every(d => ['FWD', 'RWD', 'AWD', '4WD'].includes(d)), 'drives ' + id);
     assert.ok(['ICE', 'HEV', 'PHEV', 'EV'].includes(v.power), 'power ' + id);
     assert.ok(v.trans.every(t => ['AT', 'CVT', 'MT', 'DCT', 'EV'].includes(t)), 'trans ' + id);
-    assert.ok(v.curb >= 2000 && v.curb <= 12000, 'curb ' + id);
-    assert.ok(v.wb >= 95 && v.wb <= 190, 'wheelbase ' + id);
-    assert.ok(v.gc >= 3.5 && v.gc <= 12, 'clearance ' + id);
+    assert.ok(v.curb >= 1500 && v.curb <= 12000, 'curb ' + id);
+    assert.ok(v.wb === 0 || (v.wb >= 70 && v.wb <= 190), 'wheelbase ' + id);
+    assert.ok(v.gc === 0 || (v.gc >= 3.5 && v.gc <= 18), 'clearance ' + id);
+    if (v.len) assert.ok(v.len >= 100 && v.len <= 280, 'length ' + id);
+    if (v.wid) assert.ok(v.wid >= 55 && v.wid <= 100, 'width ' + id);
+    if (v.ht) assert.ok(v.ht >= 40 && v.ht <= 110, 'height ' + id);
     if (v.gvwr) assert.ok(v.gvwr >= v.curb, 'gvwr below curb ' + id);
     if (v.power === 'EV') assert.deepEqual(v.trans, ['EV'], 'EV trans ' + id);
   }
-  assert.ok(D.vehicles.length >= 90);
+  assert.ok(D.vehicles.length >= 165);
+  for (const make of ['Subaru', 'Mazda', 'Mercedes-Benz', 'Audi', 'BMW', 'Volkswagen', 'Hyundai', 'Kia', 'Volvo', 'Lexus']) {
+    assert.ok(D.makes.includes(make), 'missing manufacturer ' + make);
+  }
 });
 
 test('every vehicle produces a complete recommendation for every drive and transmission', () => {
@@ -218,11 +345,30 @@ test('every vehicle produces a complete recommendation for every drive and trans
       for (const trans of v.trans) {
         const r = E.recommend(v, { drive, trans });
         assert.ok(r.method.primary && r.truck.label && r.tiedown.steps.tiedown.length, v.model);
-        assert.ok(Number.isFinite(r.clearance.neededIn) && Number.isFinite(r.clearance.maxAngleDeg), v.model);
+        assert.equal(r.clearance.status, 'unknown', v.model);
         if (v.power === 'EV' || drive === 'AWD' || drive === '4WD') assert.equal(r.method.flatbedOnly, true, v.model + ' ' + drive);
       }
     }
   }
+});
+
+
+test('generation-split catalog entries match model years without reusing a cross-generation row', () => {
+  const by = (make, model, year) => {
+    const found = D.vehicles.filter(v => v.make === make && v.model === model && year >= v.yFrom && year <= v.yTo);
+    assert.equal(found.length, 1, make + ' ' + model + ' ' + year + ' should resolve to one generation row');
+    return found[0];
+  };
+  assert.equal(by('Mazda', 'MX-5 Miata (NA)', 1995).conf, 0);
+  assert.equal(by('Mazda', 'MX-5 Miata (NB)', 2002).yFrom, 1999);
+  assert.equal(by('Mazda', 'MX-5 Miata (NC)', 2010).yTo, 2015);
+  assert.equal(by('Mazda', 'MX-5 Miata (ND)', 2024).yFrom, 2016);
+  assert.equal(by('BMW', '3 Series (E46)', 2004).yTo, 2006);
+  assert.equal(by('BMW', '3 Series (G20)', 2022).yFrom, 2019);
+  assert.equal(by('Mercedes-Benz', 'C-Class (W205)', 2018).yTo, 2021);
+  assert.equal(by('Mercedes-Benz', 'E-Class (W214)', 2025).yFrom, 2024);
+  assert.equal(by('Mercedes-Benz', 'S-Class (W223)', 2022).yFrom, 2021);
+  for (const v of D.vehicles) if (!v.source) assert.equal(v.conf, 0, v.make + ' ' + v.model);
 });
 
 /* ---------- VIN decode ---------- */
@@ -265,7 +411,7 @@ test('VIN match finds the right database entry', () => {
   ms = E.matchVehicles(D.vehicles, E.parseVinDecode(sample({ Make: 'JEEP', Model: 'Wrangler', ModelYear: '2012' })));
   assert.equal(ms[0].model, 'Wrangler Unlimited (JK)');
   ms = E.matchVehicles(D.vehicles, E.parseVinDecode(sample({ Make: 'TOYOTA', Model: 'Camry', ModelYear: '2022', ElectrificationLevel: 'HEV (Hybrid Electric Vehicle) - Full' })));
-  assert.equal(ms[0].model, 'Camry Hybrid');
+  assert.equal(ms[0].model, 'Camry Hybrid (2018-2024)');
 });
 
 test('VIN match returns nothing for unknown vehicles and bad payloads', () => {
@@ -280,4 +426,212 @@ test('body-type guess for unlisted vehicles', () => {
   assert.equal(E.guessPreset('Sport Utility Vehicle (SUV)/Multi-Purpose Vehicle (MPV)', 5000), 'crossover');
   assert.equal(E.guessPreset('Coupe', 0), 'sports');
   assert.equal(E.guessPreset('Minivan', 0), 'minivan');
+});
+
+
+test('bulk aggregator rows are tagged, low-confidence, and never carry a verified source', () => {
+  const bulk = D.vehicles.filter(v => v.agg);
+  assert.ok(bulk.length >= 1500, 'expected bulk import, got ' + bulk.length);
+  for (const v of bulk) {
+    const id = v.make + ' ' + v.model + ' ' + v.yFrom;
+    assert.equal(v.conf, 0, id);
+    assert.equal(v.source, '', id + ' aggregator rows must not claim a verified source');
+    assert.match(v.agg, /autoevolution/, id);
+    assert.match(v.note, /UNVERIFIED/, id + ' note must say unverified');
+    assert.match(v.note, /Source variants:/, id + ' note must keep variant ranges');
+  }
+});
+
+test('every bulk row has a matching audit CSV row marked AGGREGATOR_UNVERIFIED', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const lines = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8').trim().split('\n');
+  const agg = lines.filter(l => l.includes('"AGGREGATOR_UNVERIFIED"')).length;
+  assert.equal(agg, D.vehicles.filter(v => v.agg).length);
+  assert.equal(lines.length - 1, D.vehicles.length, 'audit CSV must track every catalog row');
+});
+
+
+test('unknown catalog clearance/wheelbase stay unknown: never low-flagged, never a verdict', () => {
+  const unk = D.vehicles.filter(v => v.agg && (v.gc === 0 || v.wb === 0));
+  assert.ok(unk.length > 0, 'expected rows with unknown clearance or wheelbase');
+  for (const v of unk) {
+    const id = v.make + ' ' + v.model + ' ' + v.yFrom;
+    assert.match(v.note, /NOT IN SOURCE/, id);
+    const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
+    assert.equal(r.clearance.status, 'unknown', id);
+    if (v.gc === 0) assert.equal(r.spec.low, !!v.low, id + ' unknown clearance must not set the low flag');
+  }
+  const r = E.recommend(unk[0], { drive: unk[0].drives[0], trans: unk[0].trans[0], gc: 6, wb: 110 });
+  assert.notEqual(r.clearance.status, 'unknown', 'measured values still produce a verdict');
+});
+
+test('pickups do not offer FWD except for known FWD-based models', () => {
+  for (const v of D.vehicles) {
+    if (/Pickup/.test(v.body) && v.drives.includes('FWD')) {
+      assert.match(v.model, /maverick|ridgeline|santa cruz|rampage|caddy|rabbit/i, v.make + ' ' + v.model);
+    }
+  }
+});
+
+test('broad or lumped hand-entered rows carry an explicit warning note', () => {
+  const broad = D.vehicles.filter(v => !v.agg && v.yTo - v.yFrom >= 8);
+  assert.ok(broad.length > 0);
+  for (const v of broad) assert.match(v.note, /BROAD YEAR RANGE/, v.make + ' ' + v.model);
+  for (const v of D.vehicles.filter(v => !v.agg && / \/ /.test(v.model))) assert.match(v.note, /LUMPED ENTRY/, v.model);
+});
+
+test('bulk rows expose length/width/height when the source has them', () => {
+  const withDims = D.vehicles.filter(v => v.agg && v.len && v.wid && v.ht);
+  assert.ok(withDims.length >= 1000, 'dimension coverage ' + withDims.length);
+});
+
+
+test('2025 CR-V gas and hybrid specifications are OEM-verified and variant-scoped', () => {
+  const gas = find('Honda', 'CR-V (2025)');
+  const hybrid = find('Honda', 'CR-V Hybrid (2025)');
+  for (const v of [gas, hybrid]) {
+    assert.equal(v.conf, 1);
+    assert.equal(v.sourceYear, 2025);
+    assert.equal(v.wb, 106.3);
+    assert.equal(v.gc, 7.8);
+    assert.equal(v.len, 184.8);
+    assert.equal(v.wid, 73.5);
+    assert.equal(v.ht, 66.5);
+    assert.equal(E.recommend(v).clearance.status, 'unknown');
+  }
+  assert.equal(gas.curb, 3635);
+  assert.equal(hybrid.curb, 3926);
+});
+
+test('five new 2025 OEM records are single-year scoped and carry complete source-backed dimensions', () => {
+  const cases = [
+    ['Honda', 'HR-V (2025)', 3333, 104.5, 7.0, 179.8, 72.4, 63.4],
+    ['Subaru', 'Crosstrek (2025, non-Wilderness)', 3349, 105.1, 8.7, 176.4, 70.9, 63.0],
+    ['Subaru', 'Crosstrek Wilderness (2025)', 3369, 104.9, 9.3, 176.4, 71.7, 63.6],
+    ['Subaru', 'Impreza (2025)', 3275, 105.1, 5.1, 176.2, 70.1, 58.3],
+    ['Toyota', 'Corolla (2025 gas)', 3150, 106.3, 4.7, 182.5, 70.1, 56.5]
+  ];
+  for (const [make, model, curb, wb, gc, len, wid, ht] of cases) {
+    const v = find(make, model);
+    assert.ok(v, make + ' ' + model + ' exists');
+    assert.equal(v.yFrom, 2025);
+    assert.equal(v.yTo, 2025);
+    assert.equal(v.conf, 1);
+    assert.equal(v.sourceYear, 2025);
+    assert.match(v.source, /^https:\/\//);
+    assert.equal(v.curb, curb);
+    assert.equal(v.wb, wb);
+    assert.equal(v.gc, gc);
+    assert.equal(v.len, len);
+    assert.equal(v.wid, wid);
+    assert.equal(v.ht, ht);
+    assert.equal(E.recommend(v).clearance.status, 'unknown');
+  }
+});
+
+test('OEM-verified rows still never produce a clearance verdict without on-scene measurements', () => {
+  const ver = D.vehicles.filter(v => v.source);
+  assert.equal(ver.length, 11);
+  for (const v of ver) {
+    const r = E.recommend(v, { drive: v.drives[0], trans: v.trans[0] });
+    assert.equal(r.clearance.status, 'unknown', v.model);
+    assert.ok(v.len && v.wid && v.ht && v.wb && v.gc, v.model + ' complete dimensions');
+  }
+});
+
+
+test('audit CSV source URLs are in the correct column and verified rows are single-year scoped', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const lines = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8').trim().split('\n');
+  for (const line of lines.slice(1)) {
+    const cols = [...line.matchAll(/"(?:[^"]|"")*"/g)].map(m => m[0].slice(1, -1).replace(/""/g, '"'));
+    const status = cols[12], sourceUrl = cols[13];
+    if (sourceUrl) assert.match(sourceUrl, /^https:\/\//, cols[0] + ' ' + cols[1] + ' source URL column');
+    if (status === 'OEM_VERIFIED') {
+      assert.equal(cols[11], 'OEM_VERIFIED_SINGLE_YEAR', cols[0] + ' ' + cols[1]);
+      assert.equal(cols[2], cols[3], cols[0] + ' ' + cols[1] + ' must be single-year scoped');
+      assert.match(sourceUrl, /^https:\/\//, cols[0] + ' ' + cols[1]);
+      assert.equal(cols[15], cols[2], cols[0] + ' ' + cols[1] + ' source year must match row year');
+    }
+  }
+});
+
+test('every OEM-verified row has an OEM_VERIFIED audit CSV row with the same source URL', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const text = fs.readFileSync(path.join(__dirname, '..', 'docs', 'vehicle-catalog-audit.csv'), 'utf8');
+  for (const v of D.vehicles.filter(v => v.source)) assert.ok(text.includes('"OEM_VERIFIED"') && text.includes('"' + v.source + '"'), v.model);
+});
+
+
+test('unverified catalog curb weight produces an explicitly provisional truck class', () => {
+  const v = find('Ford', 'F-150');
+  assert.equal(v.conf, 0);
+  const t = E.recommend(v).truck;
+  assert.equal(t.provisional, true);
+  assert.equal(t.weightConfirmed, false);
+  assert.match(t.label, /^Provisional/);
+  assert.ok(t.reasons.some(x => /unverified catalog estimate/i.test(x)));
+});
+
+test('unverified catalog GVWR cannot silently upgrade truck class', () => {
+  const t = E.truckClass(E.resolve({
+    curb: 6800, gvwr: 14000, wb: 150, gc: 8,
+    drives: ['RWD'], trans: ['AT'], power: 'ICE', conf: 0
+  }, {}));
+  assert.equal(t.id, 'light');
+  assert.equal(t.gvwrConfirmed, false);
+  assert.ok(t.reasons.some(x => /GVWR is unverified/i.test(x)));
+  assert.equal(t.provisional, true);
+});
+
+test('operator-entered curb weight and GVWR overrides are treated as confirmed inputs', () => {
+  const v = find('Ford', 'F-150');
+  const curbOnly = E.recommend(v, { curb: 6200 }).truck;
+  assert.equal(curbOnly.provisional, false);
+  assert.equal(curbOnly.weightConfirmed, true);
+  assert.equal(curbOnly.gvwrConfirmed, false);
+  const withGvwr = E.recommend(v, { curb: 6200, gvwrOverride: 14000 }).truck;
+  assert.equal(withGvwr.gvwrConfirmed, true);
+  assert.equal(withGvwr.id, 'medium');
+});
+
+
+test('2025 Camry Hybrid uses Toyota OEM dimensions and conservative trim-weight maximum', () => {
+  const v = find('Toyota', 'Camry Hybrid (2025)');
+  assert.equal(v.conf, 1);
+  assert.equal(v.sourceYear, 2025);
+  assert.match(v.source, /^https:\/\//);
+  assert.equal(v.gc, 5.4);
+  assert.equal(v.wb, 111.2);
+  assert.equal(v.curb, 3682);
+  assert.equal(v.len, 193.5);
+  assert.equal(v.wid, 72.4);
+  assert.equal(v.ht, 56.9);
+  const r = E.recommend(v, {});
+  assert.equal(r.clearance.status, 'unknown', 'OEM catalog values still cannot replace on-scene measurements');
+});
+
+
+test('2025 OEM ground-clearance evidence is field-scoped and never replaces on-scene measurements', () => {
+ const expected=[['Ford','F-150',2025,8.2],['Ford','F-250 Super Duty',2025,9.2],['Ford','F-350 Super Duty (single rear wheel)',2025,9.1],['Ford','F-350 Super Duty (dually)',2025,9.2],['Ford','F-150 Regular Cab',2025,8.2],['Kia','Sorento',2025,6.9],['Kia','Sorento (Plug-in hybrid)',2025,6.9],['Hyundai','Tucson',2025,7.1],['Hyundai','Santa Fe',2025,7.0],['Toyota','4Runner (2025)',2025,8.1],['Genesis','GV70',2025,7.3],['Genesis','GV70 (Electric)',2024,6.9],['Ford','Ranger (2024)',2024,9.3],['Ford','Ranger (2025)',2025,8.8],['Honda','Pilot (2025)',2025,7.3],['GMC','Savana 3500 (2025)',2025,8.6],['Nissan','Versa (2025)',2025,5.0]];
+ for(const [make,model,year,gc] of expected){const v=D.vehicles.find(x=>x.make===make&&x.model===model&&x.yFrom===year&&x.yTo===year);assert.ok(v,make+' '+model+' '+year+' row');assert.equal(v.gc,gc);assert.equal(v.clearanceVerified,true);assert.equal(v.clearanceSourceYear,year);assert.match(v.clearanceSource,/^https:\/\//);assert.equal(v.conf,0,'clearance-only evidence must not certify other specifications');const r=E.recommend(v);assert.equal(r.spec.clearanceVerified,true);assert.equal(r.clearance.status,'unknown','on-scene measurement is still mandatory');}
+});
+
+
+test('Ranger clearance evidence is year- and drivetrain-scoped', () => {
+ const r24=find('Ford','Ranger (2024)');
+ const r25=find('Ford','Ranger (2025)');
+ assert.equal(r24.gc,9.3);
+ assert.equal(r25.gc,8.8,'2025 4x2 is the conservative minimum');
+ assert.equal(r24.clearanceSourceYear,2024);
+ assert.equal(r25.clearanceSourceYear,2025);
+ assert.equal(r24.conf,0);
+ assert.equal(r25.conf,0);
+});
+
+test('2025 Pilot clearance retains TrailSport trim caveat', () => {
+ const p=find('Honda','Pilot (2025)');
+ assert.equal(p.gc,7.3);
+ assert.match(p.clearanceNote,/TrailSport AWD is 8.3 in/);
+ assert.equal(p.conf,0);
 });
