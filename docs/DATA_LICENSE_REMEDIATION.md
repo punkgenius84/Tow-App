@@ -35,4 +35,4 @@ Ground-clearance values remain reference data only. No catalog value may produce
 
 ## Clearance-only OEM evidence added (2026-11-23)
 
-Twelve 2024–2025 model-year ground-clearance references were added across Ford F-150 / Super Duty, Kia Sorento, Hyundai Tucson / Santa Fe and Toyota 4Runner. Clearance provenance is stored separately from whole-row dimension provenance. These entries do **not** make their rows fully OEM-verified: curb weight, wheelbase and body dimensions remain unverified where not separately sourced. The 2,524 AutoEvolution-derived rows remain unverified and the redistribution hold remains in force.
+Twelve 2024–2025 model-year ground-clearance references were added across Ford F-150 / Super Duty, Kia Sorento, Hyundai Tucson / Santa Fe, Toyota 4Runner and Genesis GV70 / Electrified GV70. Clearance provenance is stored separately from whole-row dimension provenance. These entries do **not** make their rows fully OEM-verified: curb weight, wheelbase and body dimensions remain unverified where not separately sourced. The 2,524 AutoEvolution-derived rows remain unverified and the redistribution hold remains in force.

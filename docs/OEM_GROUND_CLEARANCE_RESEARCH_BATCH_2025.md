@@ -52,7 +52,7 @@ Source: https://www.genesis.com/content/dam/genesis/us/com/pdf/2024/2024_Electri
 
 ## Data handling and limitations
 
-- Only 2025 model-year rows receive this clearance evidence. Earlier years are separate and are not upgraded from 2025 sources.
+- Only the specific 2024 and 2025 model-year slices listed above receive this clearance evidence. Earlier years remain separate and are not upgraded from newer sources; the 2025 Electrified GV70 remains unknown until a matching source is confirmed.
 - Ground-clearance source URL, source year, verified value and variant caveat are stored in clearance-specific fields.
 - These entries do not upgrade curb weight, wheelbase, body dimensions or overall row confidence.
 - The calculator still returns **NO VERDICT — MEASURE FIRST** until actual on-scene clearance and wheelbase are entered.
