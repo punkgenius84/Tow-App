@@ -1,4 +1,4 @@
-# OEM ground-clearance research batch — 2025 model year
+# OEM ground-clearance research batch — 2024–2025 model years
 
 **Status: CLEARANCE FIELD VERIFIED FOR THE SPECIFIC 2025 SOURCE SCOPE ONLY.** Other catalog fields remain unverified unless separately sourced. This batch does not authorize a loading decision; measure the actual vehicle on scene.
 
@@ -37,6 +37,18 @@ Source: https://aws-sweb.hyundaiusa.com/us/en/vehicles/2025-santa-fe/compare-spe
 Toyota's 2025 grade guide lists 8.1 in for SR5, 8.8 in for TRD Sport/Limited/Platinum, 9.1 in for TRD Off-Road and 10.1 in for TRD Pro/Trailhunter. The database retains 8.1 in as the lowest published grade baseline.
 
 Source: https://engage.toyota.com/static/articles/2025_4runner_sales_consultant_guide/2025_4Runner_Sales_Consultant_Guide.pdf
+
+## Genesis GV70 — 2025
+
+Genesis' 2025 US specification sheet lists 7.3 in minimum ground clearance for the 2.5T and 3.5T Sport configurations. The database uses 7.3 in for the 2025 gasoline GV70 slice only.
+
+Source: https://www.genesis.com/content/dam/genesis/us/com/pdf/2025/2025_GV70_spec_sheet_r7.pdf
+
+## Genesis Electrified GV70 — 2024
+
+Genesis' 2024 US specification sheet lists 6.9 in minimum ground clearance for the AWD Electrified GV70. The database uses 6.9 in for the 2024 electric slice only. The 2025 electric row remains unknown until its own matching source is confirmed.
+
+Source: https://www.genesis.com/content/dam/genesis/us/com/pdf/2024/2024_Electrified_GV70_Specs_Sheet_vfin.pdf
 
 ## Data handling and limitations
 
