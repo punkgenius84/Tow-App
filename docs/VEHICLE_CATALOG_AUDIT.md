@@ -226,3 +226,17 @@ The Ford Ranger catalog row is now split into 2019–2023, 2024 and 2025 slices.
 ## Verified clearance-only update — GMC Savana 3500 and Nissan Versa (2025)
 
 The 2025 GMC Savana 3500 entry now carries an OEM clearance-only baseline of 8.60 in, the lowest rear ground-clearance figure across the reviewed 3500 cargo/passenger configurations. The 2025 Nissan Versa entry uses 5.0 in, the lowest published value across S, S CVT, SV and SR trims (SR is 5.2 in). Both remain aggregator-derived, low-confidence rows for curb weight, wheelbase and body dimensions; the separate clearance provenance does not certify those fields. Sources: [GMC 2025 Savana cargo specifications](https://www.gmc.com/byo-vc/client/en/US/gmc/savana-cargo/2025/savana-cargo/config/specifications/3), [GMC 2025 Savana passenger specifications](https://www.gmc.com/byo-vc/client/en/US/gmc/savana-passenger/2025/savana-passenger/config/specifications/2), and [Nissan 2025 Versa specifications](https://www.nissanusa.com/vehicles/cars/versa-sedan/specs-trims.html).
+
+## OEM ground-clearance batch — 2025 model year (2026-11-23)
+
+Five catalog entries now carry **clearance-only OEM verification** for model year 2025: Ford Escape gas, Ford Escape Hybrid, Ford Explorer, Chevrolet Equinox and Nissan Rogue. Each has a separate 2025 catalog row; the prior broader entries now end at 2024. Manufacturer source URLs, model year and configuration limitations are recorded in the catalog metadata and CSV.
+
+| 2025 model | Catalog clearance | OEM configuration detail |
+|---|---:|---|
+| Ford Escape gas | 7.5 in | FWD 7.5 in; AWD 8.1 in. Baseline uses lower figure. |
+| Ford Escape Hybrid | 6.9 in | 2025 Hybrid only; do not infer PHEV coverage. |
+| Ford Explorer | 7.6 in | Active/ST-Line 7.6 in; ST 7.8 in; Platinum 8.2 in. |
+| Chevrolet Equinox | 8.05 in | LT 8.08 in; RS 8.2 in; ACTIV 8.05 in. |
+| Nissan Rogue | 8.2 in | Nissan lists same minimum for S, SV, Rock Creek, SL and Platinum. |
+
+**Important:** These entries verify ground clearance only. Curb weight, wheelbase and full vehicle identity/configuration remain unverified, so the records remain low-confidence and do not authorize a loading decision. Older-year rows remain unverified. The clearance calculator still requires actual on-scene clearance and wheelbase measurements.

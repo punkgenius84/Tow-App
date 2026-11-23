@@ -635,3 +635,24 @@ test('2025 Pilot clearance retains TrailSport trim caveat', () => {
  assert.match(p.clearanceNote,/TrailSport AWD is 8.3 in/);
  assert.equal(p.conf,0);
 });
+
+
+test('2025 OEM clearance-only batch is year-scoped and retains unverified overall confidence', () => {
+  const cases = [
+    ['Ford', 'Escape (2025)', 7.5, 'https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/fleet-vehicles/fleet-solutions/2025_FordPro_Solutions_Guide.pdf'],
+    ['Ford', 'Escape Hybrid (2025)', 6.9, 'https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2025/specs/2025_Ford_Escape_Technical_Specifications.pdf'],
+    ['Ford', 'Explorer (2025)', 7.6, 'https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2025/specs/2025-Ford-Explorer-Technical-Specs.pdf'],
+    ['Chevrolet', 'Equinox (2025)', 8.05, 'https://news.chevrolet.com/newsroom.detail.html/Pages/news/us/en/2024/jan/0123-equinox.html'],
+    ['Nissan', 'Rogue (2025)', 8.2, 'https://usa.nissannews.com/en-US/releases/2025-nissan-rogue-specifications']
+  ];
+  for (const [make, model, clearance, source] of cases) {
+    const v = find(make, model), r = E.recommend(v);
+    assert.equal(r.spec.gc, clearance);
+    assert.equal(r.spec.clearanceVerified, true);
+    assert.equal(r.spec.clearanceSource, source);
+    assert.equal(r.spec.clearanceSourceYear, 2025);
+    assert.equal(r.spec.conf, 0, 'clearance-only OEM evidence must not upgrade overall confidence');
+    assert.equal(v.yFrom, 2025);
+    assert.equal(v.yTo, 2025);
+  }
+});
