@@ -80,3 +80,20 @@ Source: https://hondanews.com/en-US/honda-automobiles/releases/2025-honda-pilot-
 ## Batch accounting
 
 This follow-up adds three clearance-only OEM evidence records (2024 Ranger, 2025 Ranger and 2025 Pilot). The values do not verify curb weight, wheelbase or body dimensions, and do not authorize a loading decision. Measure the actual vehicle on scene.
+
+
+## GMC Savana 3500 — 2025
+
+GMC's 2025 US configuration pages for Savana 3500 cargo and passenger vans show rear ground clearance of 8.60–8.62 in across the reviewed regular- and extended-wheelbase configurations; front clearance is higher. The catalog uses 8.60 in as the conservative rear-clearance baseline. Confirm the exact body and wheelbase; the entry's curb weight and other dimensions remain aggregator-derived and unverified.
+
+Sources: https://www.gmc.com/byo-vc/client/en/US/gmc/savana-cargo/2025/savana-cargo/config/specifications/3 ; https://www.gmc.com/byo-vc/client/en/US/gmc/savana-cargo/2025/savana-cargo/config/specifications/4 ; https://www.gmc.com/byo-vc/client/en/US/gmc/savana-passenger/2025/savana-passenger/config/specifications/2
+
+## Nissan Versa — 2025
+
+Nissan's 2025 US specifications list 5.0 in ground clearance on S, S CVT and SV trims, and 5.2 in on SR. The catalog uses 5.0 in as the conservative baseline. Curb weight, wheelbase and body dimensions remain aggregator-derived and unverified.
+
+Source: https://www.nissanusa.com/vehicles/cars/versa-sedan/specs-trims.html
+
+## Batch accounting
+
+This follow-up adds two additional clearance-only OEM evidence records (2025 GMC Savana 3500 and 2025 Nissan Versa). Their overall catalog confidence remains low because only ground clearance is sourced; verify exact configuration and measure on scene.
