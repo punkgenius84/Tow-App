@@ -1,6 +1,6 @@
 {
   "appId": "com.bigjaysstowing.towguide",
-  "appName": "Big Jay's Tow Guide",
+  "appName": "Big Jay's Tow",
   "webDir": "www",
   "server": {
     "androidScheme": "https"
