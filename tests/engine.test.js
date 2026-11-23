@@ -58,9 +58,10 @@ test('selection falls back to a valid drive and transmission', () => {
 
 /* ---------- truck class ---------- */
 test('half-ton pickup needs a light-duty unit', () => {
-  const r = E.recommend(find('Ford', 'F-150'));
+  const v = find('Ford', 'F-150');
+  const r = E.recommend(v);
   assert.equal(r.truck.id, 'light');
-  assert.equal(r.truck.requiredLb, Math.round(5000 * 1.15));
+  assert.equal(r.truck.requiredLb, Math.round(v.curb * 1.15));
 });
 
 test('dually pickups need at least medium-duty', () => {
@@ -130,13 +131,27 @@ test('wheelbase 0 / bad numbers never produce NaN', () => {
 
 /* ---------- tie-down plan ---------- */
 test('tie-down plan sizes WLL from weight', () => {
-  const r = E.recommend(find('Ford', 'F-150'));          // 5,000 lb
+  const v = find('Toyota', 'Camry');   // short, light car: 4 tie-downs
+  const r = E.recommend(v);
   const td = r.tiedown;
   assert.equal(td.count, 4);
-  assert.equal(td.legalAggLb, 2500);                     // 50% of weight
-  assert.equal(td.recAggLb, 5000);
-  assert.equal(td.perTiedownLb, 1300);                   // 5000/4 = 1250 -> next 100
+  assert.equal(td.legalAggLb, Math.ceil(v.curb * 0.5 / 10) * 10);      // 50% of weight, up to the next 10
+  assert.equal(td.recAggLb, Math.ceil(v.curb / 10) * 10);
+  assert.equal(td.perTiedownLb, Math.ceil(v.curb / 4 / 100) * 100);    // e.g. 3600/4 = 900 -> next 100
   assert.match(td.gear, /2-inch ratchet/);
+});
+
+test('long-wheelbase pickups get six tie-downs', () => {
+  assert.equal(E.recommend(find('Ford', 'F-150')).tiedown.count, 6);   // SuperCrew 6.5 ft box, wb >= 150 in
+});
+
+test('no two rows for the same make + model + power overlap in years', () => {
+  const seen = {};
+  for (const v of D.vehicles) {
+    const k = v.make + '|' + v.model + '|' + v.power;
+    for (const o of (seen[k] || [])) assert.ok(v.yTo < o.yFrom || o.yTo < v.yFrom, k + ' ' + v.yFrom + '-' + v.yTo);
+    (seen[k] = seen[k] || []).push(v);
+  }
 });
 
 test('heavy or long vehicles get six tie-downs and chain', () => {
@@ -209,7 +224,7 @@ test('database rows are well formed and unique', () => {
     if (v.gvwr) assert.ok(v.gvwr >= v.curb, 'gvwr below curb ' + id);
     if (v.power === 'EV') assert.deepEqual(v.trans, ['EV'], 'EV trans ' + id);
   }
-  assert.ok(D.vehicles.length >= 90);
+  assert.ok(D.vehicles.length >= 400);
 });
 
 test('every vehicle produces a complete recommendation for every drive and transmission', () => {

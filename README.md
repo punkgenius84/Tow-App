@@ -37,7 +37,9 @@ Run npm test for the tow-rule, clearance, tie-down, vehicle-database, VIN-decodi
 
 ## Adding vehicles
 
-Append a row to ROWS in www/data.js (format documented at the top of that file). The test suite checks row structure and database integrity.
+Do not edit ROWS in www/data.js by hand. Rows live in `tools/vehicle-db/data/*.json` with their sources; follow `.claude/skills/vehicle-db/SKILL.md` (validate, sanity check, `python3 tools/vehicle-db/merge.py`, `npm test`). Every row and its sources are listed in `docs/VEHICLE_SOURCES.md`.
+
+The database has about 415 model ranges across 28 makes. Values are conservative for each range: lowest common ground clearance, longest common wheelbase, heaviest common curb weight. Rows not confirmed on published spec pages are flagged as lower confidence in the app.
 
 ## Operational limits
 
