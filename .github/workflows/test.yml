@@ -5,6 +5,13 @@ on:
     branches:
       - "**"
   pull_request:
+  workflow_dispatch:
+    inputs:
+      build_android_debug_apk:
+        description: 'Build an installable debug APK only after explicit approval'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -43,6 +50,7 @@ jobs:
         run: npm test
 
   android-debug-apk:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_android_debug_apk == 'true' }}
     name: Build installable Android debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
