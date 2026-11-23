@@ -1720,5 +1720,127 @@
    "https://www.iseecars.com/car/2016-ford-super_duty_f__350-specs"
   ],
   "check": "gc 7.1 2010 DRW RWD (autopadre); wb 14.37 ft = 172.4 DRW crew 2009-10 (autopadre); curb 7648 = heaviest F-350 2008-10 entry (SRW diesel, autopadre; DRW listed 7211 gas only); GVWR 14000 from 2016 DRW (iseecars), not confirmed for 2008-10"
+ },
+ {
+  "make": "Lincoln",
+  "model": "MKZ",
+  "yFrom": 2013,
+  "yTo": 2020,
+  "body": "Sedan",
+  "drives": "FWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 3850,
+  "wb": 112.2,
+  "gc": 5.2,
+  "dually": false,
+  "air": false,
+  "low": false,
+  "note": "",
+  "verified": false,
+  "sources": [
+   "https://autofiles.com/ground-clearance/lincoln/mkz/",
+   "https://www.kbb.com/lincoln/mkz/2017/specs/",
+   "https://www.edmunds.com/lincoln/mkz/2017/features-specs/",
+   "https://guideautoweb.com/en/makes/lincoln/mkz/2014/specifications/awd"
+  ],
+  "check": "gc 5.2 autofiles 2015-16 only (aggregator, no maker/autopadre gc found); wb 112.2 KBB/Edmunds 2017; curb 3849 2014 AWD (guideautoweb; KBB 2017 3739); 3.0T AWD unsourced"
+ },
+ {
+  "make": "Lincoln",
+  "model": "MKZ (Hybrid)",
+  "yFrom": 2013,
+  "yTo": 2020,
+  "body": "Sedan",
+  "drives": "FWD",
+  "power": "HEV",
+  "trans": "CVT",
+  "curb": 3850,
+  "wb": 112.2,
+  "gc": 5.2,
+  "dually": false,
+  "air": false,
+  "low": false,
+  "note": "",
+  "verified": false,
+  "sources": [
+   "https://autofiles.com/ground-clearance/lincoln/mkz-hybrid/",
+   "https://www.kbb.com/lincoln/mkz/2017/specs/"
+  ],
+  "check": "gc 5.2 autofiles MKZ Hybrid 2015-16 only (aggregator); wb 112.2 KBB 2017; curb 3871 all Hybrid trims KBB 2017 -> 3850"
+ },
+ {
+  "make": "Ford",
+  "model": "Fusion (Hybrid)",
+  "yFrom": 2013,
+  "yTo": 2020,
+  "body": "Sedan",
+  "drives": "FWD",
+  "power": "HEV",
+  "trans": "CVT",
+  "curb": 3650,
+  "wb": 112.2,
+  "gc": 5.7,
+  "dually": false,
+  "air": false,
+  "low": false,
+  "note": "",
+  "verified": false,
+  "sources": [
+   "https://autofiles.com/ground-clearance/ford/fusion-hybrid/",
+   "https://www.edmunds.com/ford/fusion-hybrid/2017/features-specs/",
+   "https://s3.amazonaws.com/cdn.autoipacket.com/brochures/ford/2017/2017-fusion.pdf"
+  ],
+  "check": "gc 5.7 lowest autofiles value (2018 range 5.7-6.4; 2015-17 6.1-6.4), aggregator only; wb 112.2 Ford 2017 brochure/Edmunds; curb 3668 SE (Edmunds 2017)"
+ },
+ {
+  "make": "Ford",
+  "model": "Fusion (Energi)",
+  "yFrom": 2013,
+  "yTo": 2020,
+  "body": "Sedan",
+  "drives": "FWD",
+  "power": "PHEV",
+  "trans": "CVT",
+  "curb": 4050,
+  "wb": 112.2,
+  "gc": 5.7,
+  "dually": false,
+  "air": false,
+  "low": false,
+  "note": "",
+  "verified": false,
+  "sources": [
+   "https://autofiles.com/ground-clearance/ford/fusion-energi/",
+   "https://www.auto123.com/en/new-cars/technical-specs/ford/fusion-energi/2020/407883/base",
+   "https://www.kbb.com/ford/fusion-energi/2017/specs",
+   "https://s3.amazonaws.com/cdn.autoipacket.com/brochures/ford/2017/2017-fusion.pdf"
+  ],
+  "check": "gc 5.7 lowest autofiles value (2018 5.7-6.1; 2015-16 6.1), aggregator only; wb 112.2 Ford 2017 brochure/KBB; curb 4034 2020 (auto123; KBB 2017 3943) -> 4050"
+ },
+ {
+  "make": "Ford",
+  "model": "Fiesta",
+  "yFrom": 2011,
+  "yTo": 2019,
+  "body": "Hatchback",
+  "drives": "FWD",
+  "power": "ICE",
+  "trans": "DCT|MT",
+  "curb": 2750,
+  "wb": 98.0,
+  "gc": 6.0,
+  "dually": false,
+  "air": false,
+  "low": false,
+  "note": "Automatic is the PowerShift dual-clutch: pick DCT. Sedan body also sold. ST sits lower than 6.0 in (no figure found): measure.",
+  "verified": false,
+  "sources": [
+   "https://autofiles.com/ground-clearance/ford/fiesta/",
+   "https://www.kbb.com/ford/fiesta/2019/specs/",
+   "https://www.kbb.com/ford/fiesta/2016/specs/",
+   "https://www.iseecars.com/car/2016-ford-fiesta-dimensions"
+  ],
+  "check": "gc 6.0 autofiles 2012-19 (aggregator, no ST figure); wb 98.0 KBB 2016/2019, iseecars; curb 2742 ST (KBB 2019; other trims 2537-2578) -> 2750"
  }
 ]
