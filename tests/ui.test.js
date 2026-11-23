@@ -427,3 +427,17 @@ test('unmeasured clearance is explicitly shown as no verdict', () => {
   click(w, [...d.querySelectorAll('.item')].find(b => /Mustang$/.test(b.querySelector('b').textContent)));
   assert.match(d.body.textContent, /NO VERDICT — MEASURE FIRST/);
 });
+
+
+test('third-party clearance evidence is not mislabeled as OEM verified', () => {
+  const { window: w } = boot();
+  const d = w.document;
+  type(w, d.querySelector('#q'), 'Corsair Grand Touring');
+  const item = [...d.querySelectorAll('.item')].find(b => /Corsair Grand Touring/.test(b.querySelector('b').textContent));
+  assert.ok(item, 'Corsair Grand Touring search result');
+  click(w, item);
+  const text = d.body.textContent;
+  assert.ok(text.includes('Third-party source-verified for model year 2023'));
+  assert.ok(text.includes('autopadre.com/ground-clearance/lincoln-corsair'));
+  assert.ok(!text.includes('OEM-source verified for model year 2023 only'), 'third-party evidence must not be represented as OEM evidence');
+});

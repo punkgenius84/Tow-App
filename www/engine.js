@@ -72,6 +72,7 @@
       sourceYear: posNum(v.sourceYear, 0),
       agg: v.agg || '',
       clearanceVerified: v.clearanceVerified === true,
+      clearanceSourceType: v.clearanceSourceType || (v.clearanceVerified === true ? 'OEM' : ''),
       clearanceSource: v.clearanceSource || '',
       clearanceSourceYear: posNum(v.clearanceSourceYear, 0),
       clearanceNote: v.clearanceNote || '',

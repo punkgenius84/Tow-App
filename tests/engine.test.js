@@ -664,3 +664,27 @@ test('2025 Ram 1500 clearance is OEM sourced and isolated from prior model years
   assert.equal(v.yFrom, 2025);
   assert.equal(v.yTo, 2025);
 });
+
+
+test('AutoPadre clearance-only evidence is identified as third-party and never replaces on-scene measurement', () => {
+  const expected = [
+    ['Hyundai', 'Venue', 2020, 6.7],
+    ['Kia', 'Soul', 2012, 6.5],
+    ['Lincoln', 'Corsair', 2023, 7.8],
+    ['Lincoln', 'Corsair Grand Touring', 2023, 6.8],
+    ['Subaru', 'Impreza 5 doors', 2020, 5.1]
+  ];
+  for (const [make, model, year, clearance] of expected) {
+    const v = D.vehicles.find(x => x.make === make && x.model === model && x.yFrom === year && x.yTo === year);
+    assert.ok(v, make + ' ' + model + ' ' + year + ' row');
+    assert.equal(v.gc, clearance);
+    assert.equal(v.clearanceVerified, true);
+    assert.equal(v.clearanceSourceType, 'THIRD_PARTY');
+    assert.equal(v.clearanceSourceYear, year);
+    assert.match(v.clearanceSource, /^https:\/\/www\.autopadre\.com\//);
+    assert.equal(v.conf, 0, 'third-party clearance evidence must not certify other specifications');
+    const r = E.recommend(v);
+    assert.equal(r.spec.clearanceSourceType, 'THIRD_PARTY');
+    assert.equal(r.clearance.status, 'unknown', 'on-scene measurement is still mandatory');
+  }
+});
