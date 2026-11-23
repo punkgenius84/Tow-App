@@ -75,7 +75,7 @@ Source: https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library
 
 Honda's 2025 US specifications list unladen ground clearance of 7.3 in on Sport, EX-L, Touring, Elite and Black Edition, and 8.3 in on TrailSport AWD. The database uses 7.3 in as the conservative baseline. The 2025 slice is separated from 2023–2024 so this source is not applied backward.
 
-Source: https://hondanews.com/en-US/honda-automobiles/releases/2025-honda-pilot-specifications-features
+Source: https://hondanews.com/en-US/honda-automobiles/releases/release-16f7afa1eda16f08561d54be9a01e83e-2025-honda-pilot-specifications-features
 
 ## Batch accounting
 
