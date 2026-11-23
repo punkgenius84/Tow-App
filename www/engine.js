@@ -71,6 +71,10 @@
       source: v.source || '',
       sourceYear: posNum(v.sourceYear, 0),
       agg: v.agg || '',
+      clearanceVerified: v.clearanceVerified === true,
+      clearanceSource: v.clearanceSource || '',
+      clearanceSourceYear: posNum(v.clearanceSourceYear, 0),
+      clearanceNote: v.clearanceNote || '',
       dimensionsVerified: v.conf === 1 && !!v.source,
       measured: posNum(sel.gc, 0) > 0 && posNum(sel.wb, 0) > 0,
       // Catalog rows with conf=0 carry unverified weight/GVWR estimates. Only an

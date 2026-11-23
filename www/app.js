@@ -228,6 +228,9 @@
       row('Curb weight', E.fmt(sp.curb) + ' lb') + row('GVWR', sp.gvwr ? E.fmt(sp.gvwr) + ' lb' : 'n/a') +
       row('Wheelbase (catalog)', sp.catalogWb ? sp.catalogWb + ' in' : 'Not in catalog') +
       row('Ground clearance (catalog)', sp.catalogGc ? sp.catalogGc + ' in' : 'Not in catalog') +
+      row('Ground-clearance source status', sp.clearanceVerified ? 'OEM-source verified for model year ' + sp.clearanceSourceYear + ' only; configuration-dependent' : 'Not OEM-source verified for this row') +
+      row('Ground-clearance source', sp.clearanceSource || 'No scoped OEM clearance source recorded') +
+      row('Ground-clearance source notes', sp.clearanceNote || 'No separate clearance-source notes') +
       row('Overall length (catalog)', sp.len ? sp.len + ' in' : 'Not in catalog') +
       row('Overall width (catalog)', sp.wid ? sp.wid + ' in' : 'Not in catalog') +
       row('Overall height (catalog)', sp.ht ? sp.ht + ' in' : 'Not in catalog') +

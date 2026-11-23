@@ -4,11 +4,11 @@
 
 **Safety mitigation now active:** catalog-derived values are not treated as confirmed specifications unless a row has an explicit, scoped OEM verification record. Unverified values remain provisional and cannot substitute for on-scene measurements.
 
-This audit covers the complete current US-market catalog in `www/data.js`: **2,827 rows across 47 makes**, comprising **308 curated rows** and **2,519 aggregator-derived rows**, spanning model years 1980–2025. Of the 308 curated rows, 11 are OEM-source-verified for a single model year and 297 remain unverified. All 2,519 aggregator-derived rows remain unverified. Across the full catalog, 2,816 rows remain unverified. All three body dimensions are present on 2,507 rows; 320 lack at least one. Field presence: length 2,526; width 2,513; height 2,518. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
+This audit covers the complete current US-market catalog in `www/data.js`: **2,837 rows across 47 makes**, comprising **308 curated rows** and **2,522 aggregator-derived rows**, spanning model years 1980–2025. Of the 308 curated rows, 11 are OEM-source-verified for a single model year and 304 remain unverified. All 2,522 aggregator-derived rows remain unverified. Across the full catalog, 2,826 rows remain unverified. All three body dimensions are present on 2,507 rows; 320 lack at least one. Field presence: length 2,526; width 2,513; height 2,518. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
 ## Body-dimension gap inventory (2026-11-21)
 
-A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,827 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
+A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,837 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
 
 | Make | Rows missing one or more body dimensions |
 |---|---:|
@@ -136,7 +136,7 @@ The Tacoma was completely redesigned for model year 2024. The catalog now separa
 
 ## Current machine-reconciled inventory (2026-11-21)
 
-The figures below were recomputed directly from every data row in `docs/vehicle-catalog-audit.csv`, not copied from earlier narrative summaries. The CSV contains **2,827 rows**: **308 curated rows** (11 `OEM_VERIFIED` and 297 other curated rows) plus **2,519 `AGGREGATOR_UNVERIFIED` rows**. Confidence totals are 11 `OEM_VERIFIED_SINGLE_YEAR` and 2,816 `LOW_UNVERIFIED`. Audit-status totals include 279 `IDENTITY_SPLIT_DIMENSIONS_PENDING`, 2 `PARTIAL_SOURCE_VARIANTS_UNRESOLVED`, 2 `OEM_SOURCE_PARTIAL`, 4 `OEM_PARTIAL_VARIANT_BASELINE`, and the remaining scoped pending/partial statuses; see the CSV for the complete row-level breakdown.
+The figures below were recomputed directly from every data row in `docs/vehicle-catalog-audit.csv`, not copied from earlier narrative summaries. The CSV contains **2,837 rows**: **308 curated rows** (11 `OEM_VERIFIED` and 297 other curated rows) plus **2,522 `AGGREGATOR_UNVERIFIED` rows**. Confidence totals are 11 `OEM_VERIFIED_SINGLE_YEAR` and 2,826 `LOW_UNVERIFIED`. Audit-status totals include 279 `IDENTITY_SPLIT_DIMENSIONS_PENDING`, 2 `PARTIAL_SOURCE_VARIANTS_UNRESOLVED`, 2 `OEM_SOURCE_PARTIAL`, 4 `OEM_PARTIAL_VARIANT_BASELINE`, and the remaining scoped pending/partial statuses; see the CSV for the complete row-level breakdown.
 
 Field-presence audit: 495 rows have no ground-clearance value and 21 have no wheelbase value. All three body dimensions (length, width and height) are present in 2,507 rows; 320 rows lack at least one. Per-field presence: length 2,526, width 2,513, height 2,518. These are field-presence counts only—not evidence of accuracy or OEM verification. The 166 curated rows spanning eight or more model years remain a high-priority mismatch risk. Coverage of US models listed for 2015–2025 remains 596 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. **Release status remains IN PROGRESS — NOT APPROVED FOR RELEASE.**
 
@@ -157,3 +157,23 @@ The 2025 US Camry is hybrid-only. Toyota's 2025 US eBrochure lists 111.2 in whee
 ## OEM-verified update — Toyota Crown Signia (2025)
 
 Toyota's 2025 US eBrochure lists the XLE and Limited at 4,210 lb curb weight, 112.2 in wheelbase, and 6.7 in ground clearance. Both grades share exterior dimensions of 194.1 in length, 74.0 in width and 64.0 in height. Toyota specifies the 2.5L hybrid system, standard electronic on-demand AWD and electronically controlled CVT. The catalog adds a single-year 2025 row only; these values do not establish specifications for other years or unlisted future variants. AWD means flatbed-only guidance remains in effect, and the database's ground-clearance value is reference data only: measure the actual vehicle before loading. Source: [2025 Toyota Crown Signia eBrochure](https://www.toyota.com/content/dam/toyota/brochures/pdf/2025/toyotacrownsignia_ebrochure.pdf).
+
+
+## OEM ground-clearance research batch — 2025 model year
+
+The catalog now contains **11 clearance-only OEM evidence entries** for 2025 configurations across Ford, Kia, Hyundai and Toyota. These are separate from full-dimension verification: curb weight, wheelbase and/or body dimensions remain low-confidence unless independently sourced. Clearance source URL, source model year, verified value and configuration caveat are recorded separately. Earlier model years remain separate and are not upgraded from 2025 evidence.
+
+| Make / model | 2025 conservative catalog clearance | OEM source scope |
+|---|---:|---|
+| Ford F-150 | 8.2 in | Standard configurations; Tremor/Raptor higher |
+| Ford F-250 Super Duty SRW | 9.2 in | Lowest listed cab/drive/bed configuration |
+| Ford F-350 Super Duty SRW | 9.1 in | Lowest listed cab/drive/bed configuration |
+| Ford F-350 Super Duty DRW | 9.2 in | Lowest listed cab/drive/bed configuration |
+| Kia Sorento gas / PHEV | 6.9 in | 2025 FWD/AWD specifications as applicable |
+| Hyundai Tucson | 7.1 in | 2WD; AWD listed at 8.3 in |
+| Hyundai Santa Fe | 7.0 in | Most trims; XRT listed at 8.3 in |
+| Toyota 4Runner | 8.1 in | SR5; higher grades list 8.8–10.1 in |
+
+Sources: [Ford F-150 2025](https://www.ford.com/trucks/f150/2025/pricing-and-incentives/); [Ford 2025 Super Duty technical specifications](https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2025/specs/2025-Ford-Super-Duty-Technical-Specs.pdf); [Kia Sorento 2025](https://www.kiamedia.com/us/en/models/sorento/2025/specifications); [Hyundai Tucson 2025](https://www.hyundaiusa.com/us/en/vehicles/2025-tucson/compare-specs); [Hyundai Santa Fe 2025](https://aws-sweb.hyundaiusa.com/us/en/vehicles/2025-santa-fe/compare-specs); [Toyota 4Runner 2025 grade guide](https://engage.toyota.com/static/articles/2025_4runner_sales_consultant_guide/2025_4Runner_Sales_Consultant_Guide.pdf).
+
+**Safety:** published manufacturer clearance is reference data, not a measurement of an individual tow-in vehicle. The app continues to require actual lowest-point clearance and wheelbase measurements before it can return anything other than **NO VERDICT — MEASURE FIRST**.

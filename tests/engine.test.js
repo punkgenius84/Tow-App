@@ -267,7 +267,7 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 
 test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
   const curated = D.vehicles.filter(v => !v.agg);
-  assert.equal(curated.length, 308, '297 unverified estimate rows + 11 OEM-verified rows');
+  assert.equal(curated.length, 315, '304 unverified estimate rows + 11 full-dimension OEM-verified rows');
   assert.ok(D.vehicles.length > 298, 'bulk rows imported');
   for (const v of D.vehicles) {
     const id = v.make + ' ' + v.model + ' ' + v.yFrom;
@@ -609,4 +609,10 @@ test('2025 Camry Hybrid uses Toyota OEM dimensions and conservative trim-weight 
   assert.equal(v.ht, 56.9);
   const r = E.recommend(v, {});
   assert.equal(r.clearance.status, 'unknown', 'OEM catalog values still cannot replace on-scene measurements');
+});
+
+
+test('2025 OEM ground-clearance evidence is field-scoped and never replaces on-scene measurements', () => {
+ const expected=[['Ford','F-150',8.2],['Ford','F-250 Super Duty',9.2],['Ford','F-350 Super Duty (single rear wheel)',9.1],['Ford','F-350 Super Duty (dually)',9.2],['Ford','F-150 Regular Cab',8.2],['Kia','Sorento',6.9],['Kia','Sorento (Plug-in hybrid)',6.9],['Hyundai','Tucson',7.1],['Hyundai','Santa Fe',7.0],['Toyota','4Runner (2025)',8.1]];
+ for(const [make,model,gc] of expected){const v=D.vehicles.find(x=>x.make===make&&x.model===model&&x.yFrom===2025&&x.yTo===2025);assert.ok(v,make+' '+model+' 2025 row');assert.equal(v.gc,gc);assert.equal(v.clearanceVerified,true);assert.equal(v.clearanceSourceYear,2025);assert.match(v.clearanceSource,/^https:\/\//);assert.equal(v.conf,0,'clearance-only evidence must not certify other specifications');const r=E.recommend(v);assert.equal(r.spec.clearanceVerified,true);assert.equal(r.clearance.status,'unknown','on-scene measurement is still mandatory');}
 });

@@ -28,6 +28,11 @@ The AutoEvolution-derived upstream repository describes its contents as scraped 
 
 ## Data-quality status is separate from licensing
 
-As of 2026-11-21, the catalog has 2,827 rows: 308 curated entries (297 unverified curated entries plus 11 OEM-source-verified single-year entries) and 2,519 AutoEvolution-derived entries. The audit CSV records 11 OEM-verified rows and 2,816 low-confidence/unverified rows. These figures were recomputed from all 2,827 CSV data rows. A source licence does not prove specification accuracy, and OEM verification does not resolve the rights status of unrelated imported rows.
+As of 2026-11-21, the catalog has 2,837 rows: 315 curated entries (304 unverified curated entries plus 11 OEM-source-verified single-year entries) and 2,522 AutoEvolution-derived entries. The audit CSV records 11 OEM-verified rows and 2,826 low-confidence/unverified rows. These figures were recomputed from all 2,837 CSV data rows. A source licence does not prove specification accuracy, and OEM verification does not resolve the rights status of unrelated imported rows.
 
 Ground-clearance values remain reference data only. No catalog value may produce a positive loading clearance verdict; the operator must measure the actual vehicle's lowest point and wheelbase on scene.
+
+
+## Clearance-only OEM evidence added (2026-11-23)
+
+Eleven 2025 model-year ground-clearance references were added across Ford F-150 / Super Duty, Kia Sorento, Hyundai Tucson / Santa Fe and Toyota 4Runner. Clearance provenance is stored separately from whole-row dimension provenance. These entries do **not** make their rows fully OEM-verified: curb weight, wheelbase and body dimensions remain unverified where not separately sourced. The 2,522 AutoEvolution-derived rows remain unverified and the redistribution hold remains in force.
