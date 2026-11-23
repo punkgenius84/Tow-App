@@ -240,3 +240,8 @@ Five catalog entries now carry **clearance-only OEM verification** for model yea
 | Nissan Rogue | 8.2 in | Nissan lists same minimum for S, SV, Rock Creek, SL and Platinum. |
 
 **Important:** These entries verify ground clearance only. Curb weight, wheelbase and full vehicle identity/configuration remain unverified, so the records remain low-confidence and do not authorize a loading decision. Older-year rows remain unverified. The clearance calculator still requires actual on-scene clearance and wheelbase measurements.
+
+
+## OEM ground-clearance batch — Ram 1500 model years 2024–2025 (2026-11-23)
+
+The Ram 1500 range is now separated into 2019–2023, 2024 and 2025 records. The 2024 OEM source is partial and remains unverified: it documents configuration-dependent clearances (8.3–8.7 in without skid plate; 8.1–8.2 in with skid plate on some 4x4 builds). For 2025, the official specification measures at curb weight with standard tires and wheels and lists 4x4 with skid plate at 8.1 in, 4x4 without skid plate at 8.6 in and 4x2 without skid plate at 8.3 in. Air-suspension and RHO variants have additional differences. The 2025 clearance is verified only; curb weight and exact build identity remain unverified.

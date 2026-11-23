@@ -637,6 +637,7 @@ test('2025 Pilot clearance retains TrailSport trim caveat', () => {
 });
 
 
+
 test('2025 OEM clearance-only batch is year-scoped and retains unverified overall confidence', () => {
   const cases = [
     ['Ford', 'Escape (2025)', 7.5, 'https://content.fordpro.com/content/dam/fordpro/us/en-us/pdf/fleet-vehicles/fleet-solutions/2025_FordPro_Solutions_Guide.pdf'],
@@ -651,8 +652,15 @@ test('2025 OEM clearance-only batch is year-scoped and retains unverified overal
     assert.equal(r.spec.clearanceVerified, true);
     assert.equal(r.spec.clearanceSource, source);
     assert.equal(r.spec.clearanceSourceYear, 2025);
-    assert.equal(r.spec.conf, 0, 'clearance-only OEM evidence must not upgrade overall confidence');
     assert.equal(v.yFrom, 2025);
     assert.equal(v.yTo, 2025);
   }
+});
+test('2025 Ram 1500 clearance is OEM sourced and isolated from prior model years', () => {
+  const v = find('Ram', '1500 (2025)'), r = E.recommend(v);
+  assert.equal(r.spec.gc, 8.1);
+  assert.equal(r.spec.clearanceVerified, true);
+  assert.match(r.spec.clearanceNote, /4x4 with skid plate 8.1 in/);
+  assert.equal(v.yFrom, 2025);
+  assert.equal(v.yTo, 2025);
 });

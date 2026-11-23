@@ -95,7 +95,9 @@
     ['Buick', 'Enclave', 2018, 2025, 'SUV', 'FWD|AWD', 'ICE', 'AT', 4300, 120.9, 7.0, { c: 0 }],
 
     // ---------- Ram / Dodge / Chrysler / Jeep ----------
-    ['Ram', '1500', 2019, 2025, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 5200, 144.5, 8.3, { gvwr: 7100, air: 'opt', c: 0 }],
+    ['Ram', '1500', 2019, 2023, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 5200, 144.5, 8.3, { gvwr: 7100, air: 'opt', c: 0 }],
+    ['Ram', '1500 (2024)', 2024, 2024, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 5200, 144.5, 8.3, { gvwr: 7100, air: 'opt', c: 0, clearanceSource: 'https://s3.amazonaws.com/chryslermedia.iconicweb.com/mediasite/specs/2024_RAM_1500_SP.pdf', clearanceSourceYear: 2024, clearanceNote: '2024 OEM source covers specific configurations only: 8.3–8.7 in without skid plate; 8.1–8.2 in with skid plate on some 4x4 configurations. Exact trim, tires, suspension and skid plate must be identified. Catalog 8.3 in remains an unverified baseline.' }],
+    ['Ram', '1500 (2025)', 2025, 2025, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 5200, 144.6, 8.1, { gvwr: 7100, air: 'opt', c: 0, clearanceVerified: true, clearanceSource: 'https://s3.amazonaws.com/chryslermedia.iconicweb.com/mediasite/specs/2025_Ram_1500_SPals9gfdughljsslrkifm8fhfev.pdf', clearanceSourceYear: 2025, clearanceNote: 'OEM dimensions measured at curb weight with standard tires and wheels. 4x4 ground clearance with skid plate 8.1 in; without skid plate 8.6 in. 4x2 without skid plate 8.3 in. Air suspension and RHO variants have separate ride-height/clearance figures; identify exact build.' } }],
     ['Ram', '2500', 2019, 2025, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 7000, 149.0, 8.0, { gvwr: 10000, c: 0 }],
     ['Ram', '3500 (single rear wheel)', 2019, 2025, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 7300, 169.5, 8.0, { gvwr: 11000, c: 0 }],
     ['Ram', '3500 (dually)', 2019, 2025, 'Pickup', 'RWD|4WD', 'ICE', 'AT', 8200, 169.5, 8.0, { gvwr: 14000, dually: true, c: 0 }],
