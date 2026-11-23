@@ -4,11 +4,11 @@
 
 **Safety mitigation now active:** catalog-derived values are not treated as confirmed specifications unless a row has an explicit, scoped OEM verification record. Unverified values remain provisional and cannot substitute for on-scene measurements.
 
-This audit covers the complete current US-market catalog in `www/data.js`: **2,844 rows across 47 makes**, comprising **318 curated rows** and **2,526 aggregator-derived rows**, spanning model years 1980–2025. Of the 315 curated rows, 11 are OEM-source-verified for a single model year and 307 remain unverified. All 2,524 aggregator-derived rows remain unverified. Across the full catalog, 2,833 rows remain unverified. All three body dimensions are present on 2,512 rows; 330 lack at least one. Field presence: length 2,531; width 2,518; height 2,523. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
+This audit covers the complete current US-market catalog in `www/data.js`: **2,844 rows across 60 makes**, comprising **318 curated rows** and **2,526 aggregator-derived rows**, spanning model years 1980–2025. Of the 318 curated rows, 11 are OEM-source-verified for a single model year and 307 remain unverified. All 2,526 aggregator-derived rows remain unverified. Across the full catalog, 2,833 rows remain unverified. All three body dimensions are present on 2514 rows; 330 lack at least one. Field presence: length 2532; width 2520; height 2525. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
 ## Body-dimension gap inventory (2026-11-23)
 
-A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **330 of 2,842 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
+A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **330 of 2844 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
 
 | Make | Rows missing one or more body dimensions |
 |---|---:|
