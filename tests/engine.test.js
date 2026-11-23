@@ -267,7 +267,7 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 
 test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
   const curated = D.vehicles.filter(v => !v.agg);
-  assert.equal(curated.length, 318, '307 unverified estimate rows + 11 full-dimension OEM-verified rows');
+  assert.equal(curated.length, 318, '314 unverified estimate rows + 11 full-dimension OEM-verified rows + 7 clearance-only OEM rows');
   assert.ok(D.vehicles.length > 298, 'bulk rows imported');
   for (const v of D.vehicles) {
     const id = v.make + ' ' + v.model + ' ' + v.yFrom;
@@ -660,7 +660,7 @@ test('2025 Ram 1500 clearance is OEM sourced and isolated from prior model years
   const v = find('Ram', '1500 (2025)'), r = E.recommend(v);
   assert.equal(r.spec.gc, 8.1);
   assert.equal(r.spec.clearanceVerified, true);
-  assert.match(r.spec.clearanceNote, /4x4 with skid plate 8.1 in/);
+  assert.match(r.spec.clearanceNote, /4x4 ground clearance with skid plate 8.1 in/);
   assert.equal(v.yFrom, 2025);
   assert.equal(v.yTo, 2025);
 });
