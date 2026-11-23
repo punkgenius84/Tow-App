@@ -1,6 +1,6 @@
 {
-  "name": "Big Jay's Tow Guide",
-  "short_name": "Big Jay's",
+  "name": "Big Jay's Tow",
+  "short_name": "Big Jay's Tow",
   "description": "Tells tow operators how to tow a vehicle, which truck is needed, and whether it will clear the ramp.",
   "start_url": "./index.html",
   "scope": "./",
