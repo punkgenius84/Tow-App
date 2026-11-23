@@ -43,13 +43,13 @@ jobs:
       - name: Sync Capacitor Android project
         run: npx cap sync android
 
-      - name: Prepare Big Jay's branded Android launcher icons
+      - name: Prepare Android launcher icons from the approved exact JPG
         run: |
           python -m pip install --quiet pillow
           python - <<'PY'
           from pathlib import Path
           from PIL import Image, ImageOps
-          source = Image.open("www/assets/branding/big_jays_logo_300x300.png").convert("RGBA")
+          source = Image.open("www/icons/Applauncherimage.jpg").convert("RGBA")
           background = (7, 27, 59, 255)
           for density, size in [("mdpi", 48), ("hdpi", 72), ("xhdpi", 96), ("xxhdpi", 144), ("xxxhdpi", 192)]:
               folder = Path(f"android/app/src/main/res/mipmap-{density}")
