@@ -267,7 +267,7 @@ test('summary text mentions method, truck, clearance and tie-downs', () => {
 
 test('all unverified catalog rows remain low-confidence until OEM provenance is reviewed', () => {
   const curated = D.vehicles.filter(v => !v.agg);
-  assert.equal(curated.length, 325, '307 unverified estimate rows + 11 full-dimension OEM-verified rows + 7 clearance-only OEM rows');
+  assert.equal(curated.length, 327, '307 unverified estimate rows + 11 full-dimension OEM-verified rows + 9 clearance-only OEM rows');
   assert.ok(D.vehicles.length > 298, 'bulk rows imported');
   for (const v of D.vehicles) {
     const id = v.make + ' ' + v.model + ' ' + v.yFrom;
