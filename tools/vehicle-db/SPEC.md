@@ -42,8 +42,9 @@ Write ONE JSON file: `tools/vehicle-db/data/{NAME}.json` — a JSON array of row
 
 ## Confidence rule
 `verified: true` only if gc AND wb AND curb were each confirmed from at least one reliable page you actually opened
-(manufacturer spec/press page, Edmunds, Car and Driver, MotorTrend, Cars.com, KBB, NHTSA, Wikipedia infobox/specs table, carsdirect, autobytel/autoblog spec pages),
-AND gc came from the manufacturer or two independent reliable sources agreeing within 0.3 in. Otherwise `verified: false`
+(manufacturer spec/press page, autopadre, Edmunds, KBB, Car and Driver, MotorTrend, Cars.com, NHTSA, Wikipedia infobox/specs table),
+AND gc came from the manufacturer, autopadre, or two other reliable sources agreeing within 0.3 in.
+Source priority (owner rule): manufacturer figure for that exact make/model/year/trim > autopadre > others. Otherwise `verified: false`
 (still give your best sourced number). Never guess a number with no source: drop the row instead and list it in your final message.
 
 ## Naming (VIN decode matching depends on this)
@@ -67,14 +68,20 @@ may split them into more generations (keep the existing name on the newest gener
 Do not edit any other files. Do not touch the app repo.
 
 ## Fast sources (learned in round 1)
-- **autopadre.com** — one page per model covers every year: `https://www.autopadre.com/ground-clearance/{make}-{model}`
-  (also `/dimensions/` and `/weights/` pages). Use it first to find generation breaks and fill gaps with one fetch per model.
-  It names no source and some values disagree with the maker (e.g. 2014-20 Acura MDX listed at 5.6 in), so it is a
-  secondary source: it never makes a row verified on its own. If it is >1 in below the maker figure, use the maker figure
-  and say so in `check`.
+- **autopadre.com** — PRIMARY source (owner-approved). One page per model covers every year and lists the trims:
+  `https://www.autopadre.com/ground-clearance/{make}-{model}`, plus `/vehicle-dimensions/{make}-{model}` (wheelbase, in rounded feet - prefer an exact
+  inch figure when you have one) and `/vehicle-weight/{make}-{model}` (curb weight). Some slugs use the numbered model
+  (lexus-rx-350). Watch for autopadre listing GVWR as curb weight on big SUVs, and obvious typos. Take the lowest gc, longest wb
+  and heaviest curb across trims for each range. A row is `verified: true` when gc, wb and curb all come from autopadre
+  (or autopadre plus another reliable page). No second source is needed. Use KBB/Edmunds/maker only to fill what
+  autopadre lacks (e.g. model years after its last update, GVWR).
+- **OEM overrides autopadre** (owner rule): if you have the manufacturer's own figure (maker spec sheet, brochure, press
+  release, owner's manual) for the same make, model, year and trim, use the OEM number instead of autopadre's for that
+  trim, then apply the conservative rule across trims as usual. Put the OEM URL in sources (no override note needed). Only override from a page you actually opened, never from memory.
 - **KBB** `kbb.com/{make}/{model}/{year}/specs/` and **Edmunds** features-specs pages: per-trim gc/wb/curb. Note KBB,
   Edmunds, CarBuzz and iseecars often share one data feed, so two of them agreeing is weaker than maker + one of them.
 - **Maker brochures/spec PDFs** (Toyota `toyota.com/content/dam/toyota/brochures/pdf/{year}/{model}_ebrochure.pdf`,
   Honda Canada spec PDFs, Ford spec sheets) are the best sources when they load.
+- **Lexus Canada** `media.lexus.ca/en/specifications/{year}/{year}-lexus-{model}-specifications.html` counts as maker data.
 - **Skip:** cars.com for gc (rounds to whole inches), GM media pages and Car and Driver / MotorTrend (blocked).
 - WebFetch has a shared hourly limit across all agents; run at most 3-4 research agents at once.

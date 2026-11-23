@@ -582,7 +582,7 @@
       if (norm(v.make) !== norm(parsed.make)) return;
       var nm = norm(String(v.model).replace(/\(.*?\)/g, ''));
       var s = 0;
-      if (pm === nm) s = 100;
+      if (pm === nm) s = norm(v.model) === pm ? 105 : 100;   // plain "F-150" beats tagged "F-150 (Raptor)"
       else if (pm.indexOf(nm) === 0 || nm.indexOf(pm) === 0) s = 80;
       else if (pm.indexOf(nm) !== -1 || nm.indexOf(pm) !== -1) s = 60;
       if (!s) return;
@@ -590,7 +590,11 @@
       if (parsed.power) s += (parsed.power === v.power) ? 15 : -15;
       if (s > 0) scored.push({ v: v, score: s });
     });
-    scored.sort(function (a, b) { return b.score - a.score; });
+    // Ties (e.g. a VIN that decodes as "Wrangler" fits both 2-door and Unlimited rows): put the
+    // conservative pick first - heavier, then longer wheelbase, then lower clearance.
+    scored.sort(function (a, b) {
+      return (b.score - a.score) || (b.v.curb - a.v.curb) || (b.v.wb - a.v.wb) || (a.v.gc - b.v.gc);
+    });
     return scored.slice(0, 5).map(function (x) { return x.v; });
   }
 

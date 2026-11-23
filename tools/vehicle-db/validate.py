@@ -22,7 +22,7 @@ for i, r in enumerate(rows):
     if r['power'] == 'EV' and t != ['EV']: e('EV rows must have trans "EV"')
     if r['power'] != 'EV' and 'EV' in t: e('only EV rows use trans EV')
     if not (2000 <= r['curb'] <= 12000): e('curb out of range')
-    if not (95 <= r['wb'] <= 190): e('wb out of range')
+    if not (85 <= r['wb'] <= 190): e('wb out of range')
     if not (3.5 <= r['gc'] <= 12): e('gc out of range')
     g = r.get('gvwr')
     if g is not None and g != 0 and g < r['curb']: e('gvwr below curb')

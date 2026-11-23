@@ -744,9 +744,10 @@
   "sources": [
    "https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2026/specs/2026_Mustang_Technical_Specs.pdf",
    "https://www.edmunds.com/ford/mustang/2024/features-specs/",
-   "https://www.cars.com/research/ford-mustang-2024/specs/439077/"
+   "https://www.cars.com/research/ford-mustang-2024/specs/439077/",
+   "https://www.autopadre.com/ground-clearance/ford-mustang"
   ],
-  "check": "wb 107.0 (Ford 2026 spec, Edmunds); curb 4012 Dark Horse auto max (Ford 2026); gc 4.9 is the existing estimate, NOT confirmed (no spec page listed gc)"
+  "check": "wb 107.0 (Ford 2026 spec, Edmunds); curb 4012 Dark Horse auto max (Ford 2026); gc 4.9 is the existing estimate, NOT confirmed (no spec page listed gc); autopadre has no 2024+ Mustang coupe clearance (lists Mach-E only)"
  },
  {
   "make": "Ford",
@@ -768,9 +769,12 @@
   "sources": [
    "https://www.edmunds.com/ford/mustang/2018/features-specs/",
    "https://www.kbb.com/ford/mustang/2018/specs/",
-   "https://www.cars.com/research/ford-mustang-2015/specs/369900"
+   "https://www.cars.com/research/ford-mustang-2015/specs/369900",
+   "https://www.autopadre.com/ground-clearance/ford-mustang",
+   "https://www.autopadre.com/vehicle-weight/ford-mustang",
+   "https://www.autopadre.com/vehicle-dimensions/ford-mustang"
   ],
-  "check": "wb 107.1 (Edmunds 2018, KBB 2018); curb 3825 GT Premium convertible (cars.com 2015); gc 4.9 existing estimate, NOT confirmed"
+  "check": "wb 107.1 Edmunds/KBB (autopadre 8.92 ft); curb 3825 GT Premium convertible (autopadre, cars.com); gc 4.9 NOT confirmed: autopadre has no 2015-2023 Mustang clearance (its 2021+ entries are Mach-E)"
  },
  {
   "make": "Ford",
@@ -781,21 +785,21 @@
   "drives": "RWD",
   "power": "ICE",
   "trans": "AT|MT",
-  "curb": 3650,
+  "curb": 4050,
   "wb": 107.1,
   "gc": 5.7,
   "dually": false,
   "air": false,
   "low": true,
   "note": "Shelby GT500 (about 4000 lb) is heavier with a lower front splitter; measure.",
-  "verified": false,
+  "verified": true,
   "sources": [
-   "https://www.kbb.com/ford/mustang/2010/specs/",
-   "https://www.edmunds.com/ford/mustang/2010/features-specs/",
-   "https://www.cars.com/research/ford-mustang-2010/specs/309022/",
-   "https://www.autopadre.com/ground-clearance/ford-mustang"
+   "https://www.autopadre.com/ground-clearance/ford-mustang",
+   "https://www.autopadre.com/vehicle-dimensions/ford-mustang",
+   "https://www.autopadre.com/vehicle-weight/ford-mustang",
+   "https://www.kbb.com/ford/mustang/2010/specs/"
   ],
-  "check": "gc 5.7 from autopadre aggregator only (KBB lists 5.7 for GT500); wb 107.1 KBB/Edmunds; curb 3651 GT convertible (KBB 2010, cars.com)"
+  "check": "gc 5.7 all trims 2005-2008, 2011 (autopadre); wb 8.92 ft = 107.1 (autopadre, KBB); curb 4040 2007-09 Shelby GT500 convertible (autopadre)"
  },
  {
   "make": "Ford",
@@ -991,7 +995,7 @@
   "drives": "RWD|4WD",
   "power": "ICE",
   "trans": "AT",
-  "curb": 5600,
+  "curb": 5700,
   "wb": 122.5,
   "gc": 9.7,
   "note": "Expedition MAX (131.6 in wheelbase) has its own row. GVWR not found in sources.",
@@ -999,9 +1003,10 @@
   "sources": [
    "https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2019/expedition/2019-expedition.pdf",
    "https://www.kbb.com/ford/expedition/2020/specs/",
-   "https://www.edmunds.com/ford/expedition/2020/features-specs/"
+   "https://www.edmunds.com/ford/expedition/2020/features-specs/",
+   "https://www.autopadre.com/vehicle-weight/ford-expedition"
   ],
-  "check": "gc 9.8 Ford 2019 / KBB 2020 / Edmunds 2020 (9.7 used = MAX 4x4 min); wb 122.5 all; curb 5623 4x4 (Ford 2019, KBB)"
+  "check": "gc 9.8 Ford 2019 / KBB 2020 / Edmunds 2020 (9.7 used = MAX 4x4 min); wb 122.5 all; curb 5623 4x4 (Ford 2019, KBB); curb raised to 5692 2018-21/2024 4WD (autopadre)"
  },
  {
   "make": "Ford",
@@ -1051,16 +1056,18 @@
   "drives": "RWD|4WD",
   "power": "ICE",
   "trans": "AT",
-  "curb": 5800,
+  "curb": 5850,
   "wb": 119.0,
   "gc": 8.7,
   "note": "Expedition EL (long, about 131 in wheelbase) not covered by this row. GVWR not found in sources.",
   "verified": true,
   "sources": [
    "https://www.kbb.com/ford/expedition/2012/specs/",
-   "https://www.edmunds.com/ford/expedition/2012/features-specs/"
+   "https://www.edmunds.com/ford/expedition/2012/features-specs/",
+   "https://www.autopadre.com/vehicle-weight/ford-expedition",
+   "https://www.autopadre.com/ground-clearance/ford-expedition"
   ],
-  "check": "gc 8.7 KBB 2012 and Edmunds 2012; wb 119.0 both; curb 5781 4WD (both)"
+  "check": "gc 8.7 KBB 2012 and Edmunds 2012; wb 119.0 both; curb 5781 4WD (both); curb raised to 5846 2015 4WD (autopadre); autopadre gc 8.7 2008-2017"
  },
  {
   "make": "Ford",
@@ -1123,9 +1130,10 @@
   "sources": [
    "https://www.kbb.com/ford/fusion/2017/specs/",
    "https://www.edmunds.com/ford/fusion/2017/features-specs/",
-   "https://www.cars.com/research/ford-fusion-2013/specs/353070/"
+   "https://www.cars.com/research/ford-fusion-2013/specs/353070/",
+   "https://www.autopadre.com/ground-clearance/ford-fusion"
   ],
-  "check": "wb 112.2 KBB/Edmunds 2017; curb 3982 Sport AWD (KBB 2017); gc 5.2 existing estimate NOT confirmed (no source listed gc)"
+  "check": "wb 112.2 KBB/Edmunds 2017; curb 3982 Sport AWD (KBB 2017); gc 5.2 existing estimate NOT confirmed (no source listed gc); gc still unconfirmed: autopadre lists Fusion clearance for 2011-2012 only"
  },
  {
   "make": "Ford",
@@ -1165,9 +1173,10 @@
   "sources": [
    "https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2016/focus/2016-Ford-Focus-Tech-Specs-FINAL.pdf",
    "https://www.kbb.com/ford/focus/2015/specs/",
-   "https://www.cars.com/research/ford-focus-2014/specs/360844"
+   "https://www.cars.com/research/ford-focus-2014/specs/360844",
+   "https://www.autopadre.com/ground-clearance/ford-focus"
   ],
-  "check": "wb 104.3 Ford 2016 spec/KBB; curb 3055 Titanium sedan auto (Ford 2016); gc 5.0 existing estimate NOT confirmed"
+  "check": "wb 104.3 Ford 2016 spec/KBB; curb 3055 Titanium sedan auto (Ford 2016); gc 5.0 existing estimate NOT confirmed; gc still unconfirmed: autopadre lists Focus clearance for 2005-2007 only"
  },
  {
   "make": "Ford",
@@ -1193,17 +1202,523 @@
   "make": "Lincoln",
   "model": "Navigator",
   "yFrom": 2018,
-  "yTo": 2025,
+  "yTo": 2024,
   "body": "SUV",
   "drives": "RWD|4WD",
   "power": "ICE",
   "trans": "AT",
-  "curb": 5800,
+  "curb": 5900,
   "wb": 122.5,
-  "gc": 8.0,
-  "note": "Values not re-verified in this pass; measure before loading.",
+  "gc": 9.6,
+  "air": "opt",
+  "note": "Navigator L (131.6 in wheelbase) has its own row. Adaptive suspension on upper trims.",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-weight/lincoln-navigator"
+  ],
+  "check": "gc 9.6 4WD 2018-2024 (autopadre; RWD 9.7); wb 122.5 (autopadre 10.21 ft 2018-20, 10.2 ft 2024); curb 5922 2021 4WD (autopadre; its 2018-2020 weights ~7,600 look like GVWR, ignored)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Navigator",
+  "yFrom": 2025,
+  "yTo": 2026,
+  "body": "SUV",
+  "drives": "4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6000,
+  "wb": 122.4,
+  "gc": 8.9,
+  "air": "opt",
+  "note": "Navigator L (132 in wheelbase) has its own row.",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-weight/lincoln-navigator"
+  ],
+  "check": "gc 8.9 all trims 2025-2026 (autopadre); wb 10.2 ft = 122.4 (autopadre); curb 6023 2025 4WD (autopadre)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Navigator",
+  "yFrom": 2015,
+  "yTo": 2017,
+  "body": "SUV",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6200,
+  "wb": 119.0,
+  "gc": 8.1,
+  "note": "Navigator L (131 in wheelbase) has its own row. Curb is the 2007-2014 max; autopadre 2015-17 weights look like GVWR.",
   "verified": false,
-  "sources": [],
-  "check": "NOT re-verified (web fetch limit reached): existing estimates kept"
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-weight/lincoln-navigator"
+  ],
+  "check": "gc 8.1 4WD 2015-2017 (autopadre); wb 9.92 ft = 119.0 (autopadre); curb NOT confirmed for 2015-17 (autopadre lists 7,700 = GVWR-like), 6203 = 2008 4WD max used as upper bound"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Navigator",
+  "yFrom": 2007,
+  "yTo": 2014,
+  "body": "SUV",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6200,
+  "wb": 119.0,
+  "gc": 9.0,
+  "note": "Navigator L (131 in wheelbase) has its own row.",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-weight/lincoln-navigator"
+  ],
+  "check": "gc 9.0 min (2007 all, 2008 4WD) autopadre; wb 9.92 ft = 119.0 autopadre; curb 6203 2008 4WD autopadre (2014 value 7,700 looks like GVWR, ignored)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Navigator L",
+  "yFrom": 2025,
+  "yTo": 2026,
+  "body": "SUV",
+  "drives": "4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6150,
+  "wb": 132.0,
+  "gc": 8.9,
+  "air": "opt",
+  "note": "",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-weight/lincoln-navigator"
+  ],
+  "check": "gc 8.9 L trims (autopadre); wb 11.0 ft = 132.0 (autopadre); curb 6149 2025 L 4WD (autopadre)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Navigator L",
+  "yFrom": 2018,
+  "yTo": 2024,
+  "body": "SUV",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6100,
+  "wb": 131.6,
+  "gc": 9.6,
+  "air": "opt",
+  "note": "",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-weight/lincoln-navigator"
+  ],
+  "check": "gc 9.6 L 4WD (autopadre); wb 10.97 ft = 131.6 2018-20 (autopadre); curb 6089 2021 L 4WD (autopadre; 2018-20 weights GVWR-like, ignored)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Navigator L",
+  "yFrom": 2007,
+  "yTo": 2017,
+  "body": "SUV",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6400,
+  "wb": 131.0,
+  "gc": 8.1,
+  "note": "L was 9.1 in clearance 2007-2014; 8.1 in 2015-2017.",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-navigator",
+   "https://www.autopadre.com/vehicle-weight/lincoln-navigator"
+  ],
+  "check": "gc 8.1 L 4WD 2015-17 (autopadre; 9.1 2007-14); wb 10.92 ft = 131.0 (autopadre); curb 6406 2008 L 4WD (autopadre; 2014-17 7,900 GVWR-like ignored)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Corsair",
+  "yFrom": 2020,
+  "yTo": 2026,
+  "body": "SUV",
+  "drives": "FWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 3850,
+  "wb": 106.7,
+  "gc": 7.8,
+  "note": "",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-corsair",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-corsair",
+   "https://www.autopadre.com/vehicle-weight/lincoln-corsair"
+  ],
+  "check": "gc 7.8 FWD (autopadre); wb 8.89 ft = 106.7 (autopadre 2020; 8.9 ft later); curb 3851 2020 AWD (autopadre)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Corsair (Grand Touring)",
+  "yFrom": 2021,
+  "yTo": 2026,
+  "body": "SUV",
+  "drives": "AWD",
+  "power": "PHEV",
+  "trans": "CVT",
+  "curb": 4500,
+  "wb": 106.8,
+  "gc": 6.8,
+  "note": "Plug-in hybrid: lower clearance than gas Corsair.",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-corsair",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-corsair",
+   "https://www.autopadre.com/vehicle-weight/lincoln-corsair"
+  ],
+  "check": "gc 6.8 Grand Touring (autopadre); wb 8.9 ft = 106.8 (autopadre 2024-26); curb 4493 2024-26 GT eCVT AWD (autopadre)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Nautilus",
+  "yFrom": 2019,
+  "yTo": 2023,
+  "body": "SUV",
+  "drives": "FWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 4550,
+  "wb": 112.2,
+  "gc": 7.9,
+  "note": "",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-nautilus",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-nautilus",
+   "https://www.autopadre.com/vehicle-weight/lincoln-nautilus"
+  ],
+  "check": "gc 7.9 all trims (autopadre); wb 112.2 (autopadre 9.35 ft); curb 4545 2021-23 AWD (autopadre)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Nautilus",
+  "yFrom": 2024,
+  "yTo": 2026,
+  "body": "SUV",
+  "drives": "AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 4350,
+  "wb": 114.2,
+  "gc": 7.9,
+  "note": "2025+ Nautilus hybrid not covered (no sourced figures).",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-nautilus",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-nautilus",
+   "https://www.autopadre.com/vehicle-weight/lincoln-nautilus"
+  ],
+  "check": "gc 7.9 (autopadre); wb 114.2 (autopadre 9.5 ft / 114.2 in); curb 4349 AWD 2.0T (autopadre)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "MKX",
+  "yFrom": 2016,
+  "yTo": 2018,
+  "body": "SUV",
+  "drives": "FWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 4400,
+  "wb": 112.2,
+  "gc": 7.9,
+  "note": "",
+  "verified": false,
+  "sources": [
+   "https://www.kbb.com/lincoln/mkx/2017/specs/",
+   "https://www.autopadre.com/ground-clearance/lincoln-nautilus"
+  ],
+  "check": "gc 7.9 KBB 2017 all trims (autopadre lists 7.9 for the same-body 2019 Nautilus); wb 112.2 KBB; curb 4387 AWD KBB 2017"
+ },
+ {
+  "make": "Lincoln",
+  "model": "MKT",
+  "yFrom": 2010,
+  "yTo": 2019,
+  "body": "SUV",
+  "drives": "FWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 5050,
+  "wb": 117.9,
+  "gc": 5.9,
+  "note": "Long, low crossover; livery/hearse versions heavier.",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/lincoln-mkt",
+   "https://www.autopadre.com/vehicle-dimensions/lincoln-mkt",
+   "https://www.autopadre.com/vehicle-weight/lincoln-mkt",
+   "https://www.kbb.com/lincoln/mkt/2014/specs/"
+  ],
+  "check": "gc 5.9 all trims (autopadre lists 2018-2019 only); wb 9.83 ft autopadre = 117.9 KBB; curb 5036 2019 3.5T AWD (autopadre)"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Aviator",
+  "yFrom": 2020,
+  "yTo": 2026,
+  "body": "SUV",
+  "drives": "RWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 4950,
+  "wb": 119.1,
+  "gc": 7.8,
+  "air": "opt",
+  "note": "Black Label/air-suspension trims 8.6 in.",
+  "verified": false,
+  "sources": [
+   "https://www.kbb.com/lincoln/aviator/2020/specs/",
+   "https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2025/specs/2025-Lincoln-Aviator-Technical-Specifications.pdf",
+   "https://www.cars.com/research/lincoln-aviator-2020/specs/405160"
+  ],
+  "check": "gc 7.8 KBB 2020 base/Reserve (only source); wb 119.1 Ford 2025 spec (OEM); curb 4970 AWD Ford 2025 spec (OEM; cars.com 2020 Black Label 4892); autopadre has no 2020+ Aviator"
+ },
+ {
+  "make": "Lincoln",
+  "model": "Aviator (Grand Touring)",
+  "yFrom": 2020,
+  "yTo": 2024,
+  "body": "SUV",
+  "drives": "AWD",
+  "power": "PHEV",
+  "trans": "AT",
+  "curb": 5650,
+  "wb": 119.1,
+  "gc": 8.6,
+  "air": "opt",
+  "note": "Plug-in hybrid with 10-speed automatic. Heavy for its size.",
+  "verified": false,
+  "sources": [
+   "https://www.kbb.com/lincoln/aviator/2020/specs/",
+   "https://www.cars.com/research/lincoln-aviator-2020/specs/408054/"
+  ],
+  "check": "gc 8.6 KBB 2020 Grand Touring (only source); wb 119.1 KBB (cars.com 119); curb 5673 Black Label GT AWD cars.com 2020 (KBB curb values garbled); yTo 2024 because the 2025 Ford spec lists no GT"
+ },
+ {
+  "make": "Lincoln",
+  "model": "MKC",
+  "yFrom": 2015,
+  "yTo": 2019,
+  "body": "SUV",
+  "drives": "FWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 4000,
+  "wb": 105.9,
+  "gc": 6.8,
+  "note": "",
+  "verified": false,
+  "sources": [
+   "https://www.iseecars.com/car/2015-lincoln-mkc-dimensions",
+   "https://xr793.com/wp-content/uploads/2025/02/2015-Lincoln-MKC-Tech-Specs.pdf",
+   "https://www.kbb.com/lincoln/mkc/2017/specs/",
+   "https://www.edmunds.com/lincoln/mkc/2017/features-specs/"
+  ],
+  "check": "gc 6.8 iseecars 2015 all trims (only source; autopadre has no MKC page); wb 105.9 Lincoln 2015 spec/KBB/Edmunds; curb 3989 2.3L AWD Lincoln 2015 spec (KBB/Edmunds 2017 3952)"
+ },
+ {
+  "make": "Ford",
+  "model": "Transit Connect",
+  "yFrom": 2014,
+  "yTo": 2023,
+  "body": "Van",
+  "drives": "FWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 4050,
+  "wb": 120.6,
+  "gc": 5.4,
+  "gvwr": 5450,
+  "note": "Long wheelbase 120.6 in (short 104.8). 2014-2018 clearance is higher (6.0-6.4 in).",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/ford-transit-connect",
+   "https://www.autopadre.com/vehicle-dimensions/ford-transit-connect",
+   "https://www.autopadre.com/vehicle-weight/ford-transit-connect",
+   "https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2020/transit-connect-van/2020_Ford_Transit_Connect_Tech_Specs.pdf"
+  ],
+  "check": "gc 5.4 SWB van 2019-23 lowest (autopadre; OEM 2020 5.43, LWB van 5.63, wagon 5.71); wb 120.6 LWB OEM 2020 (autopadre 10.05 ft); curb 4029 LWB wagon 2.5L OEM 2020 (autopadre 4028); GVWR 5450 LWB wagon OEM 2020 (2014-18 GVWR not found)"
+ },
+ {
+  "make": "Ford",
+  "model": "EcoSport",
+  "yFrom": 2018,
+  "yTo": 2022,
+  "body": "SUV",
+  "drives": "FWD|AWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 3300,
+  "wb": 99.2,
+  "gc": 7.8,
+  "note": "",
+  "verified": false,
+  "sources": [
+   "https://www.iseecars.com/car/2019-ford-ecosport-dimensions",
+   "https://media.ford.com/content/dam/fordmedia/North%20America/US/product/2019/ecosport/2019-ecosport.pdf"
+  ],
+  "check": "gc 7.8 iseecars 2019 all trims (only source; no autopadre page); wb 99.2 Ford 2019 spec (OEM); curb 3300 2.0L 4WD Ford 2019 spec (OEM)"
+ },
+ {
+  "make": "Ford",
+  "model": "Escape (Plug-in Hybrid)",
+  "yFrom": 2021,
+  "yTo": 2025,
+  "body": "SUV",
+  "drives": "FWD",
+  "power": "PHEV",
+  "trans": "CVT",
+  "curb": 3900,
+  "wb": 106.8,
+  "gc": 6.8,
+  "note": "",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/ford-escape",
+   "https://www.autopadre.com/vehicle-dimensions/ford-escape",
+   "https://www.autopadre.com/vehicle-weight/ford-escape"
+  ],
+  "check": "gc 6.8 PHEV 2021-22 (autopadre; 6.9 2023-25); wb 8.9 ft = 106.8 2024-25 (autopadre; 8.83 ft earlier); curb 3904 PHEV 2023-25 (autopadre)"
+ },
+ {
+  "make": "Ford",
+  "model": "Expedition EL",
+  "yFrom": 2007,
+  "yTo": 2017,
+  "body": "SUV",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6150,
+  "wb": 131.0,
+  "gc": 8.7,
+  "note": "Long-wheelbase Expedition (2018+ is Expedition MAX).",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/ford-expedition",
+   "https://www.autopadre.com/vehicle-dimensions/ford-expedition",
+   "https://www.autopadre.com/vehicle-weight/ford-expedition"
+  ],
+  "check": "gc 8.7 all EL trims 2008-2017 (autopadre; 2007 not shown); wb 10.92 ft = 131.0 (autopadre); curb 6128 2010-11 EL 4WD (autopadre); GVWR not found"
+ },
+ {
+  "make": "Ford",
+  "model": "E-350",
+  "yFrom": 2008,
+  "yTo": 2014,
+  "body": "Van",
+  "drives": "RWD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 6650,
+  "wb": 138.0,
+  "gc": 7.6,
+  "gvwr": 9300,
+  "note": "Extended wagon body is longer (same 138 in wheelbase). Cutaway/chassis versions not covered.",
+  "verified": false,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/ford-e-350",
+   "https://www.autopadre.com/vehicle-dimensions/ford-e-350",
+   "https://www.autopadre.com/vehicle-weight/ford-e-350",
+   "https://www.edmunds.com/ford/e-series-wagon/2014/st-200497566/features-specs",
+   "https://www.kbb.com/ford/e350-super-duty-passenger/2014/specs"
+  ],
+  "check": "gc 7.6 2014 Club wagon (autopadre lists only 2014; extended 8.1); wb 11.5 ft = 138.0 (autopadre, KBB, Edmunds); curb 6641 Edmunds 2014 XLT wagon (autopadre max 6448); GVWR 9300 Edmunds 2014 XLT"
+ },
+ {
+  "make": "Ford",
+  "model": "F-350 Super Duty (single rear wheel)",
+  "yFrom": 2008,
+  "yTo": 2016,
+  "body": "Pickup",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 7650,
+  "wb": 172.4,
+  "gc": 7.8,
+  "gvwr": 11300,
+  "dually": false,
+  "note": "Crew cab long box shown; 6.4L/6.7L diesel crew 4x4 is the heaviest. Measure clearance under the front axle.",
+  "verified": false,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/ford-f-350",
+   "https://www.autopadre.com/vehicle-dimensions/ford-f-350",
+   "https://www.autopadre.com/vehicle-weight/ford-f-350",
+   "https://www.iseecars.com/car/2016-ford-super_duty_f__350-specs"
+  ],
+  "check": "gc 7.8 SRW 2010 crew 4WD (autopadre; SRW 2011-16 not listed); wb 172.4 = autopadre DRW crew 14.37 ft (SRW long box same frame, not listed); curb 7648 2008 crew 4WD 6.4L diesel (autopadre); GVWR 11300 iseecars 2016"
+ },
+ {
+  "make": "Ford",
+  "model": "F-350 Super Duty (dually)",
+  "yFrom": 2011,
+  "yTo": 2016,
+  "body": "Pickup",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 7600,
+  "wb": 172.4,
+  "gc": 8.0,
+  "gvwr": 14000,
+  "dually": true,
+  "note": "Autopadre lists only gas 6.2L duallys; a 6.7L diesel dually is heavier.",
+  "verified": true,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/ford-f-350",
+   "https://www.autopadre.com/vehicle-dimensions/ford-f-350",
+   "https://www.autopadre.com/vehicle-weight/ford-f-350",
+   "https://www.iseecars.com/car/2016-ford-super_duty_f__350-specs"
+  ],
+  "check": "gc 8.0 DRW 2011-2016 (autopadre); wb 14.37 ft = 172.4 crew DRW (autopadre); curb 7589 2016 DRW crew King Ranch 4WD 6.2L (autopadre, gas only); GVWR 14000 iseecars 2016 DRW"
+ },
+ {
+  "make": "Ford",
+  "model": "F-350 Super Duty (dually)",
+  "yFrom": 2008,
+  "yTo": 2010,
+  "body": "Pickup",
+  "drives": "RWD|4WD",
+  "power": "ICE",
+  "trans": "AT",
+  "curb": 7650,
+  "wb": 172.4,
+  "gc": 7.1,
+  "gvwr": 14000,
+  "dually": true,
+  "note": "Low clearance on 2010 RWD duallys. Diesel dually may exceed the curb shown.",
+  "verified": false,
+  "sources": [
+   "https://www.autopadre.com/ground-clearance/ford-f-350",
+   "https://www.autopadre.com/vehicle-dimensions/ford-f-350",
+   "https://www.autopadre.com/vehicle-weight/ford-f-350",
+   "https://www.iseecars.com/car/2016-ford-super_duty_f__350-specs"
+  ],
+  "check": "gc 7.1 2010 DRW RWD (autopadre); wb 14.37 ft = 172.4 DRW crew 2009-10 (autopadre); curb 7648 = heaviest F-350 2008-10 entry (SRW diesel, autopadre; DRW listed 7211 gas only); GVWR 14000 from 2016 DRW (iseecars), not confirmed for 2008-10"
  }
 ]

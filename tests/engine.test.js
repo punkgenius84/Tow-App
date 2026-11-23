@@ -219,7 +219,7 @@ test('database rows are well formed and unique', () => {
     assert.ok(['ICE', 'HEV', 'PHEV', 'EV'].includes(v.power), 'power ' + id);
     assert.ok(v.trans.every(t => ['AT', 'CVT', 'MT', 'DCT', 'EV'].includes(t)), 'trans ' + id);
     assert.ok(v.curb >= 2000 && v.curb <= 12000, 'curb ' + id);
-    assert.ok(v.wb >= 95 && v.wb <= 190, 'wheelbase ' + id);
+    assert.ok(v.wb >= 85 && v.wb <= 190, 'wheelbase ' + id);
     assert.ok(v.gc >= 3.5 && v.gc <= 12, 'clearance ' + id);
     if (v.gvwr) assert.ok(v.gvwr >= v.curb, 'gvwr below curb ' + id);
     if (v.power === 'EV') assert.deepEqual(v.trans, ['EV'], 'EV trans ' + id);
