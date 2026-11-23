@@ -4,17 +4,17 @@
 
 **Safety mitigation now active:** catalog-derived values are not treated as confirmed specifications unless a row has an explicit, scoped OEM verification record. Unverified values remain provisional and cannot substitute for on-scene measurements.
 
-This audit covers the complete current US-market catalog in `www/data.js`: **2,836 rows across 47 makes**, comprising **308 curated rows** and **2,521 aggregator-derived rows**, spanning model years 1980–2025. Of the 308 curated rows, 11 are OEM-source-verified for a single model year and 304 remain unverified. All 2,521 aggregator-derived rows remain unverified. Across the full catalog, 2,825 rows remain unverified. All three body dimensions are present on 2,507 rows; 320 lack at least one. Field presence: length 2,526; width 2,513; height 2,518. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
+This audit covers the complete current US-market catalog in `www/data.js`: **2,836 rows across 47 makes**, comprising **315 curated rows** and **2,521 aggregator-derived rows**, spanning model years 1980–2025. Of the 315 curated rows, 11 are OEM-source-verified for a single model year and 304 remain unverified. All 2,521 aggregator-derived rows remain unverified. Across the full catalog, 2,825 rows remain unverified. All three body dimensions are present on 2,509 rows; 327 lack at least one. Field presence: length 2,528; width 2,515; height 2,520. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
-## Body-dimension gap inventory (2026-11-21)
+## Body-dimension gap inventory (2026-11-23)
 
-A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,836 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
+A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **327 of 2,836 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
 
 | Make | Rows missing one or more body dimensions |
 |---|---:|
 | Mazda | 34 |
+| Ford | 26 |
 | Mercedes-Benz | 26 |
-| Ford | 22 |
 | Subaru | 17 |
 | Audi | 17 |
 | Chevrolet | 16 |
@@ -22,10 +22,47 @@ A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,83
 | BMW | 14 |
 | Honda | 11 |
 | Mitsubishi | 9 |
+| Hyundai | 8 |
+| Kia | 8 |
 | Lexus | 8 |
-| GMC, Nissan, Kia, Volvo, Jeep, Porsche | 7 each |
-| Hyundai, Ram, Isuzu, Pontiac, Land Rover | 5–6 each |
-| Other makes | 1–4 each |
+| GMC | 7 |
+| Jeep | 7 |
+| Nissan | 7 |
+| Volvo | 7 |
+| Porsche | 7 |
+| Volkswagen | 6 |
+| Ram | 5 |
+| Tesla | 5 |
+| Acura | 5 |
+| Pontiac | 5 |
+| Dodge | 4 |
+| Chrysler | 4 |
+| Land Rover | 4 |
+| Cadillac | 3 |
+| Isuzu | 3 |
+| Suzuki | 3 |
+| Oldsmobile | 3 |
+| Saturn | 3 |
+| Mercury | 3 |
+| Hummer | 3 |
+| Infiniti | 2 |
+| Plymouth | 2 |
+| Alfa Romeo | 2 |
+| Genesis | 2 |
+| Smart | 2 |
+| McLaren | 2 |
+| Lincoln | 1 |
+| Buick | 1 |
+| Rivian | 1 |
+| Saab | 1 |
+| Jaguar | 1 |
+| Mini | 1 |
+| Fiat | 1 |
+| Eagle | 1 |
+| Daewoo | 1 |
+| Aston Martin | 1 |
+| Bentley | 1 |
+| Lamborghini | 1 |
 
 These are missing-field counts, not a statement that the remaining values are OEM verified. Fill gaps from manufacturer specifications where available, preserve model-year/trim scope and source URL, and leave a field blank when a reliable value cannot be established. Do not copy one cab, wheelbase, body style, or trim's dimensions across a broader model range without documenting the variant limitation.
 
@@ -136,9 +173,9 @@ The Tacoma was completely redesigned for model year 2024. The catalog now separa
 
 ## Current machine-reconciled inventory (2026-11-21)
 
-The figures below were recomputed directly from every data row in `docs/vehicle-catalog-audit.csv`, not copied from earlier narrative summaries. The CSV contains **2,836 rows**: **308 curated rows** (11 `OEM_VERIFIED` and 297 other curated rows) plus **2,521 `AGGREGATOR_UNVERIFIED` rows**. Confidence totals are 11 `OEM_VERIFIED_SINGLE_YEAR` and 2,825 `LOW_UNVERIFIED`. Audit-status totals include 279 `IDENTITY_SPLIT_DIMENSIONS_PENDING`, 2 `PARTIAL_SOURCE_VARIANTS_UNRESOLVED`, 2 `OEM_SOURCE_PARTIAL`, 4 `OEM_PARTIAL_VARIANT_BASELINE`, and the remaining scoped pending/partial statuses; see the CSV for the complete row-level breakdown.
+The figures below were recomputed directly from every data row in `docs/vehicle-catalog-audit.csv`. The CSV contains **2,836 rows**: **315 curated rows** (11 `OEM_VERIFIED` full-dimension rows and 304 other curated rows) plus **2,521 `AGGREGATOR_UNVERIFIED` rows**. Confidence totals are 11 `OEM_VERIFIED_SINGLE_YEAR` and 2,825 `LOW_UNVERIFIED`. Separately, **10 rows carry 2025 OEM ground-clearance-only evidence**; these do not upgrade whole-row confidence. See the CSV for the complete row-level audit-status breakdown.
 
-Field-presence audit: 495 rows have no ground-clearance value and 21 have no wheelbase value. All three body dimensions (length, width and height) are present in 2,507 rows; 320 rows lack at least one. Per-field presence: length 2,526, width 2,513, height 2,518. These are field-presence counts only—not evidence of accuracy or OEM verification. The 166 curated rows spanning eight or more model years remain a high-priority mismatch risk. Coverage of US models listed for 2015–2025 remains 596 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. **Release status remains IN PROGRESS — NOT APPROVED FOR RELEASE.**
+Field-presence audit: 495 rows have no ground-clearance value and 21 have no wheelbase value. All three body dimensions (length, width and height) are present in 2,509 rows; 327 rows lack at least one. Per-field presence: length 2,528, width 2,515, height 2,520. These are field-presence counts only—not evidence of accuracy or OEM verification. The 159 curated rows spanning eight or more model years remain a high-priority mismatch risk. Coverage of US models listed for 2015–2025 remains 596 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. **Release status remains IN PROGRESS — NOT APPROVED FOR RELEASE.**
 
 ### Dimension inventory and operator display
 
