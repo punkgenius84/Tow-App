@@ -4,11 +4,11 @@
 
 **Safety mitigation now active:** catalog-derived values are not treated as confirmed specifications unless a row has an explicit, scoped OEM verification record. Unverified values remain provisional and cannot substitute for on-scene measurements.
 
-This audit covers the complete current US-market catalog in `www/data.js`: **2,837 rows across 47 makes**, comprising **308 curated rows** and **2,522 aggregator-derived rows**, spanning model years 1980–2025. Of the 308 curated rows, 11 are OEM-source-verified for a single model year and 304 remain unverified. All 2,522 aggregator-derived rows remain unverified. Across the full catalog, 2,826 rows remain unverified. All three body dimensions are present on 2,507 rows; 320 lack at least one. Field presence: length 2,526; width 2,513; height 2,518. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
+This audit covers the complete current US-market catalog in `www/data.js`: **2,836 rows across 47 makes**, comprising **308 curated rows** and **2,521 aggregator-derived rows**, spanning model years 1980–2025. Of the 308 curated rows, 11 are OEM-source-verified for a single model year and 304 remain unverified. All 2,521 aggregator-derived rows remain unverified. Across the full catalog, 2,825 rows remain unverified. All three body dimensions are present on 2,507 rows; 320 lack at least one. Field presence: length 2,526; width 2,513; height 2,518. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
 ## Body-dimension gap inventory (2026-11-21)
 
-A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,837 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
+A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **320 of 2,836 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
 
 | Make | Rows missing one or more body dimensions |
 |---|---:|
@@ -136,7 +136,7 @@ The Tacoma was completely redesigned for model year 2024. The catalog now separa
 
 ## Current machine-reconciled inventory (2026-11-21)
 
-The figures below were recomputed directly from every data row in `docs/vehicle-catalog-audit.csv`, not copied from earlier narrative summaries. The CSV contains **2,837 rows**: **308 curated rows** (11 `OEM_VERIFIED` and 297 other curated rows) plus **2,522 `AGGREGATOR_UNVERIFIED` rows**. Confidence totals are 11 `OEM_VERIFIED_SINGLE_YEAR` and 2,826 `LOW_UNVERIFIED`. Audit-status totals include 279 `IDENTITY_SPLIT_DIMENSIONS_PENDING`, 2 `PARTIAL_SOURCE_VARIANTS_UNRESOLVED`, 2 `OEM_SOURCE_PARTIAL`, 4 `OEM_PARTIAL_VARIANT_BASELINE`, and the remaining scoped pending/partial statuses; see the CSV for the complete row-level breakdown.
+The figures below were recomputed directly from every data row in `docs/vehicle-catalog-audit.csv`, not copied from earlier narrative summaries. The CSV contains **2,836 rows**: **308 curated rows** (11 `OEM_VERIFIED` and 297 other curated rows) plus **2,521 `AGGREGATOR_UNVERIFIED` rows**. Confidence totals are 11 `OEM_VERIFIED_SINGLE_YEAR` and 2,825 `LOW_UNVERIFIED`. Audit-status totals include 279 `IDENTITY_SPLIT_DIMENSIONS_PENDING`, 2 `PARTIAL_SOURCE_VARIANTS_UNRESOLVED`, 2 `OEM_SOURCE_PARTIAL`, 4 `OEM_PARTIAL_VARIANT_BASELINE`, and the remaining scoped pending/partial statuses; see the CSV for the complete row-level breakdown.
 
 Field-presence audit: 495 rows have no ground-clearance value and 21 have no wheelbase value. All three body dimensions (length, width and height) are present in 2,507 rows; 320 rows lack at least one. Per-field presence: length 2,526, width 2,513, height 2,518. These are field-presence counts only—not evidence of accuracy or OEM verification. The 166 curated rows spanning eight or more model years remain a high-priority mismatch risk. Coverage of US models listed for 2015–2025 remains 596 of 808; the remaining models are in `docs/vehicle-catalog-missing-us-models.csv`. **Release status remains IN PROGRESS — NOT APPROVED FOR RELEASE.**
 
@@ -161,7 +161,7 @@ Toyota's 2025 US eBrochure lists the XLE and Limited at 4,210 lb curb weight, 11
 
 ## OEM ground-clearance research batch — 2025 model year
 
-The catalog now contains **11 clearance-only OEM evidence entries** for 2025 configurations across Ford, Kia, Hyundai and Toyota. These are separate from full-dimension verification: curb weight, wheelbase and/or body dimensions remain low-confidence unless independently sourced. Clearance source URL, source model year, verified value and configuration caveat are recorded separately. Earlier model years remain separate and are not upgraded from 2025 evidence.
+The catalog now contains **10 clearance-only OEM evidence entries** for 2025 configurations across Ford, Kia, Hyundai and Toyota. These are separate from full-dimension verification: curb weight, wheelbase and/or body dimensions remain low-confidence unless independently sourced. Clearance source URL, source model year, verified value and configuration caveat are recorded separately. Earlier model years remain separate and are not upgraded from 2025 evidence.
 
 | Make / model | 2025 conservative catalog clearance | OEM source scope |
 |---|---:|---|
