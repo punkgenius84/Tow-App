@@ -613,6 +613,25 @@ test('2025 Camry Hybrid uses Toyota OEM dimensions and conservative trim-weight 
 
 
 test('2025 OEM ground-clearance evidence is field-scoped and never replaces on-scene measurements', () => {
- const expected=[['Ford','F-150',2025,8.2],['Ford','F-250 Super Duty',2025,9.2],['Ford','F-350 Super Duty (single rear wheel)',2025,9.1],['Ford','F-350 Super Duty (dually)',2025,9.2],['Ford','F-150 Regular Cab',2025,8.2],['Kia','Sorento',2025,6.9],['Kia','Sorento (Plug-in hybrid)',2025,6.9],['Hyundai','Tucson',2025,7.1],['Hyundai','Santa Fe',2025,7.0],['Toyota','4Runner (2025)',2025,8.1],['Genesis','GV70',2025,7.3],['Genesis','GV70 (Electric)',2024,6.9]];
+ const expected=[['Ford','F-150',2025,8.2],['Ford','F-250 Super Duty',2025,9.2],['Ford','F-350 Super Duty (single rear wheel)',2025,9.1],['Ford','F-350 Super Duty (dually)',2025,9.2],['Ford','F-150 Regular Cab',2025,8.2],['Kia','Sorento',2025,6.9],['Kia','Sorento (Plug-in hybrid)',2025,6.9],['Hyundai','Tucson',2025,7.1],['Hyundai','Santa Fe',2025,7.0],['Toyota','4Runner (2025)',2025,8.1],['Genesis','GV70',2025,7.3],['Genesis','GV70 (Electric)',2024,6.9],['Ford','Ranger (2024)',2024,9.3],['Ford','Ranger (2025)',2025,8.8],['Honda','Pilot (2025)',2025,7.3]];
  for(const [make,model,year,gc] of expected){const v=D.vehicles.find(x=>x.make===make&&x.model===model&&x.yFrom===year&&x.yTo===year);assert.ok(v,make+' '+model+' '+year+' row');assert.equal(v.gc,gc);assert.equal(v.clearanceVerified,true);assert.equal(v.clearanceSourceYear,year);assert.match(v.clearanceSource,/^https:\/\//);assert.equal(v.conf,0,'clearance-only evidence must not certify other specifications');const r=E.recommend(v);assert.equal(r.spec.clearanceVerified,true);assert.equal(r.clearance.status,'unknown','on-scene measurement is still mandatory');}
+});
+
+
+test('Ranger clearance evidence is year- and drivetrain-scoped', () => {
+ const r24=find('Ford','Ranger (2024)');
+ const r25=find('Ford','Ranger (2025)');
+ assert.equal(r24.gc,9.3);
+ assert.equal(r25.gc,8.8,'2025 4x2 is the conservative minimum');
+ assert.equal(r24.clearanceSourceYear,2024);
+ assert.equal(r25.clearanceSourceYear,2025);
+ assert.equal(r24.conf,0);
+ assert.equal(r25.conf,0);
+});
+
+test('2025 Pilot clearance retains TrailSport trim caveat', () => {
+ const p=find('Honda','Pilot (2025)');
+ assert.equal(p.gc,7.3);
+ assert.match(p.clearanceNote,/TrailSport AWD is 8.3 in/);
+ assert.equal(p.conf,0);
 });

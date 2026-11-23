@@ -4,23 +4,23 @@
 
 **Safety mitigation now active:** catalog-derived values are not treated as confirmed specifications unless a row has an explicit, scoped OEM verification record. Unverified values remain provisional and cannot substitute for on-scene measurements.
 
-This audit covers the complete current US-market catalog in `www/data.js`: **2,839 rows across 47 makes**, comprising **315 curated rows** and **2,524 aggregator-derived rows**, spanning model years 1980–2025. Of the 315 curated rows, 11 are OEM-source-verified for a single model year and 304 remain unverified. All 2,524 aggregator-derived rows remain unverified. Across the full catalog, 2,828 rows remain unverified. All three body dimensions are present on 2,512 rows; 327 lack at least one. Field presence: length 2,531; width 2,518; height 2,523. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
+This audit covers the complete current US-market catalog in `www/data.js`: **2,842 rows across 47 makes**, comprising **318 curated rows** and **2,524 aggregator-derived rows**, spanning model years 1980–2025. Of the 315 curated rows, 11 are OEM-source-verified for a single model year and 307 remain unverified. All 2,524 aggregator-derived rows remain unverified. Across the full catalog, 2,831 rows remain unverified. All three body dimensions are present on 2,512 rows; 330 lack at least one. Field presence: length 2,531; width 2,518; height 2,523. These are completeness counts, not accuracy claims. The audit inventory is maintained in `docs/vehicle-catalog-audit.csv`.
 
 ## Body-dimension gap inventory (2026-11-23)
 
-A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **327 of 2,839 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
+A fresh row-by-row count of `docs/vehicle-catalog-audit.csv` found **330 of 2,842 rows** missing at least one of length, width or height. The gaps are concentrated in the curated rows, not evenly distributed across the catalog. Missing-row counts by make:
 
 | Make | Rows missing one or more body dimensions |
 |---|---:|
 | Mazda | 34 |
-| Ford | 26 |
+| Ford | 28 |
 | Mercedes-Benz | 26 |
 | Subaru | 17 |
 | Audi | 17 |
 | Chevrolet | 16 |
 | Toyota | 15 |
 | BMW | 14 |
-| Honda | 11 |
+| Honda | 12 |
 | Mitsubishi | 9 |
 | Hyundai | 8 |
 | Kia | 8 |
@@ -216,3 +216,8 @@ The catalog now contains **12 clearance-only OEM evidence entries** for 2025 con
 Sources: [Ford F-150 2025](https://www.ford.com/trucks/f150/2025/pricing-and-incentives/); [Ford 2025 Super Duty technical specifications](https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2025/specs/2025-Ford-Super-Duty-Technical-Specs.pdf); [Kia Sorento 2025](https://www.kiamedia.com/us/en/models/sorento/2025/specifications); [Hyundai Tucson 2025](https://www.hyundaiusa.com/us/en/vehicles/2025-tucson/compare-specs); [Hyundai Santa Fe 2025](https://aws-sweb.hyundaiusa.com/us/en/vehicles/2025-santa-fe/compare-specs); [Toyota 4Runner 2025 grade guide](https://engage.toyota.com/static/articles/2025_4runner_sales_consultant_guide/2025_4Runner_Sales_Consultant_Guide.pdf).
 
 **Safety:** published manufacturer clearance is reference data, not a measurement of an individual tow-in vehicle. The app continues to require actual lowest-point clearance and wheelbase measurements before it can return anything other than **NO VERDICT — MEASURE FIRST**.
+
+
+## Verified clearance-only update — Ford Ranger and Honda Pilot (2024–2025)
+
+The Ford Ranger catalog row is now split into 2019–2023, 2024 and 2025 slices. Ford's 2024 technical specifications list 9.3 in minimum running ground clearance for both 4x2 and 4x4; the 2025 specifications list 8.8 in for 4x2 and 9.3 in for 4x4, so the 2025 row uses 8.8 in as the conservative baseline. The Honda Pilot row is split into 2023–2024 and 2025. Honda's 2025 US specifications list 7.3 in unladen clearance for most trims and 8.3 in for TrailSport AWD; the catalog uses 7.3 in. These are clearance-only OEM records: curb weight, wheelbase and body dimensions remain unverified, and the calculator still requires on-scene measurements. Sources: [2024 Ford Ranger specifications](https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2024/specs/2024-Ford-Ranger-Technical-Specs.pdf), [2025 Ford Ranger specifications](https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2025/specs/2025_Ford_Ranger_Technical_Specifications.pdf), and [2025 Honda Pilot specifications](https://hondanews.com/en-US/honda-automobiles/releases/2025-honda-pilot-specifications-features).

@@ -57,3 +57,26 @@ Source: https://www.genesis.com/content/dam/genesis/us/com/pdf/2024/2024_Electri
 - These entries do not upgrade curb weight, wheelbase, body dimensions or overall row confidence.
 - The calculator still returns **NO VERDICT — MEASURE FIRST** until actual on-scene clearance and wheelbase are entered.
 - Published ground clearance may be measured at a specific underbody point and vehicle condition; it does not account for aftermarket accessories, damage, load, tire changes or modifications.
+
+
+## Ford Ranger — 2024
+
+Ford's 2024 US technical specifications list minimum running ground clearance of 9.3 in for both SuperCrew 4x2 and 4x4 configurations. This is clearance-only evidence; the database keeps curb weight and other dimensions unverified.
+
+Source: https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2024/specs/2024-Ford-Ranger-Technical-Specs.pdf
+
+## Ford Ranger — 2025
+
+Ford's 2025 US technical specifications list minimum running ground clearance of 8.8 in for SuperCrew 4x2 and 9.3 in for SuperCrew 4x4. The database uses 8.8 in as the conservative baseline for the combined-drive row. Confirm trim and equipment; Raptor and modified vehicles may differ.
+
+Source: https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2025/specs/2025_Ford_Ranger_Technical_Specifications.pdf
+
+## Honda Pilot — 2025
+
+Honda's 2025 US specifications list unladen ground clearance of 7.3 in on Sport, EX-L, Touring, Elite and Black Edition, and 8.3 in on TrailSport AWD. The database uses 7.3 in as the conservative baseline. The 2025 slice is separated from 2023–2024 so this source is not applied backward.
+
+Source: https://hondanews.com/en-US/honda-automobiles/releases/2025-honda-pilot-specifications-features
+
+## Batch accounting
+
+This follow-up adds three clearance-only OEM evidence records (2024 Ranger, 2025 Ranger and 2025 Pilot). The values do not verify curb weight, wheelbase or body dimensions, and do not authorize a loading decision. Measure the actual vehicle on scene.
